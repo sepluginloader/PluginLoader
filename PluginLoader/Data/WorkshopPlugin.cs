@@ -19,9 +19,7 @@ namespace avaness.PluginLoader.Data
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);
         public override string FriendlyName { get; }
 
-        protected virtual string HashFile => "hash.txt";
-
-        private string assembly;
+        private readonly string assembly;
 
         protected WorkshopPlugin()
         {
