@@ -9,7 +9,7 @@ using VRage.GameServices;
 
 namespace avaness.PluginLoader.Data
 {
-    public class SEPMPlugin : PluginData
+    public class SEPMPlugin : SteamPlugin
     {
         private const string HashFile = "sepm-plugin.txt";
         private const string NameFile = "name.txt";
@@ -27,7 +27,7 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(id.ToString())
+        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(id)
         {
             this.log = log;
             this.zipFile = zipFile;

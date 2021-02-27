@@ -14,7 +14,7 @@ using VRage.Plugins;
 
 namespace avaness.PluginLoader.Data
 {
-    public partial class WorkshopPlugin : PluginData
+    public partial class WorkshopPlugin : SteamPlugin
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);
         public override string FriendlyName { get; }
@@ -26,7 +26,7 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public WorkshopPlugin(ulong id, string pluginFile) : base(id.ToString())
+        public WorkshopPlugin(ulong id, string pluginFile) : base(id)
 		{
             string name = Path.GetFileNameWithoutExtension(pluginFile).Replace('_', ' ');
             if (string.IsNullOrWhiteSpace(name))

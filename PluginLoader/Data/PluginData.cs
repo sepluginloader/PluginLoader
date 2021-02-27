@@ -37,10 +37,9 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public PluginData(string id, bool enabled = false)
+        public PluginData(string id)
         {
             Id = id;
-            Enabled = enabled;
         }
 
         public abstract string GetDllFile();
