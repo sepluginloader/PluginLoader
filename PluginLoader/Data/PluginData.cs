@@ -79,5 +79,10 @@ namespace avaness.PluginLoader.Data
         {
             return !(left == right);
         }
+
+        public override string ToString()
+        {
+            return Id + '|' + FriendlyName;
+        }
     }
 }

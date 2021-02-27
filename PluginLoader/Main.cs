@@ -50,10 +50,9 @@ namespace avaness.PluginLoader
             {
                 try
                 {
-                    string name = data.Id;
                     if(data.Enabled)
                     {
-                        log.WriteLine($"Loading {name}");
+                        log.WriteLine($"Loading {data}");
                         if (LoadDll(data, out Assembly a))
                         {
                             assemblies.Add(a);
@@ -66,7 +65,7 @@ namespace avaness.PluginLoader
                     }
                     else
                     {
-                        log.WriteLine($"Skipped {name}");
+                        log.WriteLine($"Skipped {data}");
                     }
                 }
                 catch (Exception e)

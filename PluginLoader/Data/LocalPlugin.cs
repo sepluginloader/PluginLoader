@@ -45,5 +45,10 @@ namespace avaness.PluginLoader.Data
                 return Id;
             return null;
         }
+
+        public override string ToString()
+        {
+            return Id;
+        }
     }
 }
