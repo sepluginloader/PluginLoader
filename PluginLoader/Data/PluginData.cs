@@ -1,6 +1,11 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
+using VRage.Plugins;
 
 namespace avaness.PluginLoader.Data
 {
@@ -43,6 +48,47 @@ namespace avaness.PluginLoader.Data
         }
 
         public abstract string GetDllFile();
+
+        public bool LoadDll(LogFile log, out Assembly a)
+        {
+            a = null;
+            string dll = GetDllFile();
+            if (dll == null)
+            {
+                log.WriteLine("Failed to load " + Path.GetFileName(dll));
+                return false;
+            }
+
+            a = Assembly.LoadFile(dll);
+            if (a.GetTypes().Any(t => typeof(IPlugin).IsAssignableFrom(t)))
+                return true;
+
+            log.WriteLine($"Failed to load {Path.GetFileName(dll)} because it does not contain an IPlugin.");
+            return false;
+        }
+
+        public bool LoadDll(LogFile log, out IPlugin plugin)
+        {
+            plugin = null;
+            string dll = GetDllFile();
+            if (dll == null)
+            {
+                log.WriteLine("Failed to load " + Path.GetFileName(dll));
+                return false;
+            }
+            
+            Assembly a = Assembly.LoadFile(dll);
+            
+            Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
+            if (pluginType == null)
+            {
+                log.WriteLine($"Failed to load {Path.GetFileName(dll)} because it does not contain an IPlugin.");
+                return false;
+            }
+
+            plugin = (IPlugin)Activator.CreateInstance(pluginType);
+            return true;
+        }
 
         public virtual void CopyFrom(PluginData other)
         {

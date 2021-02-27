@@ -12,6 +12,7 @@ using VRage.FileSystem;
 using System.Linq;
 using Sandbox.Game;
 using HarmonyLib;
+using Sandbox.Game.World;
 
 namespace avaness.PluginLoader
 {
@@ -23,10 +24,12 @@ namespace avaness.PluginLoader
 
         private readonly string mainPath;
         private LogFile log;
+        private SessionPlugins session;
 
         public Main()
         {
             Instance = this;
+
 
             Cursor.Current = Cursors.WaitCursor;
 
@@ -42,7 +45,8 @@ namespace avaness.PluginLoader
             log.WriteLine("Loading config.");
             Config = PluginConfig.Load(mainPath, log);
 
-            new Harmony("avaness.PluginLoader").PatchAll();
+            Harmony harmony = new Harmony("avaness.PluginLoader");
+            harmony.PatchAll();
 
             List<Assembly> assemblies = new List<Assembly>();
             bool error = false;
@@ -53,7 +57,7 @@ namespace avaness.PluginLoader
                     if(data.Enabled)
                     {
                         log.WriteLine($"Loading {data}");
-                        if (LoadDll(data, out Assembly a))
+                        if (data.LoadDll(log, out Assembly a))
                         {
                             assemblies.Add(a);
                         }
@@ -119,24 +123,10 @@ namespace avaness.PluginLoader
 
             Cursor.Current = Cursors.Default;
 
+            session = new SessionPlugins(log, Config, harmony);
+
             if (error)
                 MessageBox.Show($"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
-        private bool LoadDll(PluginData data, out Assembly a)
-        {
-            a = null;
-            string dll = data.GetDllFile();
-            if (dll == null)
-            {
-                log.WriteLine("Failed to load " + Path.GetFileName(dll));
-                return false;
-            }
-            a = Assembly.LoadFile(dll);
-            if(a.GetTypes().Any(t => typeof(IPlugin).IsAssignableFrom(t)))
-                return true;
-            log.WriteLine($"Failed to load {Path.GetFileName(dll)} because it does not contain an IPlugin.");
-            return false;
         }
 
         private void ScanForSEPM()
@@ -170,7 +160,7 @@ namespace avaness.PluginLoader
             return null;
         }
 
-        private void ExecuteMain(SEPluginManager.SEPMPlugin plugin)
+        public void ExecuteMain(SEPluginManager.SEPMPlugin plugin)
         {
             try
             {
@@ -188,7 +178,9 @@ namespace avaness.PluginLoader
         { }
 
         public void Update()
-        { }
+        {
+            session?.Update();
+        }
 
         public void Dispose()
         {
@@ -196,6 +188,7 @@ namespace avaness.PluginLoader
             Instance = null;
             log?.Dispose();
             log = null;
+            session?.Unload();
         }
     }
 }
