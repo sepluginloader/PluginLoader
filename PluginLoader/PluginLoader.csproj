@@ -108,6 +108,7 @@
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\SEPMPlugin.cs" />
+    <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
     <Compile Include="FileHash.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />

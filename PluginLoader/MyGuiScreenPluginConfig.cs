@@ -9,6 +9,7 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using VRage;
+using VRage.Game;
 using VRage.Input;
 using VRage.Utils;
 using VRageMath;
@@ -94,6 +95,14 @@ namespace avaness.PluginLoader
 				modTable.Add(row);
 
 				MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
+				if(data is SteamPlugin steam)
+                {
+					MyGuiControlButton steamLink = new MyGuiControlButton(originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER, textAlignment: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER, text: new StringBuilder(data.Source), onButtonClick: OnOpenSteamWorkshop);
+					steamLink.UserData = steam.WorkshopId;
+					steamLink.VisualStyle = MyGuiControlButtonStyleEnum.ClickableText;
+					sourceCell.Control = steamLink;
+					modTable.Controls.Add(steamLink);
+                }
 				row.AddCell(sourceCell);
 
 				MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
@@ -135,6 +144,12 @@ namespace avaness.PluginLoader
 			Controls.Add(btnClose);
 
 			CloseButtonEnabled = true;
+        }
+
+        private void OnOpenSteamWorkshop(MyGuiControlButton btn)
+        {
+			if (btn.UserData is ulong steamId)
+				MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + steamId, UrlOpenMode.SteamOrExternalWithConfirm);
         }
 
         private void OnSaveButtonClick(MyGuiControlButton btn)
