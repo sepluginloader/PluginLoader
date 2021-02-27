@@ -16,7 +16,7 @@ namespace avaness.PluginLoader.Data
 
         public SteamPlugin(ulong id) : base(id.ToString())
         {
-
+            WorkshopId = id;
         }
     }
 }

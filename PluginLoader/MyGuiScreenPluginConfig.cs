@@ -95,14 +95,6 @@ namespace avaness.PluginLoader
 				modTable.Add(row);
 
 				MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
-				if(data is SteamPlugin steam)
-                {
-					MyGuiControlButton steamLink = new MyGuiControlButton(originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER, textAlignment: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER, text: new StringBuilder(data.Source), onButtonClick: OnOpenSteamWorkshop);
-					steamLink.UserData = steam.WorkshopId;
-					steamLink.VisualStyle = MyGuiControlButtonStyleEnum.ClickableText;
-					sourceCell.Control = steamLink;
-					modTable.Controls.Add(steamLink);
-                }
 				row.AddCell(sourceCell);
 
 				MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
@@ -123,7 +115,7 @@ namespace avaness.PluginLoader
 				MyGuiControlTable.Cell updateCell = new MyGuiControlTable.Cell(data.StatusString);
 				row.AddCell(updateCell);
             }
-
+            modTable.ItemDoubleClicked += RowDoubleClicked;
             modTable.SelectedRowIndex = null;
 
 			MyGuiControlSeparatorList midBar = new MyGuiControlSeparatorList();
@@ -146,10 +138,23 @@ namespace avaness.PluginLoader
 			CloseButtonEnabled = true;
         }
 
-        private void OnOpenSteamWorkshop(MyGuiControlButton btn)
+        private void RowDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
-			if (btn.UserData is ulong steamId)
-				MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + steamId, UrlOpenMode.SteamOrExternalWithConfirm);
+			int i = args.RowIndex;
+			if (i >= 0 && i < table.RowsCount)
+            {
+                MyGuiControlTable.Row row = table.GetRow(i);
+				if(row.UserData is SteamPlugin steam)
+                {
+					MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + steam.WorkshopId, UrlOpenMode.SteamOrExternalWithConfirm);
+				}
+				else if(row.UserData is LocalPlugin local)
+                {
+					string file = Path.GetFullPath(local.Id);
+					if (File.Exists(file))
+						Process.Start("explorer.exe", $"/select, \"{file}\"");
+                }
+			}
         }
 
         private void OnSaveButtonClick(MyGuiControlButton btn)
