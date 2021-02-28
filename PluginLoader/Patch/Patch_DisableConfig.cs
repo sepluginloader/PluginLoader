@@ -13,7 +13,7 @@ namespace avaness.PluginLoader.Patch
 			// This is the earliest point in which I can use MyInput.Static
 			PluginConfig config = Main.Instance?.Config;
 			if(config != null && config.Data.Count > 0 && MyInput.Static is MyVRageInput && MyInput.Static.IsKeyPress(MyKeys.Escape)
-				&& MessageBox.Show("Escape pressed. Start the game with all plugins disabled?", "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+				&& MessageBox.Show(LoaderTools.GetMainForm(), "Escape pressed. Start the game with all plugins disabled?", "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
 				config.Disable();
 			}

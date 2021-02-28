@@ -1,18 +1,15 @@
 ﻿using VRage.Plugins;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System;
 using System.IO;
-using System.Security.Cryptography;
 using avaness.PluginLoader.Data;
 using SEPluginManager;
 using VRage.FileSystem;
-using System.Linq;
-using Sandbox.Game;
 using HarmonyLib;
-using Sandbox.Game.World;
+using System.Windows.Forms;
+using avaness.PluginLoader.Session;
 
 namespace avaness.PluginLoader
 {
@@ -30,8 +27,8 @@ namespace avaness.PluginLoader
         {
             Instance = this;
 
-
-            Cursor.Current = Cursors.WaitCursor;
+            Cursor temp = Cursor.Current;
+            Cursor.Current = Cursors.AppStarting;
 
             mainPath = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
             if (!Directory.Exists(mainPath))
@@ -64,7 +61,7 @@ namespace avaness.PluginLoader
                         else
                         {
                             error = true;
-                            data.MarkError();
+                            data.Status = PluginStatus.Error;
                         }
                     }
                     else
@@ -75,7 +72,7 @@ namespace avaness.PluginLoader
                 catch (Exception e)
                 {
                     log.WriteLine("An error occurred:\n" + e);
-                    data.MarkError();
+                    data.Status = PluginStatus.Error;
                 }
             }
 
@@ -121,12 +118,12 @@ namespace avaness.PluginLoader
 
             log.Flush();
 
-            Cursor.Current = Cursors.Default;
+            Cursor.Current = temp;
 
             session = new SessionPlugins(log, Config, harmony);
 
             if (error)
-                MessageBox.Show($"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void ScanForSEPM()
@@ -134,7 +131,7 @@ namespace avaness.PluginLoader
             foreach(IPlugin p in MyPlugins.Plugins)
             {
                 if (p is SEPluginManager.SEPMPlugin sepm)
-                    ExecuteMain(sepm);
+                    LoaderTools.ExecuteMain(log, sepm);
             }
         }
 
@@ -158,20 +155,6 @@ namespace avaness.PluginLoader
                 return typeof(Main).Assembly;
             }
             return null;
-        }
-
-        public void ExecuteMain(SEPluginManager.SEPMPlugin plugin)
-        {
-            try
-            {
-                string name = plugin.GetType().ToString();
-                log.WriteLine("Executing Main of " + name);
-                plugin.Main(new Harmony(name), new Logger(name, log));
-            }
-            catch (Exception e)
-            {
-                log.WriteLine("Error while calling SEPM Main: " + e);
-            }
         }
 
         public void Init(object gameInstance)

@@ -8,7 +8,6 @@ using avaness.PluginLoader.Data;
 using Sandbox.Engine.Networking;
 using VRage.GameServices;
 using VRage.Input;
-using System.Windows.Forms;
 using VRage;
 
 namespace avaness.PluginLoader

@@ -15,7 +15,7 @@ namespace avaness.PluginLoader.Data
         public abstract string FriendlyName { get; }
 
         [XmlIgnore]
-        public virtual PluginStatus Status { get; protected set; } = PluginStatus.None;
+        public virtual PluginStatus Status { get; set; } = PluginStatus.None;
         public virtual string StatusString
         {
             get
@@ -28,6 +28,8 @@ namespace avaness.PluginLoader.Data
                         return "Updated";
                     case PluginStatus.Error:
                         return "Error!";
+                    case PluginStatus.Session:
+                        return "Loaded in session";
                     default:
                         return "";
                 }
@@ -67,28 +69,6 @@ namespace avaness.PluginLoader.Data
             return false;
         }
 
-        public bool LoadDll(LogFile log, out IPlugin plugin)
-        {
-            plugin = null;
-            string dll = GetDllFile();
-            if (dll == null)
-            {
-                log.WriteLine("Failed to load " + Path.GetFileName(dll));
-                return false;
-            }
-            
-            Assembly a = Assembly.LoadFile(dll);
-            
-            Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
-            if (pluginType == null)
-            {
-                log.WriteLine($"Failed to load {Path.GetFileName(dll)} because it does not contain an IPlugin.");
-                return false;
-            }
-
-            plugin = (IPlugin)Activator.CreateInstance(pluginType);
-            return true;
-        }
 
         public virtual void CopyFrom(PluginData other)
         {
@@ -114,11 +94,6 @@ namespace avaness.PluginLoader.Data
         public static bool operator ==(PluginData left, PluginData right)
         {
             return EqualityComparer<PluginData>.Default.Equals(left, right);
-        }
-
-        public void MarkError()
-        {
-            Status = PluginStatus.Error;
         }
 
         public static bool operator !=(PluginData left, PluginData right)

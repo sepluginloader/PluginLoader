@@ -1,16 +1,11 @@
 ﻿using avaness.PluginLoader.Data;
 using Sandbox;
 using Sandbox.Graphics.GUI;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Text;
 using System.Windows.Forms;
-using VRage;
-using VRage.Game;
-using VRage.Input;
 using VRage.Utils;
 using VRageMath;
 
@@ -124,7 +119,7 @@ namespace avaness.PluginLoader
 
 			origin.Y += space;
 
-			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Restart"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnOkButtonClick);
+			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Restart"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
 			MyGuiControlButton btnSave = new MyGuiControlButton(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Save changes. Changes will take effect next time the game starts.", text: new StringBuilder("Save"), onButtonClick: OnSaveButtonClick);
 
@@ -202,16 +197,10 @@ namespace avaness.PluginLoader
 			CloseScreen();
         }
 
-        private void OnOkButtonClick(MyGuiControlButton btn)
+        private void OnRestartButtonClick(MyGuiControlButton btn)
 		{
 			Save();
-			Restart();
-		}
-
-		private void Restart()
-		{
-			Application.Restart();
-			Process.GetCurrentProcess().Kill();
+			LoaderTools.Restart();
 		}
 
 		private void Save()
