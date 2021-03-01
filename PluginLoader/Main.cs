@@ -20,6 +20,7 @@ namespace avaness.PluginLoader
 
         private readonly string mainPath;
         private LogFile log;
+        private bool loadingErrors, init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
 
@@ -45,7 +46,6 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            bool error = false;
             foreach (PluginData data in Config.Data.Values)
             {
                 if (data.Enabled)
@@ -56,7 +56,7 @@ namespace avaness.PluginLoader
                     }
                     else
                     {
-                        error = true;
+                        loadingErrors = true;
                         data.Status = PluginStatus.Error;
                     }
                 }
@@ -66,9 +66,6 @@ namespace avaness.PluginLoader
             log.Flush();
 
             Cursor.Current = temp;
-
-            if (error)
-                MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
             MySession.OnLoading += MySession_OnLoading;
@@ -97,9 +94,13 @@ namespace avaness.PluginLoader
                 if (!p.Instantiate())
                 {
                     plugins.RemoveAtFast(i);
-                    p.MarkBad();
+                    loadingErrors = true;
                 }
             }
+
+            if (loadingErrors)
+                MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
             log.Flush();
         }
 
@@ -110,23 +111,21 @@ namespace avaness.PluginLoader
             {
                 PluginInstance p = plugins[i];
                 if(!p.Init(gameInstance))
-                {
                     plugins.RemoveAtFast(i);
-                    p.MarkBad();
-                }
             }
             log.Flush();
+            init = true;
         }
 
         public void Update()
         {
-            for (int i = plugins.Count - 1; i >= 0; i--)
+            if (init)
             {
-                PluginInstance p = plugins[i];
-                if (!p.Update())
+                for (int i = plugins.Count - 1; i >= 0; i--)
                 {
-                    plugins.RemoveAtFast(i);
-                    p.MarkBad();
+                    PluginInstance p = plugins[i];
+                    if (!p.Update())
+                        plugins.RemoveAtFast(i);
                 }
             }
         }
@@ -162,7 +161,7 @@ namespace avaness.PluginLoader
                     log.WriteLine("Resolving SEPluginManager for " + assembly);
                 else
                     log.WriteLine("Resolving SEPluginManager");
-                return typeof(Main).Assembly;
+                return typeof(SEPluginManager.SEPMPlugin).Assembly;
             }
             return null;
         }

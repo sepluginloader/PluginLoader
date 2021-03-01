@@ -42,7 +42,7 @@ namespace avaness.PluginLoader.Data
             {
                 if (File.Exists(hashFile))
                 {
-                    string hash = FileHash.GetHash(zipFile);
+                    string hash = LoaderTools.GetHash(zipFile);
                     if (File.ReadAllText(hashFile) == hash)
                     {
                         extracted = true;
@@ -100,7 +100,7 @@ namespace avaness.PluginLoader.Data
             {
                 log?.WriteLine($"Updating {Id}");
                 string hashFile = Path.Combine(folder, HashFile);
-                File.WriteAllText(hashFile, FileHash.GetHash(zipFile));
+                File.WriteAllText(hashFile, LoaderTools.GetHash(zipFile));
                 ZipFile.ExtractToDirectory(zipFile, dataFolder);
                 extracted = true;
                 Status = PluginStatus.Updated;
