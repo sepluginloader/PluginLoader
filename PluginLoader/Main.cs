@@ -9,7 +9,6 @@ using SEPluginManager;
 using VRage.FileSystem;
 using HarmonyLib;
 using System.Windows.Forms;
-using avaness.PluginLoader.Session;
 
 namespace avaness.PluginLoader
 {
@@ -21,7 +20,6 @@ namespace avaness.PluginLoader
 
         private readonly string mainPath;
         private LogFile log;
-        private SessionPlugins session;
 
         public Main()
         {
@@ -120,8 +118,6 @@ namespace avaness.PluginLoader
 
             Cursor.Current = temp;
 
-            session = new SessionPlugins(log, Config, harmony);
-
             if (error)
                 MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -162,7 +158,6 @@ namespace avaness.PluginLoader
 
         public void Update()
         {
-            session?.Update();
         }
 
         public void Dispose()
@@ -171,7 +166,6 @@ namespace avaness.PluginLoader
             Instance = null;
             log?.Dispose();
             log = null;
-            session?.Unload();
         }
     }
 }

@@ -100,8 +100,6 @@
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
-    <Compile Include="Patch\Patch_FixLoadDefinitions.cs" />
-    <Compile Include="Patch\Patch_InterruptLoading.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />
@@ -110,9 +108,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SEPM\Logger.cs" />
     <Compile Include="SEPM\SEPMPlugin.cs" />
-    <Compile Include="Session\GameState.cs" />
-    <Compile Include="Session\SessionPlugin.cs" />
-    <Compile Include="Session\SessionPlugins.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
