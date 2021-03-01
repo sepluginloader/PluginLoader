@@ -139,6 +139,30 @@ namespace avaness.PluginLoader
             return installed;
         }
 
+        public void CheckForNewMods(HashSet<ulong> modIds)
+        {
+            string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
+            foreach (ulong id in modIds)
+            {
+                if(!plugins.ContainsKey(id.ToString()))
+                {
+                    string modRoot = Path.Combine(workshop, id.ToString());
+                    if (Directory.Exists(modRoot))
+                    {
+                        try
+                        {
+                            if (TryGetPlugin(id, modRoot, out PluginData plugin))
+                            {
+                                log.WriteLine(plugin + " was just installed.");
+                                plugins.Add(plugin.Id, plugin);
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+        }
+
         private bool TryGetPlugin(ulong id, string modRoot, out PluginData plugin)
         {
             plugin = null;

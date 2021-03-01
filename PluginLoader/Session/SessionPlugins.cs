@@ -8,6 +8,7 @@ using System.Reflection;
 using VRage.Plugins;
 using System.Windows.Forms;
 using System.Linq;
+using Sandbox.Game.Gui;
 
 namespace avaness.PluginLoader.Session
 {
@@ -28,6 +29,7 @@ namespace avaness.PluginLoader.Session
             MySession.OnLoading += MySession_OnLoading;
             MySession.OnUnloading += MySession_OnUnloading;
             MySession.OnUnloaded += MySession_OnUnloaded;
+            // TODO multiplayer sessions
         }
 
         public void Unload()
@@ -93,9 +95,13 @@ namespace avaness.PluginLoader.Session
             HashSet<ulong> modIds = new HashSet<ulong>();
             foreach(var mod in MySession.Static.Mods)
             {
-                if (mod.PublishedServiceName == "Steam")
+                if (mod.PublishedFileId > 0 && mod.PublishedServiceName == "Steam")
                     modIds.Add(mod.PublishedFileId);
             }
+
+            config.CheckForNewMods(modIds);
+
+            log.WriteLine("Checking for session plugins...");
 
             foreach(PluginData data in config.Data.Values)
             {
