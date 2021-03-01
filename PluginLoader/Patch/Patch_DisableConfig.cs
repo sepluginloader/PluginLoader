@@ -11,12 +11,20 @@ namespace avaness.PluginLoader.Patch
 		public static void Postfix(MySandboxGame __instance)
 		{
 			// This is the earliest point in which I can use MyInput.Static
-			PluginConfig config = Main.Instance?.Config;
+			if (Main.Instance == null)
+				return;
+
+			Main main = Main.Instance;
+			PluginConfig config = main.Config;
 			if(config != null && config.Data.Count > 0 && MyInput.Static is MyVRageInput && MyInput.Static.IsKeyPress(MyKeys.Escape)
 				&& MessageBox.Show(LoaderTools.GetMainForm(), "Escape pressed. Start the game with all plugins disabled?", "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-				config.Disable();
+				main.DisablePlugins();
 			}
+			else
+            {
+                main.InstantiatePlugins();
+            }
 		}
 
 	}

@@ -5,10 +5,10 @@ using System.Reflection;
 using System;
 using System.IO;
 using avaness.PluginLoader.Data;
-using SEPluginManager;
 using VRage.FileSystem;
 using HarmonyLib;
 using System.Windows.Forms;
+using Sandbox.Game.World;
 
 namespace avaness.PluginLoader
 {
@@ -20,6 +20,8 @@ namespace avaness.PluginLoader
 
         private readonly string mainPath;
         private LogFile log;
+
+        private readonly List<PluginInstance> plugins = new List<PluginInstance>();
 
         public Main()
         {
@@ -35,7 +37,7 @@ namespace avaness.PluginLoader
             log = new LogFile(mainPath);
             log.WriteLine("Starting.");
 
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveHarmony;
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
             log.WriteLine("Loading config.");
             Config = PluginConfig.Load(mainPath, log);
@@ -43,106 +45,118 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            List<Assembly> assemblies = new List<Assembly>();
             bool error = false;
             foreach (PluginData data in Config.Data.Values)
             {
-                try
+                if (data.Enabled)
                 {
-                    if(data.Enabled)
+                    if (PluginInstance.TryGet(harmony, log, data, out PluginInstance p))
                     {
-                        log.WriteLine($"Loading {data}");
-                        if (data.LoadDll(log, out Assembly a))
-                        {
-                            assemblies.Add(a);
-                        }
-                        else
-                        {
-                            error = true;
-                            data.Status = PluginStatus.Error;
-                        }
+                        plugins.Add(p);
                     }
                     else
                     {
-                        log.WriteLine($"Skipped {data}");
+                        error = true;
+                        data.Status = PluginStatus.Error;
                     }
                 }
-                catch (Exception e)
-                {
-                    log.WriteLine("An error occurred:\n" + e);
-                    data.Status = PluginStatus.Error;
-                }
-            }
-
-            if(assemblies.Count > 0)
-            {
-                log.WriteLine($"Linking {assemblies.Count} assemblies to the game.");
-                MethodInfo loadPlugins = typeof(MyPlugins).GetMethod("LoadPlugins", BindingFlags.NonPublic | BindingFlags.Static);
-                try
-                {
-                    loadPlugins.Invoke(null, new object[] { assemblies });
-                    ScanForSEPM();
-                }
-                catch(TargetInvocationException e)
-                {
-                    StringBuilder sb = new StringBuilder("An error occurred:");
-                    sb.AppendLine();
-                    ReflectionTypeLoadException inner = e.InnerException as ReflectionTypeLoadException;
-                    if (inner == null)
-                    {
-                        sb.Append(e).AppendLine();
-                    }
-                    else
-                    {
-                        foreach (Exception le in inner.LoaderExceptions)
-                            sb.Append(le).AppendLine();
-                    }
-                    log.WriteLine(sb.ToString());
-                    error = true;
-                }
-                catch (Exception e)
-                {
-                    log.WriteLine("An error occurred:\n" + e);
-                    error = true;
-                }
-
-            }
-            else
-            {
-                log.WriteLine("No assemblies to link!");
             }
 
             log.WriteLine("Finished startup.");
-
             log.Flush();
 
             Cursor.Current = temp;
 
             if (error)
                 MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
+            MySession.OnLoading += MySession_OnLoading;
         }
 
-        private void ScanForSEPM()
+        private void MySession_OnLoading()
         {
-            foreach(IPlugin p in MyPlugins.Plugins)
+            foreach (PluginInstance plugin in plugins)
+                plugin.RegisterSession();
+        }
+
+        public void DisablePlugins()
+        {
+            Config.Disable();
+            plugins.Clear();
+            log.WriteLine("Disabled all plugins.");
+            log.Flush();
+        }
+
+        public void InstantiatePlugins()
+        {
+            log.WriteLine($"Loading {plugins.Count} plugins...");
+            for (int i = plugins.Count - 1; i >= 0; i--)
             {
-                if (p is SEPluginManager.SEPMPlugin sepm)
-                    LoaderTools.ExecuteMain(log, sepm);
+                PluginInstance p = plugins[i];
+                if (!p.Instantiate())
+                {
+                    plugins.RemoveAtFast(i);
+                    p.MarkBad();
+                }
+            }
+            log.Flush();
+        }
+
+        public void Init(object gameInstance)
+        {
+            log.WriteLine($"Initializing {plugins.Count} plugins...");
+            for (int i = plugins.Count - 1; i >= 0; i--)
+            {
+                PluginInstance p = plugins[i];
+                if(!p.Init(gameInstance))
+                {
+                    plugins.RemoveAtFast(i);
+                    p.MarkBad();
+                }
+            }
+            log.Flush();
+        }
+
+        public void Update()
+        {
+            for (int i = plugins.Count - 1; i >= 0; i--)
+            {
+                PluginInstance p = plugins[i];
+                if (!p.Update())
+                {
+                    plugins.RemoveAtFast(i);
+                    p.MarkBad();
+                }
             }
         }
 
-        private Assembly ResolveHarmony(object sender, ResolveEventArgs args)
+        public void Dispose()
+        {
+            foreach (PluginInstance p in plugins)
+                p.Dispose();
+            plugins.Clear();
+
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
+            MySession.OnLoading -= MySession_OnLoading;
+            log?.Dispose();
+            log = null;
+            Instance = null;
+        }
+
+
+        private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {
             string assembly = args.RequestingAssembly?.GetName()?.ToString();
-            if(args.Name.Contains("0Harmony"))
+            if (args.Name.Contains("0Harmony"))
             {
-                if(assembly != null)
+                if (assembly != null)
                     log.WriteLine("Resolving 0Harmony for " + assembly);
                 else
                     log.WriteLine("Resolving 0Harmony");
                 return typeof(Harmony).Assembly;
             }
-            else if(args.Name.Contains("SEPluginManager"))
+            else if (args.Name.Contains("SEPluginManager"))
             {
                 if (assembly != null)
                     log.WriteLine("Resolving SEPluginManager for " + assembly);
@@ -151,21 +165,6 @@ namespace avaness.PluginLoader
                 return typeof(Main).Assembly;
             }
             return null;
-        }
-
-        public void Init(object gameInstance)
-        { }
-
-        public void Update()
-        {
-        }
-
-        public void Dispose()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveHarmony;
-            Instance = null;
-            log?.Dispose();
-            log = null;
         }
     }
 }

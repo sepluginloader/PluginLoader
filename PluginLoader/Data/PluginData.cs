@@ -28,8 +28,6 @@ namespace avaness.PluginLoader.Data
                         return "Updated";
                     case PluginStatus.Error:
                         return "Error!";
-                    case PluginStatus.Session:
-                        return "Loaded in session";
                     default:
                         return "";
                 }
@@ -51,21 +49,25 @@ namespace avaness.PluginLoader.Data
 
         public abstract string GetDllFile();
 
-        public bool LoadDll(LogFile log, out Assembly a)
+        public bool TryLoadAssembly(LogFile log, out Assembly a)
         {
             a = null;
             string dll = GetDllFile();
             if (dll == null)
             {
-                log.WriteLine("Failed to load " + Path.GetFileName(dll));
+                log.WriteLine("Failed to load " + ToString());
                 return false;
             }
 
-            a = Assembly.LoadFile(dll);
-            if (a.GetTypes().Any(t => typeof(IPlugin).IsAssignableFrom(t)))
+            try
+            {
+                a = Assembly.LoadFile(dll);
                 return true;
-
-            log.WriteLine($"Failed to load {Path.GetFileName(dll)} because it does not contain an IPlugin.");
+            }
+            catch (Exception e) 
+            {
+                log.WriteLine($"Failed to load {ToString()} because of an error: " + e);
+            }
             return false;
         }
 

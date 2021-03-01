@@ -2,6 +2,6 @@
 {
     public enum PluginStatus
     {
-        None, PendingUpdate, Updated, Error, Session
+        None, PendingUpdate, Updated, Error
     }
 }

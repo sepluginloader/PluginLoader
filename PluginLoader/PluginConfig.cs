@@ -83,7 +83,6 @@ namespace avaness.PluginLoader
         {
             foreach (PluginData data in plugins.Values)
                 data.Enabled = false;
-            log.WriteLine("Disabled all plugins.");
         }
 
 
