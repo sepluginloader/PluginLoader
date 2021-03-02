@@ -30,16 +30,8 @@ namespace avaness.PluginLoader
 
         public static void ExecuteMain(LogFile log, SEPMPlugin plugin)
         {
-            try
-            {
-                string name = plugin.GetType().ToString();
-                log.WriteLine("Executing Main of " + name);
-                plugin.Main(new Harmony(name), new Logger(name, log));
-            }
-            catch (Exception e)
-            {
-                log.WriteLine("Error while calling SEPM Main: " + e);
-            }
+            string name = plugin.GetType().ToString();
+            plugin.Main(new Harmony(name), new Logger(name, log));
         }
 
         public static string GetHash(string file)
@@ -60,16 +52,21 @@ namespace avaness.PluginLoader
             }
         }
 
+        /// <summary>
+        /// This method attempts to disable JIT compiling for the assembly. 
+        /// This method will force any member access exceptions by methods to be thrown now instead of later.
+        /// </summary>
         public static void Precompile(LogFile log, Assembly a)
         {
             log.WriteLine("Precompiling " + a);
             foreach (Type t in a.GetTypes())
             {
+                // Static constructors allow for early code execution which can cause issues later in the game
                 if(!HasStaticConstructor(t))
                 {
                     foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                     {
-                        if (m.HasMethodBody() && !m.IsAbstract && !m.ContainsGenericParameters)
+                        if (!m.IsAbstract && !m.ContainsGenericParameters)
                             RuntimeHelpers.PrepareMethod(m.MethodHandle);
                     }
                 }

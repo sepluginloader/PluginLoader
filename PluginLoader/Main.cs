@@ -8,6 +8,7 @@ using VRage.FileSystem;
 using HarmonyLib;
 using System.Windows.Forms;
 using Sandbox.Game.World;
+using System.Diagnostics;
 
 namespace avaness.PluginLoader
 {
@@ -45,13 +46,16 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
+            Stopwatch sw = Stopwatch.StartNew();
             foreach (PluginData data in Config.Data.Values)
             {
                 if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))
                     plugins.Add(p);
             }
 
-            log.WriteLine("Finished startup.");
+            sw.Stop();
+
+            log.WriteLine($"Finished startup. Took {sw.ElapsedMilliseconds}ms");
             log.Flush();
 
             Cursor.Current = temp;

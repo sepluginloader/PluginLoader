@@ -1,12 +1,8 @@
-﻿using HarmonyLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using VRage.Plugins;
 
 namespace avaness.PluginLoader.Data
 {
@@ -64,12 +60,16 @@ namespace avaness.PluginLoader.Data
             try
             {
                 a = Assembly.LoadFile(dll);
+                // Precompile the entire assembly in order to force any missing method exceptions
                 LoaderTools.Precompile(log, a);
                 return true;
             }
             catch (Exception e) 
             {
-                log.WriteLine($"Failed to load {ToString()} because of an error: " + e);
+                string name = ToString();
+                log.WriteLine($"Failed to load {name} because of an error: " + e);
+                if (e is MissingMemberException)
+                    log.WriteLine($"Is {name} up to date?");
                 log.Flush();
                 Error();
                 return false;
