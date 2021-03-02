@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage.Plugins;
 
@@ -106,6 +107,12 @@ namespace avaness.PluginLoader.Data
         public override string ToString()
         {
             return Id + '|' + FriendlyName;
+        }
+
+        public void Error()
+        {
+            Status = PluginStatus.Error;
+            MessageBox.Show(LoaderTools.GetMainForm(), $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

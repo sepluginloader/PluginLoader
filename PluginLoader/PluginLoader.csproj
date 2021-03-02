@@ -97,6 +97,7 @@
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
     <Compile Include="LoaderTools.cs" />
+    <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
     <Compile Include="PluginConfig.cs" />

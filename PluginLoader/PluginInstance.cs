@@ -1,11 +1,9 @@
 ﻿using avaness.PluginLoader.Data;
-using HarmonyLib;
-using Sandbox.Game;
 using Sandbox.Game.World;
-using SpaceEngineers.Game;
 using System;
 using System.Linq;
 using System.Reflection;
+using VRage.Game.Components;
 using VRage.Plugins;
 
 namespace avaness.PluginLoader
@@ -15,13 +13,11 @@ namespace avaness.PluginLoader
         private readonly LogFile log;
         private readonly Type mainType;
         private readonly PluginData data;
-        private readonly Harmony harmony;
         private readonly Assembly mainAssembly;
         private IPlugin plugin;
 
-        private PluginInstance(Harmony harmony, LogFile log, PluginData data, Assembly mainAssembly, Type mainType)
+        private PluginInstance(LogFile log, PluginData data, Assembly mainAssembly, Type mainType)
         {
-            this.harmony = harmony;
             this.log = log;
             this.data = data;
             this.mainAssembly = mainAssembly;
@@ -62,10 +58,29 @@ namespace avaness.PluginLoader
             }
         }
 
-        public void RegisterSession()
+        public void RegisterSession(MySession session)
         {
             if (plugin != null)
-                MySession.Static.RegisterComponentsFromAssembly(mainAssembly, true);
+            {
+                try
+                {
+                    Type descType = typeof(MySessionComponentDescriptor);
+                    int count = 0;
+                    foreach (Type t in mainAssembly.GetTypes().Where(t => Attribute.IsDefined(t, descType)))
+                    {
+                        MySessionComponentBase comp = (MySessionComponentBase)Activator.CreateInstance(t);
+                        session.RegisterComponent(comp, comp.UpdateOrder, comp.Priority);
+                        count++;
+                    }
+                    if(count > 0)
+                        log.WriteLine($"Registered {count} session components from: {mainAssembly.FullName}");
+                }
+                catch (Exception e)
+                {
+                    ThrowError($"Failed to register {data} because of an error: {e}");
+                }
+            }
+                
         }
 
         public bool Update()
@@ -76,10 +91,6 @@ namespace avaness.PluginLoader
             try
             {
                 plugin.Update();
-
-                if (data.FriendlyName.Contains("World"))
-                    throw new Exception();
-
                 return true;
             }
             catch (Exception e)
@@ -89,22 +100,14 @@ namespace avaness.PluginLoader
             }
         }
 
-        public void Dispose(bool error = false)
+        public void Dispose()
         {
             if(plugin != null)
             {
                 try
                 {
                     plugin.Dispose();
-                    plugin = null;
-                    if (error)
-                    {
-                        log.WriteLine($"Attempting to remove because {data} because it is not working properly...");
-                        if(LoaderTools.UnpatchAll(harmony, mainAssembly))
-                            log.WriteLine("Unpatched harmony patches.");
-                        LoaderTools.ResetGameSettings();
-                        log.WriteLine("Reset MyPerGameSettings.");
-                    }
+                    plugin = null; 
                 }
                 catch (Exception e)
                 {
@@ -114,8 +117,15 @@ namespace avaness.PluginLoader
             }
         }
 
+        private void ThrowError(string error)
+        {
+            log.WriteLine(error);
+            log.Flush();
+            data.Error();
+            Dispose();
+        }
 
-        public static bool TryGet(Harmony harmony, LogFile log, PluginData data, out PluginInstance instance)
+        public static bool TryGet(LogFile log, PluginData data, out PluginInstance instance)
         {
             instance = null;
             if (!data.TryLoadAssembly(log, out Assembly a))
@@ -124,12 +134,13 @@ namespace avaness.PluginLoader
             Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
             if (pluginType == null)
             {
-                data.Status = PluginStatus.Error;
                 log.WriteLine($"Failed to load {data} because it does not contain an IPlugin.");
+                log.Flush();
+                data.Error();
                 return false;
             }
 
-            instance = new PluginInstance(harmony, log, data, a, pluginType);
+            instance = new PluginInstance(log, data, a, pluginType);
             return true;
         }
 
@@ -138,11 +149,5 @@ namespace avaness.PluginLoader
             return data.ToString();
         }
 
-        private void ThrowError(string error)
-        {
-            data.Status = PluginStatus.Error;
-            log.WriteLine(error);
-            Dispose(true);
-        }
     }
 }

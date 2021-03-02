@@ -8,7 +8,7 @@ namespace avaness.PluginLoader.Patch
     [HarmonyPatch(typeof(MySandboxGame), "LoadData")]
     public static class Patch_DisableConfig
     {
-		public static void Postfix(MySandboxGame __instance)
+		public static void Postfix()
 		{
 			// This is the earliest point in which I can use MyInput.Static
 			if (Main.Instance == null)

@@ -1,6 +1,5 @@
 ﻿using VRage.Plugins;
 using System.Collections.Generic;
-using System.Text;
 using System.Reflection;
 using System;
 using System.IO;
@@ -20,7 +19,7 @@ namespace avaness.PluginLoader
 
         private readonly string mainPath;
         private LogFile log;
-        private bool loadingErrors, init;
+        private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
 
@@ -50,15 +49,10 @@ namespace avaness.PluginLoader
             {
                 if (data.Enabled)
                 {
-                    if (PluginInstance.TryGet(harmony, log, data, out PluginInstance p))
-                    {
+                    if (PluginInstance.TryGet(log, data, out PluginInstance p))
                         plugins.Add(p);
-                    }
                     else
-                    {
-                        loadingErrors = true;
                         data.Status = PluginStatus.Error;
-                    }
                 }
             }
 
@@ -68,13 +62,14 @@ namespace avaness.PluginLoader
             Cursor.Current = temp;
 
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
-            MySession.OnLoading += MySession_OnLoading;
         }
 
-        private void MySession_OnLoading()
+        public void RegisterComponents()
         {
+            log.WriteLine("Registering Components...");
             foreach (PluginInstance plugin in plugins)
-                plugin.RegisterSession();
+                plugin.RegisterSession(MySession.Static);
+            log.Flush();
         }
 
         public void DisablePlugins()
@@ -92,14 +87,8 @@ namespace avaness.PluginLoader
             {
                 PluginInstance p = plugins[i];
                 if (!p.Instantiate())
-                {
                     plugins.RemoveAtFast(i);
-                    loadingErrors = true;
-                }
             }
-
-            if (loadingErrors)
-                MessageBox.Show(LoaderTools.GetMainForm(), $"There was an error while trying to load a plugin. Some or all of the plugins may not have been loaded. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             log.Flush();
         }
@@ -137,7 +126,6 @@ namespace avaness.PluginLoader
             plugins.Clear();
 
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
-            MySession.OnLoading -= MySession_OnLoading;
             log?.Dispose();
             log = null;
             Instance = null;

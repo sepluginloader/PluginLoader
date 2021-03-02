@@ -33,42 +33,6 @@ namespace avaness.PluginLoader
             Process.GetCurrentProcess().Kill();
         }
 
-        public static bool UnpatchAll(Harmony harmony, Assembly patchOwner)
-        {
-            bool result = false;
-            foreach (MethodBase patched in Harmony.GetAllPatchedMethods())
-            {
-                Patches patches = Harmony.GetPatchInfo(patched);
-                if (patches != null)
-                {
-                    if (UnpatchAll(harmony, patched, patches.Prefixes, patchOwner))
-                        result = true;
-                    if (UnpatchAll(harmony, patched, patches.Postfixes, patchOwner))
-                        result = true;
-                    if (UnpatchAll(harmony, patched, patches.Transpilers, patchOwner))
-                        result = true;
-                    if (UnpatchAll(harmony, patched, patches.Finalizers, patchOwner))
-                        result = true;
-                }
-            }
-            return result;
-        }
-
-        public static bool UnpatchAll(Harmony harmony, MethodBase original, IEnumerable<HarmonyLib.Patch> patches, Assembly patchOwner)
-        {
-            bool result = false;
-            foreach (HarmonyLib.Patch p in patches)
-            {
-                MethodInfo method = p.PatchMethod;
-                if (method.DeclaringType.Assembly == patchOwner)
-                {
-                    harmony.Unpatch(original, method);
-                    result = true;
-                }
-            }
-            return result;
-        }
-
         public static void ExecuteMain(LogFile log, SEPMPlugin plugin)
         {
             try
@@ -99,28 +63,6 @@ namespace avaness.PluginLoader
                     }
                 }
             }
-        }
-
-        public static void ResetGameSettings()
-        {
-            MyGUISettings gui = new MyGUISettings()
-            {
-                EnableTerminalScreen = true,
-                EnableToolbarConfigScreen = true,
-                MultipleSpinningWheels = true,
-                LoadingScreenIndexRange = new Vector2I(1, 16),
-                HUDScreen = typeof(MyGuiScreenHudSpace),
-                ToolbarConfigScreen = typeof(MyGuiScreenCubeBuilder),
-                ToolbarControl = typeof(MyGuiControlToolbar),
-                EditWorldSettingsScreen = typeof(MyGuiScreenWorldSettings),
-                HelpScreen = typeof(MyGuiScreenHelpSpace),
-                VoxelMapEditingScreen = MyPerGameSettings.GUI.VoxelMapEditingScreen, // This type is not public
-                AdminMenuScreen = typeof(MyGuiScreenAdminMenu),
-                CreateFactionScreen = typeof(MyGuiScreenCreateOrEditFaction),
-                PlayersScreen = typeof(MyGuiScreenPlayers)
-            };
-            MyPerGameSettings.GUI = gui;
-            SpaceEngineersGame.SetupPerGameSettings();
         }
     }
 }
