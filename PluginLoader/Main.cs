@@ -47,13 +47,8 @@ namespace avaness.PluginLoader
 
             foreach (PluginData data in Config.Data.Values)
             {
-                if (data.Enabled)
-                {
-                    if (PluginInstance.TryGet(log, data, out PluginInstance p))
-                        plugins.Add(p);
-                    else
-                        data.Status = PluginStatus.Error;
-                }
+                if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))
+                    plugins.Add(p);
             }
 
             log.WriteLine("Finished startup.");

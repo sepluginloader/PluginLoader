@@ -57,19 +57,23 @@ namespace avaness.PluginLoader.Data
             if (dll == null)
             {
                 log.WriteLine("Failed to load " + ToString());
+                Error();
                 return false;
             }
 
             try
             {
                 a = Assembly.LoadFile(dll);
+                LoaderTools.Precompile(log, a);
                 return true;
             }
             catch (Exception e) 
             {
                 log.WriteLine($"Failed to load {ToString()} because of an error: " + e);
+                log.Flush();
+                Error();
+                return false;
             }
-            return false;
         }
 
 

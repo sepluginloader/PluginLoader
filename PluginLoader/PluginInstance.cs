@@ -88,16 +88,8 @@ namespace avaness.PluginLoader
             if (plugin == null)
                 return false;
 
-            try
-            {
-                plugin.Update();
-                return true;
-            }
-            catch (Exception e)
-            {
-                ThrowError($"Failed to update {data} because of an error: {e}");
-                return false;
-            }
+            plugin.Update();
+            return true;
         }
 
         public void Dispose()
