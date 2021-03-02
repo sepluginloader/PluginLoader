@@ -65,7 +65,7 @@ namespace avaness.PluginLoader
             log.WriteLine("Precompiling " + a);
             foreach (Type t in a.GetTypes())
             {
-                if(!IsStatic(t) && !HasStaticConstructor(t))
+                if(!HasStaticConstructor(t))
                 {
                     foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                     {
@@ -79,11 +79,6 @@ namespace avaness.PluginLoader
         private static bool HasStaticConstructor(Type t)
         {
             return t.GetConstructors(BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Instance).Any(c => c.IsStatic);
-        }
-
-        private static bool IsStatic(Type t)
-        {
-            return t.IsAbstract && t.IsSealed;
         }
     }
 }
