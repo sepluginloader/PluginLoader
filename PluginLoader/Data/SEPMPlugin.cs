@@ -49,12 +49,12 @@ namespace avaness.PluginLoader.Data
                     }
                     else
                     {
-                        Directory.Delete(dataFolder);
+                        Directory.Delete(dataFolder, true);
                     }
                 }
                 else
                 {
-                    Directory.Delete(dataFolder);
+                    Directory.Delete(dataFolder, true);
                 }
             }
 

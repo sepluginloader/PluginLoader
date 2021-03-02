@@ -11,6 +11,8 @@ namespace avaness.PluginLoader
     public class LogFile : IDisposable
     {
         private const string fileName = "loader.log";
+        private StreamWriter writer;
+
 
         public void WriteLine(string text, string prefix = null)
         {
@@ -25,9 +27,6 @@ namespace avaness.PluginLoader
                 MyLog.Default.WriteLine($"[{prefix}] {text}");
             }
         }
-
-
-        StreamWriter writer;
 
         public LogFile(string mainPath)
         {
