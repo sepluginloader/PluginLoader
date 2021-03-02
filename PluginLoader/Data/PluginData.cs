@@ -61,7 +61,8 @@ namespace avaness.PluginLoader.Data
             {
                 a = Assembly.LoadFile(dll);
                 // Precompile the entire assembly in order to force any missing method exceptions
-                LoaderTools.Precompile(log, a);
+                log.WriteLine("Precompiling " + a);
+                LoaderTools.Precompile(a);
                 return true;
             }
             catch (Exception e) 
