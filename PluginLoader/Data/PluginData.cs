@@ -49,16 +49,18 @@ namespace avaness.PluginLoader.Data
         public bool TryLoadAssembly(LogFile log, out Assembly a)
         {
             a = null;
-            string dll = GetDllFile();
-            if (dll == null)
-            {
-                log.WriteLine("Failed to load " + ToString());
-                Error();
-                return false;
-            }
 
             try
             {
+
+                string dll = GetDllFile();
+                if (dll == null)
+                {
+                    log.WriteLine("Failed to load " + ToString());
+                    Error();
+                    return false;
+                }
+
                 a = Assembly.LoadFile(dll);
                 // Precompile the entire assembly in order to force any missing method exceptions
                 log.WriteLine("Precompiling " + a);

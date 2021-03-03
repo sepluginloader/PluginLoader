@@ -26,6 +26,8 @@ namespace avaness.PluginLoader
 
         public Main()
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             Instance = this;
 
             Cursor temp = Cursor.Current;
@@ -46,7 +48,6 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            Stopwatch sw = Stopwatch.StartNew();
             foreach (PluginData data in Config.Data.Values)
             {
                 if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))

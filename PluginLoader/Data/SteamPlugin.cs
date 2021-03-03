@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,15 +9,56 @@ namespace avaness.PluginLoader.Data
 {
     public abstract class SteamPlugin : PluginData
     {
+        public override string FriendlyName { get; }
+
         public ulong WorkshopId { get; }
+        protected abstract string HashFile { get; }
+        protected string root, sourceFile, hashFile;
 
         protected SteamPlugin()
         {
         }
 
-        public SteamPlugin(ulong id) : base(id.ToString())
+        public SteamPlugin(ulong id, string sourceFile) : base(id.ToString())
         {
             WorkshopId = id;
+            this.sourceFile = sourceFile;
+            root = Path.GetDirectoryName(sourceFile);
+            hashFile = Path.Combine(root, HashFile);
+            CheckForUpdates();
+            FriendlyName = GetName();
         }
+
+        protected virtual void CheckForUpdates()
+        {
+            if (File.Exists(hashFile))
+            {
+                string oldHash = File.ReadAllText(hashFile);
+                string newHash = LoaderTools.GetHash1(sourceFile);
+                if (oldHash != newHash)
+                    Status = PluginStatus.PendingUpdate;
+            }
+            else
+            {
+                Status = PluginStatus.PendingUpdate;
+            }
+        }
+
+        protected abstract string GetName();
+
+        public override string GetDllFile()
+        {
+            if (Status == PluginStatus.PendingUpdate)
+            {
+                File.WriteAllText(hashFile, LoaderTools.GetHash1(sourceFile));
+                ApplyUpdate();
+                Status = PluginStatus.Updated;
+            }
+
+            return GetAssemblyFile();
+        }
+
+        protected abstract void ApplyUpdate();
+        protected abstract string GetAssemblyFile();
     }
 }
