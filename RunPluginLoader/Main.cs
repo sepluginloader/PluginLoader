@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using VRage.Plugins;
 using VRage.Utils;
 
@@ -18,7 +19,7 @@ namespace avaness.RunPluginLoader
             Log("Loading PluginLoader and dependences...");
             try
             {
-                string dir = AssemblyDirectory;
+                string dir = GetAssemblyDirectory();
                 harmony = Assembly.LoadFile(Path.Combine(dir, "0Harmony"));
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveHarmony;
                 Assembly pluginLoaderAssembly = Assembly.LoadFile(Path.Combine(dir, "PluginLoader"));
@@ -37,6 +38,7 @@ namespace avaness.RunPluginLoader
             catch (Exception e) 
             {
                 Log("Error: " + e);
+                MessageBox.Show(GetMainForm(), "Plugin Loader has crashed: " + e);
             }
         }
 
@@ -72,15 +74,20 @@ namespace avaness.RunPluginLoader
             pluginLoader?.Update();
         }
 
-        public static string AssemblyDirectory
+        private static string GetAssemblyDirectory()
         {
-            get
-            {
-                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                UriBuilder uri = new UriBuilder(codeBase);
-                string path = Uri.UnescapeDataString(uri.Path);
-                return Path.GetFullPath(Path.GetDirectoryName(path));
-            }
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            return Path.GetFullPath(Path.GetDirectoryName(path));
+        }
+
+        private static Form GetMainForm()
+        {
+            if (Application.OpenForms.Count > 0)
+                return Application.OpenForms[0];
+            else
+                return new Form { TopMost = true };
         }
     }
 }
