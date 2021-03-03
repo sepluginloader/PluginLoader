@@ -34,20 +34,33 @@ namespace avaness.PluginLoader
             plugin.Main(new Harmony(name), new Logger(name, log));
         }
 
-        public static string GetHash(string file)
+        public static string GetHash1(string file)
+        {
+            using (SHA1Managed sha = new SHA1Managed())
+            {
+                return GetHash(file, sha);
+            }
+        }
+
+        public static string GetHash256(string file)
+        {
+            using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
+            {
+                return GetHash(file, sha);
+            }
+        }
+
+        public static string GetHash(string file, HashAlgorithm hash)
         {
             using (FileStream fileStream = new FileStream(file, FileMode.Open))
             {
                 using (BufferedStream bufferedStream = new BufferedStream(fileStream))
                 {
-                    using (SHA1Managed sha = new SHA1Managed())
-                    {
-                        byte[] hash = sha.ComputeHash(bufferedStream);
-                        StringBuilder sb = new StringBuilder(2 * hash.Length);
-                        foreach (byte b in hash)
-                            sb.AppendFormat("{0:x2}", b);
-                        return sb.ToString();
-                    }
+                    byte[] data = hash.ComputeHash(bufferedStream);
+                    StringBuilder sb = new StringBuilder(2 * data.Length);
+                    foreach (byte b in data)
+                        sb.AppendFormat("{0:x2}", b);
+                    return sb.ToString();
                 }
             }
         }
@@ -66,15 +79,6 @@ namespace avaness.PluginLoader
                     foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                     {
                         Precompile(m);
-                    }
-                    foreach(PropertyInfo p in t.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-                    {
-                        MethodInfo getMethod = p.GetMethod;
-                        if (getMethod != null)
-                            Precompile(getMethod);
-                        MethodInfo setMethod = p.SetMethod;
-                        if (setMethod != null)
-                            Precompile(setMethod);
                     }
                 }
             }
