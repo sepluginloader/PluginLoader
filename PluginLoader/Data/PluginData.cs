@@ -34,25 +34,28 @@ namespace avaness.PluginLoader.Data
         public virtual string Id { get; set; }
         public bool Enabled { get; set; }
 
+        protected LogFile log;
+
         protected PluginData()
         {
 
         }
 
-        public PluginData(string id)
+        public PluginData(LogFile log, string id)
         {
+            this.log = log;
             Id = id;
         }
 
         public abstract string GetDllFile();
 
-        public bool TryLoadAssembly(LogFile log, out Assembly a)
+        public bool TryLoadAssembly(out Assembly a)
         {
             a = null;
 
             try
             {
-
+                // Get the file path
                 string dll = GetDllFile();
                 if (dll == null)
                 {
@@ -61,7 +64,16 @@ namespace avaness.PluginLoader.Data
                     return false;
                 }
 
+                // Verify the file
+                if (this is SteamPlugin && !Security.Validate(log, dll))
+                {
+                    ErrorSecurity();
+                    return false;
+                }
+
+                // Load the assembly
                 a = Assembly.LoadFile(dll);
+
                 // Precompile the entire assembly in order to force any missing method exceptions
                 log.WriteLine("Precompiling " + a);
                 LoaderTools.Precompile(a);
@@ -120,6 +132,12 @@ namespace avaness.PluginLoader.Data
         {
             Status = PluginStatus.Error;
             MessageBox.Show(LoaderTools.GetMainForm(), $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        protected void ErrorSecurity()
+        {
+            Status = PluginStatus.Error;
+            MessageBox.Show(LoaderTools.GetMainForm(), $"Error: Unable to load or update the plugin {this} because it is not allowed.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
     }
 }

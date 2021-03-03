@@ -26,7 +26,7 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public WorkshopPlugin(ulong id, string pluginFile) : base(id, pluginFile)
+        public WorkshopPlugin(LogFile log, ulong id, string pluginFile) : base(log, id, pluginFile)
 		{ }
 
         protected override void CheckForUpdates()
@@ -58,7 +58,10 @@ namespace avaness.PluginLoader.Data
 
         protected override void ApplyUpdate()
         {
-            File.Copy(sourceFile, assembly, true);
+            if (Security.Validate(log, sourceFile))
+                File.Copy(sourceFile, assembly, true);
+            else
+                ErrorSecurity();
         }
 
         protected override string GetAssemblyFile()

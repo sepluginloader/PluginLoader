@@ -35,9 +35,8 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public LocalPlugin(string fullPath) : base(fullPath)
-        {
-        }
+        public LocalPlugin(LogFile log, string fullPath) : base(log, fullPath)
+        { }
 
         public override string GetDllFile()
         {

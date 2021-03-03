@@ -19,7 +19,7 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public SEPMPlugin(ulong id, string zipFile) : base(id, zipFile)
+        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(log, id, zipFile)
         { }
 
         protected override void CheckForUpdates()
@@ -42,6 +42,8 @@ namespace avaness.PluginLoader.Data
 
         protected override string GetAssemblyFile()
         {
+            if (!Directory.Exists(dataFolder))
+                return null;
             return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.Equals("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
         }
 

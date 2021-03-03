@@ -19,7 +19,7 @@ namespace avaness.PluginLoader.Data
         {
         }
 
-        public SteamPlugin(ulong id, string sourceFile) : base(id.ToString())
+        public SteamPlugin(LogFile log, ulong id, string sourceFile) : base(log, id.ToString())
         {
             WorkshopId = id;
             this.sourceFile = sourceFile;
@@ -54,8 +54,10 @@ namespace avaness.PluginLoader.Data
                 ApplyUpdate();
                 Status = PluginStatus.Updated;
             }
-
-            return GetAssemblyFile();
+            string dll = GetAssemblyFile();
+            if (dll == null || !File.Exists(dll))
+                return null;
+            return dll;
         }
 
         protected abstract void ApplyUpdate();

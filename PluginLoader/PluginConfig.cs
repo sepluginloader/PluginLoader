@@ -85,7 +85,6 @@ namespace avaness.PluginLoader
                 data.Enabled = false;
         }
 
-
         private HashSet<string> GetPlugins()
         {
             log.WriteLine("Finding installed plugins...");
@@ -94,12 +93,14 @@ namespace avaness.PluginLoader
             // Find local plugins
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
-                LocalPlugin local = new LocalPlugin(dll);
+                LocalPlugin local = new LocalPlugin(log, dll);
                 if (!local.FriendlyName.StartsWith("0Harmony"))
                 {
                     installed.Add(local.Id);
-                    if (!plugins.ContainsKey(local.Id))
-                        plugins.Add(local.Id, local);
+                    if (plugins.TryGetValue(local.Id, out PluginData data))
+                        local.CopyFrom(data);
+
+                    plugins[local.Id] = local;
                 }
             }
 
@@ -147,7 +148,7 @@ namespace avaness.PluginLoader
                 string name = Path.GetFileName(file);
                 if (!name.StartsWith("0Harmony", StringComparison.OrdinalIgnoreCase))
                 {
-                    plugin = new WorkshopPlugin(id, file);
+                    plugin = new WorkshopPlugin(log, id, file);
                     return true;
                 }
             }
@@ -155,7 +156,7 @@ namespace avaness.PluginLoader
             string sepm = Path.Combine(modRoot, "Data", "sepm-plugin.zip");
             if (File.Exists(sepm))
             {
-                plugin = new SEPMPlugin(id, sepm);
+                plugin = new SEPMPlugin(log, id, sepm);
                 return true;
             }
 
