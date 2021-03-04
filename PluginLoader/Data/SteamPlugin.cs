@@ -50,6 +50,7 @@ namespace avaness.PluginLoader.Data
         {
             if (Status == PluginStatus.PendingUpdate)
             {
+                log.WriteLine("Updating " + this);
                 File.WriteAllText(hashFile, LoaderTools.GetHash1(sourceFile));
                 ApplyUpdate();
                 Status = PluginStatus.Updated;

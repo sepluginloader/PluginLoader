@@ -65,7 +65,7 @@ namespace avaness.PluginLoader.Data
                 }
 
                 // Verify the file
-                if (this is SteamPlugin && !Security.Validate(log, dll))
+                if (this is SteamPlugin steam && !Security.Validate(steam.WorkshopId))
                 {
                     ErrorSecurity();
                     return false;
@@ -137,7 +137,8 @@ namespace avaness.PluginLoader.Data
         protected void ErrorSecurity()
         {
             Status = PluginStatus.Error;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"Error: Unable to load or update the plugin {this} because it is not allowed.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not allowed!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            log.WriteLine("Error: " + this + " is not on the whitelist!");
         }
     }
 }
