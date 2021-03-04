@@ -71,14 +71,14 @@ namespace avaness.PluginLoader
 			modTable.SetCustomColumnWidths(new float[]
 			{
 				0.15f,
-				0.4f,
-				0.2f,
-				0.25f
+				0.45f,
+				0.3f,
+				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnName(1, new StringBuilder("Name"));
-			modTable.SetColumnName(2, new StringBuilder("Enabled"));
-			modTable.SetColumnName(3, new StringBuilder("Status"));
+			modTable.SetColumnName(2, new StringBuilder("Status"));
+			modTable.SetColumnName(3, new StringBuilder("Enabled"));
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
@@ -95,6 +95,9 @@ namespace avaness.PluginLoader
 				MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
 				row.AddCell(nameCell);
 
+				MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
+				row.AddCell(statusCell);
+
 				MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
                 MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: data.Enabled)
                 {
@@ -106,9 +109,6 @@ namespace avaness.PluginLoader
 				enabledCell.Control = enabledBox;
                 modTable.Controls.Add(enabledBox);
                 row.AddCell(enabledCell);
-
-				MyGuiControlTable.Cell updateCell = new MyGuiControlTable.Cell(data.StatusString);
-				row.AddCell(updateCell);
             }
             modTable.ItemDoubleClicked += RowDoubleClicked;
             modTable.SelectedRowIndex = null;
