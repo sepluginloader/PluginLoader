@@ -1,6 +1,7 @@
 ﻿using avaness.PluginLoader.Data;
 using Sandbox;
 using Sandbox.Graphics.GUI;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -19,9 +20,11 @@ namespace avaness.PluginLoader
 		private const float tableWidth = 0.8f;
 		private const float tableHeight = 0.7f;
         private const float sizeX = 1;
-        private const float sizeY = 0.75f;
+        private const float sizeY = 0.76f;
 
 		private Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
+		private StringBuilder tempBuilder = new StringBuilder();
+		private MyGuiControlTable modTable;
 
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
@@ -60,7 +63,18 @@ namespace avaness.PluginLoader
 
 			origin.Y += space;
 
-			MyGuiControlTable modTable = new MyGuiControlTable
+			MyGuiControlTextbox searchBox = new MyGuiControlTextbox(origin)
+			{
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
+				Size = new Vector2(size.X * tableWidth, 0),
+			};
+			Controls.Add(searchBox);
+            searchBox.TextChanged += SearchBox_TextChanged;
+
+			origin.Y += searchBox.Size.Y + MyGuiConstants.TEXTBOX_TEXT_OFFSET.Y;
+			MyLog.Default.WriteLine($"Margin: {searchBox.Margin} Size: {searchBox.Size} GetSize: {searchBox.GetSize() ?? new Vector2()} Rect: {searchBox.Rectangle} FocusRect: {searchBox.FocusRectangle}");
+
+			modTable = new MyGuiControlTable
 			{
 				Position = origin,
 				Size = new Vector2(size.X * tableWidth, size.Y * tableHeight),
@@ -82,36 +96,9 @@ namespace avaness.PluginLoader
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
-
-			PluginConfig config = Main.Instance.Config;
-			foreach(PluginData data in config.Data.Values)
-            {
-				MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
-				modTable.Add(row);
-
-				MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
-				row.AddCell(sourceCell);
-
-				MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
-				row.AddCell(nameCell);
-
-				MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
-				row.AddCell(statusCell);
-
-				MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
-                MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: data.Enabled)
-                {
-                    UserData = data,
-                    Enabled = true,
-                    Visible = true
-                };
-                enabledBox.IsCheckedChanged += IsCheckedChanged;
-				enabledCell.Control = enabledBox;
-                modTable.Controls.Add(enabledBox);
-                row.AddCell(enabledCell);
-            }
+			
+			ResetTable();
             modTable.ItemDoubleClicked += RowDoubleClicked;
-            modTable.SelectedRowIndex = null;
 
 			MyGuiControlSeparatorList midBar = new MyGuiControlSeparatorList();
 			midBar.AddHorizontal(new Vector2(origin.X - barWidth / 2, origin.Y), barWidth);
@@ -133,7 +120,64 @@ namespace avaness.PluginLoader
 			CloseButtonEnabled = true;
         }
 
-        private void RowDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
+        private void ResetTable(string[] filter = null)
+		{
+			modTable.Clear();
+			modTable.Controls.Clear();
+			PluginConfig config = Main.Instance.Config;
+			foreach (PluginData data in config.Data.Values)
+			{
+				if(FilterName(data.FriendlyName, filter))
+				{
+					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
+					modTable.Add(row);
+
+					MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
+					row.AddCell(sourceCell);
+
+					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
+					row.AddCell(nameCell);
+
+					MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
+					row.AddCell(statusCell);
+
+					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
+					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: data.Enabled)
+					{
+						UserData = data,
+						Enabled = true,
+						Visible = true
+					};
+					enabledBox.IsCheckedChanged += IsCheckedChanged;
+					enabledCell.Control = enabledBox;
+					modTable.Controls.Add(enabledBox);
+					row.AddCell(enabledCell);
+				}
+			}
+		}
+
+        private void SearchBox_TextChanged(MyGuiControlTextbox txt)
+        {
+			txt.GetText(tempBuilder);
+			string s = tempBuilder.ToString().Trim();
+			string[] args = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			ResetTable(args);
+			tempBuilder.Clear();
+        }
+
+		private bool FilterName(string name, string[] filter)
+        {
+			if (filter == null || filter.Length == 0)
+				return true;
+			foreach(string s in filter)
+            {
+				if (!name.Contains(s, StringComparison.OrdinalIgnoreCase))
+					return false;
+            }
+			return true;
+        }
+
+		private void RowDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
 			int i = args.RowIndex;
 			if (i >= 0 && i < table.RowsCount)
