@@ -15,6 +15,7 @@ namespace avaness.PluginLoader
             2292390607, // Tool Switcher
             2413859055, // SteamWorkshopFix
             2413918072, // SEWorldGenPlugin v2
+            2414532651, // DecalFixPlugin
             // SEPM - Most of these are old or broken
             2004495632, // BlockPicker
             1937528740, // GridFilter
