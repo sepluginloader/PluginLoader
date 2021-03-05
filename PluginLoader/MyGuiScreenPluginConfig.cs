@@ -90,9 +90,13 @@ namespace avaness.PluginLoader
 				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
+			modTable.SetColumnComparison(0, CellTextComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
+			modTable.SetColumnComparison(1, CellTextComparison);
 			modTable.SetColumnName(2, new StringBuilder("Status"));
+			modTable.SetColumnComparison(2, CellTextComparison);
 			modTable.SetColumnName(3, new StringBuilder("Enabled"));
+			modTable.SetColumnComparison(3, CellCheckedComparison);
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
@@ -118,6 +122,18 @@ namespace avaness.PluginLoader
 			Controls.Add(btnClose);
 
 			CloseButtonEnabled = true;
+        }
+
+        private int CellCheckedComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        {
+			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
+				return xBox.IsChecked.CompareTo(yBox.IsChecked);
+			return 0;
+        }
+
+        private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        {
+			return x.Text.CompareTo(y.Text);
         }
 
         private void ResetTable(string[] filter = null)
