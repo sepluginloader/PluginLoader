@@ -140,5 +140,7 @@ namespace avaness.PluginLoader.Data
             MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not allowed!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             log.WriteLine("Error: " + this + " is not on the whitelist!");
         }
+
+        public abstract void Show();
     }
 }

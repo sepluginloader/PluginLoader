@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Sandbox.Graphics.GUI;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace avaness.PluginLoader.Data
 {
@@ -63,5 +59,10 @@ namespace avaness.PluginLoader.Data
 
         protected abstract void ApplyUpdate();
         protected abstract string GetAssemblyFile();
+
+        public override void Show()
+        {
+            MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + WorkshopId, UrlOpenMode.SteamOrExternalWithConfirm);
+        }
     }
 }

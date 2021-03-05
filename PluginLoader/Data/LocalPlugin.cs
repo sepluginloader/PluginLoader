@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage;
 
 namespace avaness.PluginLoader.Data
@@ -48,6 +44,13 @@ namespace avaness.PluginLoader.Data
         public override string ToString()
         {
             return Id;
+        }
+
+        public override void Show()
+        {
+            string file = Path.GetFullPath(Id);
+            if (File.Exists(file))
+                Process.Start("explorer.exe", $"/select, \"{file}\"");
         }
     }
 }

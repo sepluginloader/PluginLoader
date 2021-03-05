@@ -1,16 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
-using HarmonyLib;
+﻿using System.IO;
 using VRage;
-using VRage.Plugins;
 
 namespace avaness.PluginLoader.Data
 {

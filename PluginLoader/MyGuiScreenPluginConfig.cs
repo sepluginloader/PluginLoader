@@ -183,16 +183,8 @@ namespace avaness.PluginLoader
 			if (i >= 0 && i < table.RowsCount)
             {
                 MyGuiControlTable.Row row = table.GetRow(i);
-				if(row.UserData is SteamPlugin steam)
-                {
-					MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + steam.WorkshopId, UrlOpenMode.SteamOrExternalWithConfirm);
-				}
-				else if(row.UserData is LocalPlugin local)
-                {
-					string file = Path.GetFullPath(local.Id);
-					if (File.Exists(file))
-						Process.Start("explorer.exe", $"/select, \"{file}\"");
-                }
+				if (row.UserData is PluginData data)
+					data.Show();
 			}
         }
 
