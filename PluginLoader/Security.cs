@@ -9,7 +9,7 @@ namespace avaness.PluginLoader
 {
     internal static class Security
     {
-        private readonly static HashSet<ulong> whitelist = new HashSet<ulong>
+        private readonly static HashSet<ulong> whitelistItemIds = new HashSet<ulong>
         {
             // Workshop
             2292390607, // Tool Switcher
@@ -26,9 +26,18 @@ namespace avaness.PluginLoader
             2037606896, // CameraLCD
         };
 
-        public static bool Validate(ulong steamId)
+        private readonly static HashSet<string> whitelistItemSha = new HashSet<string>()
         {
-            return whitelist.Contains(steamId);
+            
+        };
+
+        public static bool Validate(ulong steamId, string file, out string sha256)
+        {
+            sha256 = null;
+            if (whitelistItemIds.Contains(steamId))
+                return true;
+            sha256 = LoaderTools.GetHash256(file);
+            return whitelistItemSha.Contains(sha256);
         }
     }
 }

@@ -49,7 +49,11 @@ namespace avaness.PluginLoader.Data
                 log.WriteLine("Updating " + this);
                 File.WriteAllText(hashFile, LoaderTools.GetHash1(sourceFile));
                 ApplyUpdate();
-                Status = PluginStatus.Updated;
+                if (Status == PluginStatus.PendingUpdate)
+                    Status = PluginStatus.Updated;
+                else
+                    return null;
+                    
             }
             string dll = GetAssemblyFile();
             if (dll == null || !File.Exists(dll))

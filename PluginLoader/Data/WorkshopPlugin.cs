@@ -47,7 +47,10 @@ namespace avaness.PluginLoader.Data
 
         protected override void ApplyUpdate()
         {
-            File.Copy(sourceFile, assembly, true);
+            if (Security.Validate(WorkshopId, sourceFile, out string hash))
+                File.Copy(sourceFile, assembly, true);
+            else
+                ErrorSecurity(hash);
         }
 
         protected override string GetAssemblyFile()

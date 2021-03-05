@@ -25,6 +25,8 @@ namespace avaness.PluginLoader.Data
                         return "Updated";
                     case PluginStatus.Error:
                         return "Error!";
+                    case PluginStatus.Blocked:
+                        return "Not whitelisted!";
                     default:
                         return "";
                 }
@@ -57,6 +59,9 @@ namespace avaness.PluginLoader.Data
             {
                 // Get the file path
                 string dll = GetDllFile();
+                if (Status == PluginStatus.Blocked)
+                    return false;
+
                 if (dll == null)
                 {
                     log.WriteLine("Failed to load " + ToString());
@@ -65,9 +70,9 @@ namespace avaness.PluginLoader.Data
                 }
 
                 // Verify the file
-                if (this is SteamPlugin steam && !Security.Validate(steam.WorkshopId))
+                if (this is SteamPlugin steam && !Security.Validate(steam.WorkshopId, dll, out string hash))
                 {
-                    ErrorSecurity();
+                    ErrorSecurity(hash);
                     return false;
                 }
 
@@ -134,11 +139,11 @@ namespace avaness.PluginLoader.Data
             MessageBox.Show(LoaderTools.GetMainForm(), $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        protected void ErrorSecurity()
+        protected void ErrorSecurity(string hash)
         {
-            Status = PluginStatus.Error;
+            Status = PluginStatus.Blocked;
             MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not allowed!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            log.WriteLine("Error: " + this + " is not on the whitelist!");
+            log.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 
         public abstract void Show();
