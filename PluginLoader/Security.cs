@@ -23,7 +23,7 @@ namespace avaness.PluginLoader
 
         private readonly static HashSet<string> whitelistItemSha = new HashSet<string>()
         {
-
+            "fa6d204bcb706bb5ba841e06e19b2793f324d591093e67ca0752d681fb5e6352", // Jump Selector Plugin
         };
 
         public static bool Validate(ulong steamId, string file, out string sha256)
