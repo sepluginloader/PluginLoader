@@ -66,7 +66,7 @@ namespace avaness.PluginLoader
         }
 
         /// <summary>
-        /// This method attempts to disable JIT compiling for the assembly. 
+        /// This method attempts to disable JIT compiling for the assembly.
         /// This method will force any member access exceptions by methods to be thrown now instead of later.
         /// </summary>
         public static void Precompile(Assembly a)
@@ -74,12 +74,12 @@ namespace avaness.PluginLoader
             foreach (Type t in a.GetTypes())
             {
                 // Static constructors allow for early code execution which can cause issues later in the game
-                if(!HasStaticConstructor(t))
+                if (HasStaticConstructor(t))
+                    continue;
+
+                foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                 {
-                    foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-                    {
-                        Precompile(m);
-                    }
+                    Precompile(m);
                 }
             }
         }

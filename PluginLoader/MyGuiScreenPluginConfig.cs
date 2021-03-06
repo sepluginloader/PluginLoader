@@ -3,10 +3,7 @@ using Sandbox;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Windows.Forms;
 using VRage.Utils;
 using VRageMath;
 
@@ -53,7 +50,7 @@ namespace avaness.PluginLoader
 
 			Vector2 size = m_size.Value;
 			Vector2 origin = title.Position;
-			
+
 			origin.Y += title.GetTextSize().Y / 2 + space;
 
 			float barWidth = size.X * MyGuiScreenPluginConfig.barWidth;
@@ -100,7 +97,7 @@ namespace avaness.PluginLoader
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
-			
+
 			ResetTable();
             modTable.ItemDoubleClicked += RowDoubleClicked;
 

@@ -1,7 +1,5 @@
 ﻿using HarmonyLib;
 using Sandbox.Game.World;
-using VRage.Game.Components;
-using VRage.Utils;
 
 namespace avaness.PluginLoader.Patch
 {

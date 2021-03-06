@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
 using avaness.PluginLoader.Data;
-using Sandbox.Engine.Networking;
-using VRage.GameServices;
-using VRage.Input;
-using VRage;
 
 namespace avaness.PluginLoader
 {

@@ -84,7 +84,7 @@ namespace avaness.PluginLoader.Data
                 LoaderTools.Precompile(a);
                 return true;
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 string name = ToString();
                 log.WriteLine($"Failed to load {name} because of an error: " + e);
@@ -142,7 +142,7 @@ namespace avaness.PluginLoader.Data
         protected void ErrorSecurity(string hash)
         {
             Status = PluginStatus.Blocked;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not allowed!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             log.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 

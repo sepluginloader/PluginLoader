@@ -21,7 +21,11 @@ namespace avaness.PluginLoader.Data
             this.sourceFile = sourceFile;
             root = Path.GetDirectoryName(sourceFile);
             hashFile = Path.Combine(root, HashFile);
+
+            // See https://www.jetbrains.com/help/rider/VirtualMemberCallInConstructor.html
             CheckForUpdates();
+
+            // See https://www.jetbrains.com/help/rider/VirtualMemberCallInConstructor.html
             FriendlyName = GetName();
         }
 
@@ -53,7 +57,7 @@ namespace avaness.PluginLoader.Data
                     Status = PluginStatus.Updated;
                 else
                     return null;
-                    
+
             }
             string dll = GetAssemblyFile();
             if (dll == null || !File.Exists(dll))

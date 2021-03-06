@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Utils;
 
 namespace avaness.PluginLoader
@@ -36,15 +32,14 @@ namespace avaness.PluginLoader
 
         public void Dispose()
         {
-            if (writer != null)
-            {
-                writer.Flush();
-                writer.Close();
-                writer = null;
-            }
+            if (writer == null)
+                return;
 
+            writer.Flush();
+            writer.Close();
+            writer = null;
         }
-        
+
         public void Flush()
         {
             writer.Flush();

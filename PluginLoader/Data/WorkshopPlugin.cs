@@ -3,7 +3,7 @@ using VRage;
 
 namespace avaness.PluginLoader.Data
 {
-    public partial class WorkshopPlugin : SteamPlugin
+    public class WorkshopPlugin : SteamPlugin
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);
         protected override string HashFile => "hash.txt";

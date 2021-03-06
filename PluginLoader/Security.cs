@@ -1,9 +1,4 @@
-﻿using avaness.PluginLoader.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace avaness.PluginLoader
 {
@@ -19,7 +14,7 @@ namespace avaness.PluginLoader
             // SEPM - Most of these are old or broken
             2004495632, // BlockPicker
             1937528740, // GridFilter
-            2029854486, // RemovePlanetSizeLimits 
+            2029854486, // RemovePlanetSizeLimits
             2171994463, // ClientFixes
             2156683844, // SEWorldGenPlugin
             1937530079, // Mass Rename
@@ -28,7 +23,7 @@ namespace avaness.PluginLoader
 
         private readonly static HashSet<string> whitelistItemSha = new HashSet<string>()
         {
-            
+
         };
 
         public static bool Validate(ulong steamId, string file, out string sha256)

@@ -2,7 +2,6 @@
 using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game.GUI;
-using System;
 using System.Text;
 using VRage.Utils;
 using VRageMath;
@@ -22,7 +21,7 @@ namespace avaness.PluginLoader.Patch
                     BorderHighlightEnabled = true,
                     BorderColor = Vector4.Zero
                 });
-            
+
         }
 
         private static void OpenMenu(MyGuiControlButton btn)
