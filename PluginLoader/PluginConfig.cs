@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
 using avaness.PluginLoader.Data;
-using Sandbox.Engine.Networking;
-using VRage.GameServices;
-using VRage.Input;
-using VRage;
 
 namespace avaness.PluginLoader
 {
@@ -85,7 +80,6 @@ namespace avaness.PluginLoader
                 data.Enabled = false;
         }
 
-
         private HashSet<string> GetPlugins()
         {
             log.WriteLine("Finding installed plugins...");
@@ -94,12 +88,14 @@ namespace avaness.PluginLoader
             // Find local plugins
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
-                LocalPlugin local = new LocalPlugin(dll);
+                LocalPlugin local = new LocalPlugin(log, dll);
                 if (!local.FriendlyName.StartsWith("0Harmony"))
                 {
                     installed.Add(local.Id);
-                    if (!plugins.ContainsKey(local.Id))
-                        plugins.Add(local.Id, local);
+                    if (plugins.TryGetValue(local.Id, out PluginData data))
+                        local.CopyFrom(data);
+
+                    plugins[local.Id] = local;
                 }
             }
 
@@ -138,30 +134,6 @@ namespace avaness.PluginLoader
             return installed;
         }
 
-        public void CheckForNewMods(HashSet<ulong> modIds)
-        {
-            string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
-            foreach (ulong id in modIds)
-            {
-                if(!plugins.ContainsKey(id.ToString()))
-                {
-                    string modRoot = Path.Combine(workshop, id.ToString());
-                    if (Directory.Exists(modRoot))
-                    {
-                        try
-                        {
-                            if (TryGetPlugin(id, modRoot, out PluginData plugin))
-                            {
-                                log.WriteLine(plugin + " was just installed.");
-                                plugins.Add(plugin.Id, plugin);
-                            }
-                        }
-                        catch { }
-                    }
-                }
-            }
-        }
-
         private bool TryGetPlugin(ulong id, string modRoot, out PluginData plugin)
         {
             plugin = null;
@@ -171,7 +143,7 @@ namespace avaness.PluginLoader
                 string name = Path.GetFileName(file);
                 if (!name.StartsWith("0Harmony", StringComparison.OrdinalIgnoreCase))
                 {
-                    plugin = new WorkshopPlugin(id, file);
+                    plugin = new WorkshopPlugin(log, id, file);
                     return true;
                 }
             }

@@ -15,10 +15,9 @@ namespace avaness.PluginLoader
     public class Main : IPlugin
     {
         public static Main Instance;
-        
+
         public PluginConfig Config { get; }
 
-        private readonly string mainPath;
         private LogFile log;
         private bool init;
 
@@ -26,12 +25,14 @@ namespace avaness.PluginLoader
 
         public Main()
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             Instance = this;
 
             Cursor temp = Cursor.Current;
             Cursor.Current = Cursors.AppStarting;
 
-            mainPath = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+            string mainPath = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
             if (!Directory.Exists(mainPath))
                 Directory.CreateDirectory(mainPath);
 
@@ -46,7 +47,6 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            Stopwatch sw = Stopwatch.StartNew();
             foreach (PluginData data in Config.Data.Values)
             {
                 if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))
@@ -133,7 +133,7 @@ namespace avaness.PluginLoader
 
         private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {
-            string assembly = args.RequestingAssembly?.GetName()?.ToString();
+            string assembly = args.RequestingAssembly?.GetName().ToString();
             if (args.Name.Contains("0Harmony"))
             {
                 if (assembly != null)

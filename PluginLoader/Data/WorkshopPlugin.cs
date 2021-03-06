@@ -1,45 +1,61 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
-using HarmonyLib;
+﻿using System.IO;
 using VRage;
-using VRage.Plugins;
 
 namespace avaness.PluginLoader.Data
 {
-    public partial class WorkshopPlugin : SteamPlugin
+    public class WorkshopPlugin : SteamPlugin
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);
-        public override string FriendlyName { get; }
+        protected override string HashFile => "hash.txt";
 
-        private readonly string assembly;
+        private string assembly;
 
         protected WorkshopPlugin()
         {
 
         }
 
-        public WorkshopPlugin(ulong id, string pluginFile) : base(id)
-		{
-            string name = Path.GetFileNameWithoutExtension(pluginFile).Replace('_', ' ');
-            if (string.IsNullOrWhiteSpace(name))
-                FriendlyName = Id;
+        public WorkshopPlugin(LogFile log, ulong id, string pluginFile) : base(log, id, pluginFile)
+		{ }
+
+        protected override void CheckForUpdates()
+        {
+            assembly = Path.Combine(root, Path.GetFileNameWithoutExtension(sourceFile) + ".dll");
+
+            bool found = false;
+            foreach (string dll in Directory.EnumerateFiles(root, "*.dll"))
+            {
+                if (dll == assembly)
+                    found = true;
+                else
+                    File.Delete(dll);
+            }
+            if (!found)
+                Status = PluginStatus.PendingUpdate;
             else
-                FriendlyName = name;
-            assembly = pluginFile;
+                base.CheckForUpdates();
         }
 
-        public override string GetDllFile()
+        protected override string GetName()
+        {
+            string name = Path.GetFileNameWithoutExtension(sourceFile).Replace('_', ' ');
+            if (string.IsNullOrWhiteSpace(name))
+                return Id;
+            else
+                return name;
+        }
+
+        protected override void ApplyUpdate()
+        {
+            if (Security.Validate(WorkshopId, sourceFile, out string hash))
+                File.Copy(sourceFile, assembly, true);
+            else
+                ErrorSecurity(hash);
+        }
+
+        protected override string GetAssemblyFile()
         {
             return assembly;
-
         }
     }
 }

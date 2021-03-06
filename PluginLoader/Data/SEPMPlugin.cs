@@ -7,106 +7,69 @@ namespace avaness.PluginLoader.Data
 {
     public class SEPMPlugin : SteamPlugin
     {
-        private const string HashFile = "sepm-plugin.txt";
         private const string NameFile = "name.txt";
 
         public override string Source => "SEPM";
-        public override string FriendlyName => name;
+        protected override string HashFile => "sepm-plugin.txt";
 
-        private string name;
-        private bool extracted;
-        private readonly string zipFile;
-        private readonly LogFile log;
+        private string dataFolder;
 
         protected SEPMPlugin()
         {
 
         }
 
-        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(id)
+        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(log, id, zipFile)
+        { }
+
+        protected override void CheckForUpdates()
         {
-            this.log = log;
-            this.zipFile = zipFile;
-            ExamineZip();
+            dataFolder = Path.Combine(root, "sepm-plugin");
+
+            if (Directory.Exists(dataFolder))
+                base.CheckForUpdates();
+            else
+                Status = PluginStatus.PendingUpdate;
         }
 
-        private void ExamineZip()
+        protected override void ApplyUpdate()
         {
-            log.WriteLine($"Examining sepm zip file of {Id}");
-            string folder = Path.GetDirectoryName(zipFile);
-            string hashFile = Path.Combine(folder, HashFile);
-            string dataFolder = GetDataFolder(folder);
-
-            // Is data already extracted?
             if (Directory.Exists(dataFolder))
-            {
-                if (File.Exists(hashFile))
-                {
-                    string hash = LoaderTools.GetHash(zipFile);
-                    if (File.ReadAllText(hashFile) == hash)
-                    {
-                        extracted = true;
-                    }
-                    else
-                    {
-                        Directory.Delete(dataFolder, true);
-                    }
-                }
-                else
-                {
-                    Directory.Delete(dataFolder, true);
-                }
-            }
+                Directory.Delete(dataFolder, true);
 
-            // Find the name of the plugin
-            if (extracted)
+            ZipFile.ExtractToDirectory(sourceFile, dataFolder);
+        }
+
+        protected override string GetAssemblyFile()
+        {
+            if (!Directory.Exists(dataFolder))
+                return null;
+            return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.Equals("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        }
+
+        protected override string GetName()
+        {
+            if (Status == PluginStatus.PendingUpdate)
             {
-                string nameFile = Path.Combine(dataFolder, NameFile);
-                if (File.Exists(nameFile))
-                    name = File.ReadAllText(nameFile);
-                Status = PluginStatus.None;
-            }
-            else
-            {
-                log.WriteLine($"{Id} requires an update.");
-                Status = PluginStatus.PendingUpdate;
-                using (ZipArchive archive = ZipFile.OpenRead(zipFile))
+                using (ZipArchive archive = ZipFile.OpenRead(sourceFile))
                 {
                     ZipArchiveEntry nameEntry = archive.Entries.First(e => e.FullName == NameFile);
                     if (nameEntry != null)
                     {
                         string temp = new StreamReader(nameEntry.Open()).ReadToEnd();
                         if (temp.Length != 0)
-                            name = temp;
+                            return temp;
                     }
                 }
             }
-        }
-
-        private string GetDataFolder(string parent)
-        {
-            return Path.Combine(parent, Path.GetFileNameWithoutExtension(zipFile).ToLowerInvariant());
-        }
-
-        public override string GetDllFile()
-        {
-            if (zipFile == null)
-                return null;
-
-            string folder = Path.GetDirectoryName(zipFile);
-            string dataFolder = GetDataFolder(folder);
-
-            if (!extracted)
+            else
             {
-                log?.WriteLine($"Updating {Id}");
-                string hashFile = Path.Combine(folder, HashFile);
-                File.WriteAllText(hashFile, LoaderTools.GetHash(zipFile));
-                ZipFile.ExtractToDirectory(zipFile, dataFolder);
-                extracted = true;
-                Status = PluginStatus.Updated;
+                string nameFile = Path.Combine(dataFolder, NameFile);
+                if (File.Exists(nameFile))
+                    return File.ReadAllText(nameFile);
             }
 
-            return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.EndsWith("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return Id;
         }
     }
 }

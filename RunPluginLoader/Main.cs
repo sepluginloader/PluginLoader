@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,12 +10,12 @@ namespace avaness.RunPluginLoader
 {
     public class Main : IPlugin
     {
-        private IPlugin pluginLoader;
-        private Assembly harmony;
+        private readonly IPlugin pluginLoader;
+        private readonly Assembly harmony;
 
         public Main()
         {
-            Log("Loading PluginLoader and dependences...");
+            Log("Loading PluginLoader and dependencies...");
             try
             {
                 string dir = GetAssemblyDirectory();
@@ -24,10 +23,10 @@ namespace avaness.RunPluginLoader
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveHarmony;
                 Assembly pluginLoaderAssembly = Assembly.LoadFile(Path.Combine(dir, "PluginLoader"));
                 Type pluginType = typeof(IPlugin);
-                IEnumerable<Type> types = pluginLoaderAssembly.GetTypes().Where(t => pluginType.IsAssignableFrom(t) && t.Name.Contains("Main"));
-                if (types.Any())
+                Type pluginLoaderMain = pluginLoaderAssembly.GetTypes().Where(t => pluginType.IsAssignableFrom(t) && t.Name.Contains("Main")).FirstOrDefault();
+                if (pluginLoaderMain != null)
                 {
-                    pluginLoader = (IPlugin)Activator.CreateInstance(types.First());
+                    pluginLoader = (IPlugin)Activator.CreateInstance(pluginLoaderMain);
                     Log($"PluginLoader started.");
                 }
                 else
@@ -35,10 +34,10 @@ namespace avaness.RunPluginLoader
                     Log("Failed to find PluginLoader!");
                 }
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 Log("Error: " + e);
-                MessageBox.Show(GetMainForm(), "Plugin Loader has crashed: " + e);
+                MessageBox.Show(GetMainForm(), "Plugin Loader crashed: " + e);
             }
         }
 

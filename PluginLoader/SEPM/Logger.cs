@@ -1,6 +1,4 @@
-﻿using System;
-using avaness.PluginLoader;
-using HarmonyLib;
+﻿using avaness.PluginLoader;
 
 namespace SEPluginManager
 {

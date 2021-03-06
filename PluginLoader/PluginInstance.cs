@@ -120,7 +120,7 @@ namespace avaness.PluginLoader
         public static bool TryGet(LogFile log, PluginData data, out PluginInstance instance)
         {
             instance = null;
-            if (!data.TryLoadAssembly(log, out Assembly a))
+            if (!data.TryLoadAssembly(out Assembly a))
                 return false;
 
             Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
