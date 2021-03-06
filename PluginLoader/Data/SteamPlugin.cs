@@ -22,10 +22,8 @@ namespace avaness.PluginLoader.Data
             root = Path.GetDirectoryName(sourceFile);
             hashFile = Path.Combine(root, HashFile);
 
-            // See https://www.jetbrains.com/help/rider/VirtualMemberCallInConstructor.html
             CheckForUpdates();
 
-            // See https://www.jetbrains.com/help/rider/VirtualMemberCallInConstructor.html
             FriendlyName = GetName();
         }
 
