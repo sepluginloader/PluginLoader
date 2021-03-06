@@ -23,10 +23,10 @@ namespace avaness.RunPluginLoader
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveHarmony;
                 Assembly pluginLoaderAssembly = Assembly.LoadFile(Path.Combine(dir, "PluginLoader"));
                 Type pluginType = typeof(IPlugin);
-                var types = pluginLoaderAssembly.GetTypes().Where(t => pluginType.IsAssignableFrom(t) && t.Name.Contains("Main")).ToList();
-                if (types.Any())
+                Type pluginLoaderMain = pluginLoaderAssembly.GetTypes().Where(t => pluginType.IsAssignableFrom(t) && t.Name.Contains("Main")).FirstOrDefault();
+                if (pluginLoaderMain != null)
                 {
-                    pluginLoader = (IPlugin)Activator.CreateInstance(types.First());
+                    pluginLoader = (IPlugin)Activator.CreateInstance(pluginLoaderMain);
                     Log($"PluginLoader started.");
                 }
                 else

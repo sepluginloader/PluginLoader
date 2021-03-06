@@ -129,6 +129,6 @@ goto waitfile
 :copyfile
 echo Copying file.
 copy /y "$(TargetPath)" %25target%25
-copy /y "$(TargetPath)" "C:\Users\austi\AppData\Roaming\SpaceEngineers\Mods\Plugin Loader\$(TargetName) "</PostBuildEvent>
+copy /y "$(TargetPath)" "%25appdata%25\SpaceEngineers\Mods\Plugin Loader\$(TargetName) "</PostBuildEvent>
   </PropertyGroup>
 </Project>

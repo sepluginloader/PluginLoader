@@ -32,7 +32,7 @@ namespace avaness.PluginLoader
             Cursor temp = Cursor.Current;
             Cursor.Current = Cursors.AppStarting;
 
-            var mainPath = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+            string mainPath = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
             if (!Directory.Exists(mainPath))
                 Directory.CreateDirectory(mainPath);
 
