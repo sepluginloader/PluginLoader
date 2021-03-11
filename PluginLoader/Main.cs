@@ -59,8 +59,6 @@ namespace avaness.PluginLoader
             log.Flush();
 
             Cursor.Current = temp;
-
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
         }
 
         public void RegisterComponents()
