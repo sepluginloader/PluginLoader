@@ -37,6 +37,17 @@ namespace avaness.PluginLoader.Network
                         yield return temp;
                 }
             }
+            else
+            {
+                string msg = "Unknown";
+                if(json.ContainsKey("message"))
+                {
+                    JsonData msgData = json["message"];
+                    if (msgData != null && msgData.IsString)
+                        msg = (string)msgData;
+                }
+                throw new Exception("An error occurred while downloading whitelist: " + msg);
+            }
         }
     }
 }
