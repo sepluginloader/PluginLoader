@@ -1,0 +1,20 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Update Whitelist
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: 'whitelist.zip'
+        exclusions: '*.git* /*node_modules/* .editorconfig'
