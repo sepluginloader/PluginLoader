@@ -13,8 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
-    - name: Update Whitelist
+    - name: Create Archive
       uses: thedoctor0/zip-release@master
       with:
         filename: 'whitelist.zip'
         exclusions: '*.git* /*node_modules/* .editorconfig'
+    - name: Push Archive
+      uses: EndBug/add-and-commit@v7
+      with:
+        message: 'Whitelist updated.'
+        add: 'whitelist.zip'
