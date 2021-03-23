@@ -16,7 +16,7 @@ namespace avaness.PluginLoader.Patch
 
 			Main main = Main.Instance;
 			PluginConfig config = main.Config;
-			if(config != null && config.Data.Count > 0 && MyInput.Static is MyVRageInput && MyInput.Static.IsKeyPress(MyKeys.Escape)
+			if(config != null && config.Count > 0 && MyInput.Static is MyVRageInput && MyInput.Static.IsKeyPress(MyKeys.Escape)
 				&& MessageBox.Show(LoaderTools.GetMainForm(), "Escape pressed. Start the game with all plugins disabled?", "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
 				main.DisablePlugins();

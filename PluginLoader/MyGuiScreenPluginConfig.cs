@@ -22,6 +22,7 @@ namespace avaness.PluginLoader
 		private Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
 		private StringBuilder tempBuilder = new StringBuilder();
 		private MyGuiControlTable modTable;
+		private PluginConfig config;
 
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
@@ -30,6 +31,7 @@ namespace avaness.PluginLoader
 			m_drawEvenWithoutFocus = true;
 			CanHideOthers = true;
 			CanBeHidden = true;
+			config = Main.Instance.Config;
 		}
 
         public override string GetFriendlyName()
@@ -46,6 +48,9 @@ namespace avaness.PluginLoader
         public override void RecreateControls(bool constructor)
 		{
 			base.RecreateControls(constructor);
+
+			config = Main.Instance.Config;
+
 			var title = AddCaption("Plugin List");
 
 			Vector2 size = m_size.Value;
@@ -137,8 +142,8 @@ namespace avaness.PluginLoader
 		{
 			modTable.Clear();
 			modTable.Controls.Clear();
-			PluginConfig config = Main.Instance.Config;
-			foreach (PluginData data in config.Data.Values)
+			PluginList list = Main.Instance.List;
+			foreach (PluginData data in list)
 			{
 				if(FilterName(data.FriendlyName, filter))
 				{
@@ -155,7 +160,7 @@ namespace avaness.PluginLoader
 					row.AddCell(statusCell);
 
 					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
-					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: data.Enabled)
+					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: config.IsEnabled(data.Id))
 					{
 						UserData = data,
 						Enabled = true,
@@ -234,7 +239,7 @@ namespace avaness.PluginLoader
         private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
         {
 			PluginData original = (PluginData)checkbox.UserData;
-			if (original.Enabled == checkbox.IsChecked)
+			if (config.IsEnabled(original.Id))
 				dataChanges.Remove(original.Id);
 			else
 				dataChanges[original.Id] = checkbox.IsChecked;
@@ -258,10 +263,7 @@ namespace avaness.PluginLoader
 			{
 				PluginConfig config = Main.Instance.Config;
 				foreach (KeyValuePair<string, bool> kv in dataChanges)
-				{
-					if (config.Data.TryGetValue(kv.Key, out PluginData data))
-						data.Enabled = kv.Value;
-				}
+					config.SetEnabled(kv.Key, kv.Value);
 				config.Save();
 				dataChanges.Clear();
 			}

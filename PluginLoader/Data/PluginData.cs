@@ -34,7 +34,6 @@ namespace avaness.PluginLoader.Data
         }
 
         public virtual string Id { get; set; }
-        public bool Enabled { get; set; }
 
         protected LogFile log;
 
@@ -70,7 +69,7 @@ namespace avaness.PluginLoader.Data
                 }
 
                 // Verify the file
-                if (this is SteamPlugin steam && !Security.Validate(steam.WorkshopId, dll, out string hash))
+                if (this is SteamPlugin steam && !PluginList.Validate(steam.WorkshopId, dll, out string hash))
                 {
                     ErrorSecurity(hash);
                     return false;
@@ -96,11 +95,6 @@ namespace avaness.PluginLoader.Data
             }
         }
 
-
-        public virtual void CopyFrom(PluginData other)
-        {
-            Enabled = other.Enabled;
-        }
 
         public override bool Equals(object obj)
         {

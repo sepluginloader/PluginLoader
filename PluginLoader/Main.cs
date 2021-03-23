@@ -16,6 +16,7 @@ namespace avaness.PluginLoader
     {
         public static Main Instance;
 
+        public PluginList List { get; }
         public PluginConfig Config { get; }
 
         private LogFile log;
@@ -41,15 +42,17 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
+            List = new PluginList(mainPath, log);
+
             log.WriteLine("Loading config.");
-            Config = PluginConfig.Load(mainPath, log);
+            Config = PluginConfig.Load(mainPath, List, log);
 
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            foreach (PluginData data in Config.Data.Values)
+            foreach (string id in Config)
             {
-                if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))
+                if (PluginInstance.TryGet(log, List[id], out PluginInstance p))
                     plugins.Add(p);
             }
 
