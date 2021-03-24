@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using ProtoBuf;
+using System.IO;
 using VRage;
 
 namespace avaness.PluginLoader.Data
 {
+    [ProtoContract]
     public class WorkshopPlugin : SteamPlugin
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);

@@ -9,6 +9,7 @@ namespace avaness.PluginLoader.Network
     public static class GitHub
     {
         private const string githubApi = "https://api.github.com/repos/austinvaness/PluginLoader/";
+        private const string rawUrl = "https://raw.githubusercontent.com/austinvaness/PluginLoader/main/";
 
         private static JsonData GetResponse(string path)
         {
@@ -22,6 +23,18 @@ namespace avaness.PluginLoader.Network
             using (StreamReader reader = new StreamReader(stream))
             {
                 return JsonMapper.ToObject(reader);
+            }
+        }
+
+        public static Stream DownloadFile(string path)
+        {
+            Uri uri = new Uri(rawUrl + path.TrimStart('/'), UriKind.Absolute);
+            HttpWebRequest request = WebRequest.CreateHttp(uri);
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            {
+                return response.GetResponseStream();
             }
         }
 

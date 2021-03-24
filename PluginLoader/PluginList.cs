@@ -3,6 +3,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
+using ProtoBuf;
+using System.Linq;
+using avaness.PluginLoader.Network;
+using System.Net.Sockets;
+using System.IO.Compression;
 
 namespace avaness.PluginLoader
 {
@@ -21,10 +27,101 @@ namespace avaness.PluginLoader
         {
             this.log = log;
 
+            GetWhitelist(mainDirectory);
+
             log.WriteLine("Finding installed plugins...");
-            FindLocalPlugins(mainDirectory);
             FindWorkshopPlugins();
+            //CreateXmlFiles(mainDirectory);
+            FindLocalPlugins(mainDirectory);
+
             log.WriteLine($"Found {plugins.Count} plugins.");
+        }
+
+        private void GetWhitelist(string mainDirectory)
+        {
+            string whitelist = Path.Combine(mainDirectory, "whitelist.bin");
+
+            try
+            {
+                if (!File.Exists(whitelist) || WhitelistChanged())
+                {
+                    log.WriteLine("Downloading whitelist...");
+                    using (Stream zipFileStream = GitHub.DownloadFile("whitelist.zip"))
+                    using (ZipArchive zipFile = new ZipArchive(zipFileStream))
+                    {
+                        XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+                        foreach(var entry in zipFile.Entries)
+                        {
+                            if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            using(Stream entryStream = entry.Open())
+                            using(StreamReader entryReader = new StreamReader(entryStream))
+                            {
+                                PluginData data = (PluginData)xml.Deserialize(entryReader);
+                                plugins[data.Id] = data;
+                            }
+                        }
+                    }
+                    
+                    log.WriteLine("Saving whitelist to disk...");
+                    using (Stream binFile = File.Create(whitelist))
+                    {
+                        Serializer.Serialize(binFile, plugins.Values.ToArray());
+                    }
+
+                    log.WriteLine("Whitelist updated.");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                log.WriteLine("Error while downloading whitelist: " + e);
+            }
+
+            if (File.Exists(whitelist))
+            {
+                try
+                {
+                    log.WriteLine("Reading whitelist...");
+                    using (Stream binFile = File.OpenRead(whitelist))
+                    {
+                        foreach (PluginData data in Serializer.Deserialize<PluginData[]>(binFile))
+                            plugins[data.Id] = data;
+                    }
+                    log.WriteLine("Whitelist retrieved from disk.");
+                }
+                catch (Exception e)
+                {
+                    log.WriteLine("Error while reading whitelist: " + e);
+                }
+            }
+        }
+
+        private bool WhitelistChanged()
+        {
+            string whitelistHash;
+            using (Stream hashStream = GitHub.DownloadFile("plugins.txt"))
+            using (StreamReader hashStreamReader = new StreamReader(hashStream))
+            {
+                whitelistHash = hashStreamReader.ReadToEnd();
+            }
+
+            return whitelistHash != "existinghashhere"; // TODO
+        }
+
+        private void CreateXmlFiles(string mainDirectory)
+        {
+            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+            foreach(PluginData data in plugins.Values)
+            {
+                string filePath = Path.Combine(mainDirectory, "List", data.FriendlyName.Replace(' ', '_') + ".xml");
+                FileStream fs = File.Create(filePath);
+                xml.Serialize(fs, data);
+                fs.Flush();
+                fs.Close();
+            }
+
         }
 
         public bool Exists(string id)
@@ -118,7 +215,6 @@ namespace avaness.PluginLoader
             2414532651, // DecalFixPlugin
             2415983416, // Multigrid Projector
             2425805190, // MorePPSettings
-            // SEPM - Most of these are old or broken
             2004495632, // BlockPicker
             1937528740, // GridFilter
             2029854486, // RemovePlanetSizeLimits
@@ -126,6 +222,7 @@ namespace avaness.PluginLoader
             2156683844, // SEWorldGenPlugin
             1937530079, // Mass Rename
             2037606896, // CameraLCD
+            2432659774, // ScrollableFOV
         };
 
         private readonly static HashSet<string> whitelistItemSha = new HashSet<string>()

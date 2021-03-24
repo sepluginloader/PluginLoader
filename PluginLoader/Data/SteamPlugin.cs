@@ -1,8 +1,12 @@
-﻿using Sandbox.Graphics.GUI;
+﻿using ProtoBuf;
+using Sandbox.Graphics.GUI;
 using System.IO;
 
 namespace avaness.PluginLoader.Data
 {
+    [ProtoContract]
+    [ProtoInclude(101, typeof(SEPMPlugin))]
+    [ProtoInclude(102, typeof(WorkshopPlugin))]
     public abstract class SteamPlugin : PluginData
     {
         public override string FriendlyName { get; }

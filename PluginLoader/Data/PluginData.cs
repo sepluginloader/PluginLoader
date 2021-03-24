@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
@@ -6,6 +7,8 @@ using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
 {
+    [ProtoContract]
+    [ProtoInclude(100, typeof(SteamPlugin))]
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
@@ -33,6 +36,7 @@ namespace avaness.PluginLoader.Data
             }
         }
 
+        [ProtoMember(1)]
         public virtual string Id { get; set; }
 
         protected LogFile log;
