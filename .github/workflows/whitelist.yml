@@ -17,9 +17,11 @@ jobs:
       uses: thedoctor0/zip-release@master
       with:
         filename: 'whitelist.zip'
-        exclusions: '*.git* /*node_modules/* .editorconfig'
+        path: 'Plugins'
+    - name: Hash Archive
+      run: sha1sum whitelist.zip > whitelist.sha1
     - name: Push Archive
       uses: EndBug/add-and-commit@v7
       with:
         message: 'Whitelist updated.'
-        add: 'whitelist.zip'
+        add: 'whitelist.zip whitelist.sha1'
