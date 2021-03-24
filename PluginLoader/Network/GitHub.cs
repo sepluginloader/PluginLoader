@@ -32,10 +32,8 @@ namespace avaness.PluginLoader.Network
             HttpWebRequest request = WebRequest.CreateHttp(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            {
-                return response.GetResponseStream();
-            }
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            return response.GetResponseStream();
         }
 
         public static IEnumerable<GitHubFile> GetFiles(string path)

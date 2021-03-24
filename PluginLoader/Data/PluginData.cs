@@ -7,6 +7,8 @@ using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
 {
+    [XmlInclude(typeof(WorkshopPlugin))]
+    [XmlInclude(typeof(SEPMPlugin))]
     [ProtoContract]
     [ProtoInclude(100, typeof(SteamPlugin))]
     public abstract class PluginData : IEquatable<PluginData>

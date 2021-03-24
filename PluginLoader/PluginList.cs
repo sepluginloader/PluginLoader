@@ -43,9 +43,9 @@ namespace avaness.PluginLoader
 
             try
             {
+                log.WriteLine("Downloading whitelist...");
                 if (!File.Exists(whitelist) || WhitelistChanged())
                 {
-                    log.WriteLine("Downloading whitelist...");
                     using (Stream zipFileStream = GitHub.DownloadFile("whitelist.zip"))
                     using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                     {
@@ -100,8 +100,9 @@ namespace avaness.PluginLoader
 
         private bool WhitelistChanged()
         {
+            return false;
             string whitelistHash;
-            using (Stream hashStream = GitHub.DownloadFile("plugins.txt"))
+            using (Stream hashStream = GitHub.DownloadFile("whitelist.sha1"))
             using (StreamReader hashStreamReader = new StreamReader(hashStream))
             {
                 whitelistHash = hashStreamReader.ReadToEnd();
@@ -149,14 +150,14 @@ namespace avaness.PluginLoader
                 try
                 {
                     string folder = Path.GetFileName(mod);
-                    if (ulong.TryParse(folder, out ulong modId))
+                    if (ulong.TryParse(folder, out ulong modId) && plugins.ContainsKey(folder))
                     {
-                        if (TryGetPlugin(modId, mod, out PluginData newPlugin))
+                        if (SteamAPI.IsSubscribed(modId) && TryGetPlugin(modId, mod, out PluginData newPlugin))
                             plugins[newPlugin.Id] = newPlugin;
                     }
                     else
                     {
-                        log.WriteLine($"Failed to parse {folder} into a steam id.");
+                        log.WriteLine($"The item with id {folder} is not available.");
                     }
                 }
                 catch (Exception e)
