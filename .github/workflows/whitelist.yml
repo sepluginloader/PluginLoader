@@ -1,11 +1,15 @@
-name: .NET
+name: Plugin List Updater
 
 on:
   workflow_dispatch: []
   push:
     branches: [ main ]
+    paths: 
+    - 'Plugins/**'
   pull_request:
     branches: [ main ]
+    paths: 
+    - 'Plugins/**'
   
 jobs:
   build:
