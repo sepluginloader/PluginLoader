@@ -9,8 +9,10 @@ namespace avaness.PluginLoader.Data
 {
     [XmlInclude(typeof(WorkshopPlugin))]
     [XmlInclude(typeof(SEPMPlugin))]
+    [XmlInclude(typeof(GitHubPlugin))]
     [ProtoContract]
     [ProtoInclude(100, typeof(SteamPlugin))]
+    [ProtoInclude(103, typeof(GitHubPlugin))]
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }

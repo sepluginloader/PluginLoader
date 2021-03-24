@@ -83,6 +83,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\SEPMPlugin.cs" />
