@@ -23,30 +23,30 @@ namespace avaness.PluginLoader
             set => plugins[key] = value;
         }
 
-        public PluginList(string mainDirectory, LogFile log)
+        public PluginList(string mainDirectory, PluginConfig config, LogFile log)
         {
             this.log = log;
 
-            GetWhitelist(mainDirectory);
+            DownloadList(mainDirectory, config);
 
             log.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
-            //CreateXmlFiles(mainDirectory);
             FindLocalPlugins(mainDirectory);
-
             log.WriteLine($"Found {plugins.Count} plugins.");
         }
 
-        private void GetWhitelist(string mainDirectory)
+        private void DownloadList(string mainDirectory, PluginConfig config)
         {
             string whitelist = Path.Combine(mainDirectory, "whitelist.bin");
 
             try
             {
                 log.WriteLine("Downloading whitelist...");
-                if (!File.Exists(whitelist) || WhitelistChanged())
+                if (!File.Exists(whitelist) | ListChanged(config.ListHash, out string hash))
                 {
-                    using (Stream zipFileStream = GitHub.DownloadFile("whitelist.zip"))
+                    config.ListHash = hash;
+
+                    using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit))
                     using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                     {
                         XmlSerializer xml = new XmlSerializer(typeof(PluginData));
@@ -69,7 +69,6 @@ namespace avaness.PluginLoader
                     {
                         Serializer.Serialize(binFile, plugins.Values.ToArray());
                     }
-
                     log.WriteLine("Whitelist updated.");
                     return;
                 }
@@ -98,31 +97,15 @@ namespace avaness.PluginLoader
             }
         }
 
-        private bool WhitelistChanged()
+        private bool ListChanged(string current, out string hash)
         {
-            return false;
-            string whitelistHash;
-            using (Stream hashStream = GitHub.DownloadFile("whitelist.sha1"))
+            using (Stream hashStream = GitHub.DownloadFile(GitHub.listRepoName, GitHub.listRepoCommit, GitHub.listRepoHash))
             using (StreamReader hashStreamReader = new StreamReader(hashStream))
             {
-                whitelistHash = hashStreamReader.ReadToEnd();
+                hash = hashStreamReader.ReadToEnd().Trim();
             }
 
-            return whitelistHash != "existinghashhere"; // TODO
-        }
-
-        private void CreateXmlFiles(string mainDirectory)
-        {
-            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-            foreach(PluginData data in plugins.Values)
-            {
-                string filePath = Path.Combine(mainDirectory, "List", data.FriendlyName.Replace(' ', '_') + ".xml");
-                FileStream fs = File.Create(filePath);
-                xml.Serialize(fs, data);
-                fs.Flush();
-                fs.Close();
-            }
-
+            return current == null || current != hash;
         }
 
         public bool Exists(string id)
@@ -150,14 +133,12 @@ namespace avaness.PluginLoader
                 try
                 {
                     string folder = Path.GetFileName(mod);
-                    if (ulong.TryParse(folder, out ulong modId) && plugins.ContainsKey(folder))
+                    if (ulong.TryParse(folder, out ulong modId) && SteamAPI.IsSubscribed(modId) && TryGetPlugin(modId, mod, out PluginData newPlugin))
                     {
-                        if (SteamAPI.IsSubscribed(modId) && TryGetPlugin(modId, mod, out PluginData newPlugin))
+                        if (plugins.ContainsKey(newPlugin.Id))
                             plugins[newPlugin.Id] = newPlugin;
-                    }
-                    else
-                    {
-                        log.WriteLine($"The item with id {folder} is not available.");
+                        else
+                            log.WriteLine($"The item {newPlugin} is not on the plugin list.");
                     }
                 }
                 catch (Exception e)

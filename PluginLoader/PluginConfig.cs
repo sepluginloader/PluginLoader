@@ -29,6 +29,8 @@ namespace avaness.PluginLoader
             }
         }
 
+        public string ListHash { get; set; }
+
         public int Count => enabledPlugins.Count;
 
         public PluginConfig()
@@ -36,9 +38,8 @@ namespace avaness.PluginLoader
 
         }
 
-        public void Init(string filePath, string mainDirectory, PluginList plugins, LogFile log)
+        public void Init(PluginList plugins, LogFile log)
         {
-            this.filePath = filePath;
             this.log = log;
 
             // Remove plugins from config that no longer exist
@@ -79,7 +80,7 @@ namespace avaness.PluginLoader
             }
         }
 
-        public static PluginConfig Load(string mainDirectory, PluginList plugins, LogFile log)
+        public static PluginConfig Load(string mainDirectory, LogFile log)
         {
             string path = Path.Combine(mainDirectory, fileName);
             if (File.Exists(path))
@@ -90,7 +91,7 @@ namespace avaness.PluginLoader
                     FileStream fs = File.OpenRead(path);
                     PluginConfig config = (PluginConfig)serializer.Deserialize(fs);
                     fs.Close();
-                    config.Init(path, mainDirectory, plugins, log);
+                    config.filePath = path;
                     return config;
                 }
                 catch (Exception e)
@@ -101,7 +102,7 @@ namespace avaness.PluginLoader
 
 
             var temp = new PluginConfig();
-            temp.Init(path, mainDirectory, plugins, log);
+            temp.filePath = path;
             return temp;
         }
 

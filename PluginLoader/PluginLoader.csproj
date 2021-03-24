@@ -90,7 +90,6 @@
     <Compile Include="Data\WorkshopPlugin.cs" />
     <Compile Include="Network\GitHub.cs" />
     <Compile Include="LoaderTools.cs" />
-    <Compile Include="Network\GitHubFile.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />

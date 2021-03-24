@@ -42,10 +42,11 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
-            List = new PluginList(mainPath, log);
-
+            Config = PluginConfig.Load(mainPath, log);
+            List = new PluginList(mainPath, Config, log);
+            
             log.WriteLine("Loading config.");
-            Config = PluginConfig.Load(mainPath, List, log);
+            Config.Init(List, log);
 
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
