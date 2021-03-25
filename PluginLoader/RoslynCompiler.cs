@@ -19,7 +19,7 @@ namespace avaness.PluginLoader
             source.Add(CSharpSyntaxTree.ParseText(SourceText.From(s)));
         }
 
-        public Assembly Compile(LogFile log)
+        public byte[] Compile(LogFile log)
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
                Path.GetRandomFileName(),
@@ -40,16 +40,16 @@ namespace avaness.PluginLoader
 
                     foreach (Diagnostic diagnostic in failures)
                         log.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} {diagnostic.Location.GetLineSpan().StartLinePosition}");
-                    log.WriteLine("Compilation failed!");
-                    return null;
+                    throw new Exception("Compilation failed!");
                 }
                 else
                 {
                     // load this 'virtual' DLL so that we can use
                     ms.Seek(0, SeekOrigin.Begin);
-                    return Assembly.Load(ms.ToArray());
+                    return ms.ToArray();
                 }
             }
+
         }
 
         private static IEnumerable<MetadataReference> GetRequiredRefernces()
