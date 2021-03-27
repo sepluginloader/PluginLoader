@@ -3,29 +3,33 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Xml.Linq;
 
-namespace avaness.PluginLoader
+namespace avaness.PluginLoader.Compiler
 {
     public class RoslynCompiler
     {
-        private readonly List<SyntaxTree> source = new List<SyntaxTree>();
-        
-        public void Load(Stream s)
+        private readonly List<Source> source = new List<Source>();
+
+        public void Load(Source source)
         {
-            source.Add(CSharpSyntaxTree.ParseText(SourceText.From(s)));
+            this.source.Add(source);
         }
 
-        public byte[] Compile(LogFile log)
+        public byte[] Compile()
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
                Path.GetRandomFileName(),
-               syntaxTrees: source,
-               references: GetRequiredRefernces().ToList(),
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+               syntaxTrees: source.Select(x => x.Tree),
+               references: RoslynReferences.EnumerateAllReferences(),
+               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release));
 
             using (var ms = new MemoryStream())
             {
@@ -39,7 +43,11 @@ namespace avaness.PluginLoader
                         diagnostic.Severity == DiagnosticSeverity.Error);
 
                     foreach (Diagnostic diagnostic in failures)
-                        log.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} {diagnostic.Location.GetLineSpan().StartLinePosition}");
+                    {
+                        Location location = diagnostic.Location;
+                        Source source = this.source.FirstOrDefault(x => x.Tree == location.SourceTree);
+                        LogFile.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} in file:\n{source?.Name ?? "null"} ({location.GetLineSpan().StartLinePosition})");
+                    }
                     throw new Exception("Compilation failed!");
                 }
                 else
@@ -52,15 +60,17 @@ namespace avaness.PluginLoader
 
         }
 
-        private static IEnumerable<MetadataReference> GetRequiredRefernces()
-        {
-            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies().Where(IsValidReference))
-                yield return MetadataReference.CreateFromFile(a.Location);
-        }
 
-        private static bool IsValidReference(Assembly a)
+        public class Source
         {
-            return !a.IsDynamic && !string.IsNullOrWhiteSpace(a.Location);
+            public string Name { get; }
+            public SyntaxTree Tree { get; }
+
+            public Source(Stream s, string name)
+            {
+                Name = name;
+                Tree = CSharpSyntaxTree.ParseText(SourceText.From(s), new CSharpParseOptions(LanguageVersion.Latest));
+            }
         }
     }
 

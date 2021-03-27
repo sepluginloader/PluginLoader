@@ -1,4 +1,5 @@
-﻿using avaness.PluginLoader.Network;
+﻿using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.Network;
 using ProtoBuf;
 using Sandbox.Graphics.GUI;
 using System;
@@ -13,30 +14,40 @@ namespace avaness.PluginLoader.Data
     {
         public override string Source => "GitHub";
 
-        public override string FriendlyName => Name;
-
         [ProtoMember(1)]
-        public string Name { get; set; } = "";
-        [ProtoMember(2)]
         public string Commit { get; set; }
 
+        private const string pluginFile = "plugin.dll";
+        private const string commitHashFile = "commit.sha1";
         private string cacheDir;
 
         public GitHubPlugin()
-        { }
+        {
+            Status = PluginStatus.None;
+        }
 
-        public override string GetDllFile()
+        public void Init(string mainDirectory)
+        {
+            string[] nameArgs = Id.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (nameArgs.Length != 2)
+                throw new Exception("Invalid GitHub name: " + Id);
+
+            cacheDir = Path.Combine(mainDirectory, "GitHub", nameArgs[0], nameArgs[1]);
+        }
+
+        public override Assembly GetAssembly()
         {
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
-            string dllFile = Path.Combine(cacheDir, "plugin.dll");
-            string commitFile = Path.Combine(cacheDir, "commit.sha1");
+            string dllFile = Path.Combine(cacheDir, pluginFile);
+            string commitFile = Path.Combine(cacheDir, commitHashFile);
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
             {
-                File.WriteAllText(commitFile, Commit);
                 byte[] data = CompileFromSource();
                 File.WriteAllBytes(dllFile, data);
+                File.WriteAllText(commitFile, Commit);
+                Status = PluginStatus.Updated;
                 return Assembly.Load(data);
             }
             return Assembly.LoadFile(dllFile);
@@ -50,16 +61,29 @@ namespace avaness.PluginLoader.Data
             {
                 foreach(ZipArchiveEntry entry in zip.Entries)
                 {
-                    if (!entry.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    using (Stream entryStream = entry.Open())
+                    if(entry.FullName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                     {
-                        compiler.Load(entryStream);
+                        using (Stream entryStream = entry.Open())
+                        {
+                            RoslynReferences.LoadReferences(entryStream);
+                        }
                     }
+                    else if (entry.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        using (Stream entryStream = entry.Open())
+                        {
+                            MemoryStream mem = new MemoryStream();
+                            using (mem)
+                            {
+                                entryStream.CopyTo(mem);
+                                compiler.Load(new RoslynCompiler.Source(mem, entry.FullName));
+                            }
+                        }
+                    }
+
                 }
             }
-            return compiler.Compile(log);
+            return compiler.Compile();
         }
 
         public override void Show()

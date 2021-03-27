@@ -4,33 +4,25 @@ using VRage.Utils;
 
 namespace avaness.PluginLoader
 {
-    public class LogFile : IDisposable
+    public static class LogFile
     {
         private const string fileName = "loader.log";
-        private StreamWriter writer;
+        private static StreamWriter writer;
 
-
-        public void WriteLine(string text, string prefix = null)
-        {
-            if(prefix == null)
-            {
-                writer?.WriteLine($"{DateTime.Now} {text}");
-                MyLog.Default.WriteLine($"[PluginLoader] {text}");
-            }
-            else
-            {
-                writer?.WriteLine($"{DateTime.Now} [{prefix}] {text}");
-                MyLog.Default.WriteLine($"[{prefix}] {text}");
-            }
-        }
-
-        public LogFile(string mainPath)
+        public static void Init(string mainPath)
         {
             string file = Path.Combine(mainPath, fileName);
             writer = File.CreateText(file);
         }
 
-        public void Dispose()
+        public static void WriteLine(string text, bool gameLog = true)
+        {
+            writer?.WriteLine($"{DateTime.Now} {text}");
+            if(gameLog)
+                MyLog.Default.WriteLine($"[PluginLoader] {text}");
+        }
+
+        public static void Dispose()
         {
             if (writer == null)
                 return;
@@ -40,7 +32,7 @@ namespace avaness.PluginLoader
             writer = null;
         }
 
-        public void Flush()
+        public static void Flush()
         {
             writer.Flush();
         }

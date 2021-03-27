@@ -17,9 +17,6 @@ namespace avaness.PluginLoader.Data
 
         }
 
-        public WorkshopPlugin(LogFile log, ulong id, string pluginFile) : base(log, id, pluginFile)
-		{ }
-
         protected override void CheckForUpdates()
         {
             assembly = Path.Combine(root, Path.GetFileNameWithoutExtension(sourceFile) + ".dll");
@@ -38,21 +35,9 @@ namespace avaness.PluginLoader.Data
                 base.CheckForUpdates();
         }
 
-        protected override string GetName()
-        {
-            string name = Path.GetFileNameWithoutExtension(sourceFile).Replace('_', ' ');
-            if (string.IsNullOrWhiteSpace(name))
-                return Id;
-            else
-                return name;
-        }
-
         protected override void ApplyUpdate()
         {
-            if (PluginList.Validate(WorkshopId, sourceFile, out string hash))
-                File.Copy(sourceFile, assembly, true);
-            else
-                ErrorSecurity(hash);
+            File.Copy(sourceFile, assembly, true);
         }
 
         protected override string GetAssemblyFile()

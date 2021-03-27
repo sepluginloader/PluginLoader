@@ -14,7 +14,6 @@ namespace avaness.PluginLoader
 
         private HashSet<string> enabledPlugins = new HashSet<string>();
         private string filePath;
-        private LogFile log;
 
         [XmlArray]
         public ConfigEntry[] Plugins
@@ -38,19 +37,22 @@ namespace avaness.PluginLoader
 
         }
 
-        public void Init(PluginList plugins, LogFile log)
+        public void Init(PluginList plugins)
         {
-            this.log = log;
-
             // Remove plugins from config that no longer exist
+            List<string> toRemove = new List<string>();
+
             foreach (string id in enabledPlugins)
             {
-                if (!plugins.Exists(id))
+                if (!plugins.IsInstalled(id))
                 {
-                    log.WriteLine($"{id} is no longer available.");
-                    enabledPlugins.Remove(id);
+                    LogFile.WriteLine($"{id} is no longer available.");
+                    toRemove.Add(id);
                 }
             }
+
+            foreach (string id in toRemove)
+                enabledPlugins.Remove(id);
 
             Save();
         }
@@ -65,7 +67,7 @@ namespace avaness.PluginLoader
         {
             try
             {
-                log.WriteLine("Saving config.");
+                LogFile.WriteLine("Saving config.");
                 XmlSerializer serializer = new XmlSerializer(typeof(PluginConfig));
                 if (File.Exists(filePath))
                     File.Delete(filePath);
@@ -76,11 +78,11 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                log.WriteLine($"An error occurred while saving plugin config: " + e);
+                LogFile.WriteLine($"An error occurred while saving plugin config: " + e);
             }
         }
 
-        public static PluginConfig Load(string mainDirectory, LogFile log)
+        public static PluginConfig Load(string mainDirectory)
         {
             string path = Path.Combine(mainDirectory, fileName);
             if (File.Exists(path))
@@ -96,7 +98,7 @@ namespace avaness.PluginLoader
                 }
                 catch (Exception e)
                 {
-                    log.WriteLine($"An error occurred while loading plugin config: " + e);
+                    LogFile.WriteLine($"An error occurred while loading plugin config: " + e);
                 }
             }
 

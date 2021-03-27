@@ -9,6 +9,7 @@ using HarmonyLib;
 using System.Windows.Forms;
 using Sandbox.Game.World;
 using System.Diagnostics;
+using avaness.PluginLoader.Compiler;
 
 namespace avaness.PluginLoader
 {
@@ -19,7 +20,6 @@ namespace avaness.PluginLoader
         public PluginList List { get; }
         public PluginConfig Config { get; }
 
-        private LogFile log;
         private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
@@ -37,53 +37,55 @@ namespace avaness.PluginLoader
             if (!Directory.Exists(mainPath))
                 Directory.CreateDirectory(mainPath);
 
-            log = new LogFile(mainPath);
-            log.WriteLine("Starting.");
+            LogFile.Init(mainPath);
+            LogFile.WriteLine("Starting.");
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
-            Config = PluginConfig.Load(mainPath, log);
-            List = new PluginList(mainPath, Config, log);
+            RoslynReferences.GenerateAssemblyList();
+
+            Config = PluginConfig.Load(mainPath);
+            List = new PluginList(mainPath, Config);
             
-            log.WriteLine("Loading config.");
-            Config.Init(List, log);
+            LogFile.WriteLine("Loading config.");
+            Config.Init(List);
 
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
             foreach (string id in Config)
             {
-                if (PluginInstance.TryGet(log, List[id], out PluginInstance p))
+                if (PluginInstance.TryGet(List[id], out PluginInstance p))
                     plugins.Add(p);
             }
 
             sw.Stop();
 
-            log.WriteLine($"Finished startup. Took {sw.ElapsedMilliseconds}ms");
-            log.Flush();
+            LogFile.WriteLine($"Finished startup. Took {sw.ElapsedMilliseconds}ms");
+            LogFile.Flush();
 
             Cursor.Current = temp;
         }
 
         public void RegisterComponents()
         {
-            log.WriteLine("Registering Components...");
+            LogFile.WriteLine("Registering Components...");
             foreach (PluginInstance plugin in plugins)
                 plugin.RegisterSession(MySession.Static);
-            log.Flush();
+            LogFile.Flush();
         }
 
         public void DisablePlugins()
         {
             Config.Disable();
             plugins.Clear();
-            log.WriteLine("Disabled all plugins.");
-            log.Flush();
+            LogFile.WriteLine("Disabled all plugins.");
+            LogFile.Flush();
         }
 
         public void InstantiatePlugins()
         {
-            log.WriteLine($"Loading {plugins.Count} plugins...");
+            LogFile.WriteLine($"Loading {plugins.Count} plugins...");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
@@ -91,19 +93,19 @@ namespace avaness.PluginLoader
                     plugins.RemoveAtFast(i);
             }
 
-            log.Flush();
+            LogFile.Flush();
         }
 
         public void Init(object gameInstance)
         {
-            log.WriteLine($"Initializing {plugins.Count} plugins...");
+            LogFile.WriteLine($"Initializing {plugins.Count} plugins...");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
                 if(!p.Init(gameInstance))
                     plugins.RemoveAtFast(i);
             }
-            log.Flush();
+            LogFile.Flush();
             init = true;
         }
 
@@ -127,8 +129,7 @@ namespace avaness.PluginLoader
             plugins.Clear();
 
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
-            log?.Dispose();
-            log = null;
+            LogFile.Dispose();
             Instance = null;
         }
 
@@ -139,17 +140,17 @@ namespace avaness.PluginLoader
             if (args.Name.Contains("0Harmony"))
             {
                 if (assembly != null)
-                    log.WriteLine("Resolving 0Harmony for " + assembly);
+                    LogFile.WriteLine("Resolving 0Harmony for " + assembly);
                 else
-                    log.WriteLine("Resolving 0Harmony");
+                    LogFile.WriteLine("Resolving 0Harmony");
                 return typeof(Harmony).Assembly;
             }
             else if (args.Name.Contains("SEPluginManager"))
             {
                 if (assembly != null)
-                    log.WriteLine("Resolving SEPluginManager for " + assembly);
+                    LogFile.WriteLine("Resolving SEPluginManager for " + assembly);
                 else
-                    log.WriteLine("Resolving SEPluginManager");
+                    LogFile.WriteLine("Resolving SEPluginManager");
                 return typeof(SEPluginManager.SEPMPlugin).Assembly;
             }
             return null;

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using VRage;
 
 namespace avaness.PluginLoader.Data
@@ -7,9 +8,7 @@ namespace avaness.PluginLoader.Data
     public class LocalPlugin : PluginData
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
-        public override string FriendlyName => name;
-        private string name;
-
+        
         public override string Id
         {
             get
@@ -20,24 +19,26 @@ namespace avaness.PluginLoader.Data
             {
                 base.Id = value;
                 if (File.Exists(value))
-                    name = Path.GetFileName(value);
-                else
-                    name = "Unknown";
+                    FriendlyName = Path.GetFileName(value);
             }
         }
+
 
         private LocalPlugin()
         {
 
         }
 
-        public LocalPlugin(LogFile log, string fullPath) : base(log, fullPath)
-        { }
+        public LocalPlugin(string dll)
+        {
+            Id = dll;
+            Status = PluginStatus.None;
+        }
 
-        public override string GetDllFile()
+        public override Assembly GetAssembly()
         {
             if(File.Exists(Id))
-                return Id;
+                return Assembly.LoadFile(Id);
             return null;
         }
 

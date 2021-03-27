@@ -17,6 +17,7 @@ namespace avaness.PluginLoader.Network
         public static Stream DownloadRepo(string name, string commit)
         {
             Uri uri = new Uri(string.Format(repoZipUrl, name, commit), UriKind.Absolute);
+            LogFile.WriteLine("Downloading " + uri);
             HttpWebRequest request = WebRequest.CreateHttp(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
@@ -27,6 +28,7 @@ namespace avaness.PluginLoader.Network
         public static Stream DownloadFile(string name, string commit, string path)
         {
             Uri uri = new Uri(string.Format(rawUrl, name, commit) + path.TrimStart('/'), UriKind.Absolute);
+            LogFile.WriteLine("Downloading " + uri);
             HttpWebRequest request = WebRequest.CreateHttp(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 

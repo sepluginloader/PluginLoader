@@ -14,7 +14,6 @@ namespace avaness.PluginLoader
 {
     public class PluginList : IEnumerable<PluginData>
     {
-        private readonly LogFile log;
         private readonly SortedDictionary<string, PluginData> plugins = new SortedDictionary<string, PluginData>();
         
         public PluginData this[string key]
@@ -23,16 +22,24 @@ namespace avaness.PluginLoader
             set => plugins[key] = value;
         }
 
-        public PluginList(string mainDirectory, PluginConfig config, LogFile log)
+        public PluginList(string mainDirectory, PluginConfig config)
         {
-            this.log = log;
-
             DownloadList(mainDirectory, config);
 
-            log.WriteLine("Finding installed plugins...");
+            GitHubPlugin temp = new GitHubPlugin()
+            {
+                Id = "Casimir255/SeamlessClientPlugin",
+                FriendlyName = "TEST",
+                Commit = "c097a1e87cb3e02234648b56a4be0ed14faeb973"
+            };
+            plugins[temp.Id] = temp;
+            temp.Init(mainDirectory);
+            Save(temp, Path.Combine(mainDirectory, "temp.xml"));
+
+            LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
             FindLocalPlugins(mainDirectory);
-            log.WriteLine($"Found {plugins.Count} plugins.");
+            LogFile.WriteLine($"Found {plugins.Count} plugins.");
         }
 
         private void DownloadList(string mainDirectory, PluginConfig config)
@@ -41,11 +48,9 @@ namespace avaness.PluginLoader
 
             try
             {
-                log.WriteLine("Downloading whitelist...");
+                LogFile.WriteLine("Downloading whitelist...");
                 if (!File.Exists(whitelist) | ListChanged(config.ListHash, out string hash))
                 {
-                    config.ListHash = hash;
-
                     using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit))
                     using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                     {
@@ -64,36 +69,47 @@ namespace avaness.PluginLoader
                         }
                     }
                     
-                    log.WriteLine("Saving whitelist to disk...");
+                    LogFile.WriteLine("Saving whitelist to disk...");
                     using (Stream binFile = File.Create(whitelist))
                     {
                         Serializer.Serialize(binFile, plugins.Values.ToArray());
                     }
-                    log.WriteLine("Whitelist updated.");
+                    LogFile.WriteLine("Whitelist updated.");
+
+                    config.ListHash = hash;
                     return;
                 }
             }
             catch (Exception e)
             {
-                log.WriteLine("Error while downloading whitelist: " + e);
+                LogFile.WriteLine("Error while downloading whitelist: " + e);
             }
 
             if (File.Exists(whitelist))
             {
                 try
                 {
-                    log.WriteLine("Reading whitelist...");
+                    LogFile.WriteLine("Reading whitelist from cache...");
                     using (Stream binFile = File.OpenRead(whitelist))
                     {
                         foreach (PluginData data in Serializer.Deserialize<PluginData[]>(binFile))
                             plugins[data.Id] = data;
                     }
-                    log.WriteLine("Whitelist retrieved from disk.");
+                    LogFile.WriteLine("Whitelist retrieved from disk.");
                 }
                 catch (Exception e)
                 {
-                    log.WriteLine("Error while reading whitelist: " + e);
+                    LogFile.WriteLine("Error while reading whitelist: " + e);
                 }
+            }
+        }
+
+        private static void Save(PluginData data, string path)
+        {
+            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+            using (Stream file = File.Create(path))
+            {
+                xml.Serialize(file, data);
             }
         }
 
@@ -108,18 +124,21 @@ namespace avaness.PluginLoader
             return current == null || current != hash;
         }
 
-        public bool Exists(string id)
+        public bool IsInstalled(string id)
         {
-            return plugins.ContainsKey(id);
+            return plugins.TryGetValue(id, out PluginData data) && data.Status != PluginStatus.NotInstalled;
         }
 
         private void FindLocalPlugins(string mainDirectory)
         {
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
-                LocalPlugin local = new LocalPlugin(log, dll);
-                if (!local.FriendlyName.StartsWith("0Harmony"))
-                    plugins[local.Id] = local;
+                if(!dll.Contains(Path.DirectorySeparatorChar + "GitHub" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                {
+                    LocalPlugin local = new LocalPlugin(dll);
+                    if (!local.FriendlyName.StartsWith("0Harmony"))
+                        plugins[local.Id] = local;
+                }
             }
         }
 
@@ -133,33 +152,30 @@ namespace avaness.PluginLoader
                 try
                 {
                     string folder = Path.GetFileName(mod);
-                    if (ulong.TryParse(folder, out ulong modId) && SteamAPI.IsSubscribed(modId) && TryGetPlugin(modId, mod, out PluginData newPlugin))
+                    if (ulong.TryParse(folder, out ulong modId) && SteamAPI.IsSubscribed(modId) && TryGetPlugin(mod, out string newPlugin))
                     {
-                        if (plugins.ContainsKey(newPlugin.Id))
-                            plugins[newPlugin.Id] = newPlugin;
+                        if (plugins.TryGetValue(folder, out PluginData data) && data is SteamPlugin steam)
+                            steam.Init(newPlugin);
                         else
-                            log.WriteLine($"The item {newPlugin} is not on the plugin list.");
+                            LogFile.WriteLine($"The item {folder} is not on the plugin list.");
                     }
                 }
                 catch (Exception e)
                 {
-                    log.WriteLine($"An error occurred while searching {mod} for a plugin: {e}");
+                    LogFile.WriteLine($"An error occurred while searching {mod} for a plugin: {e}");
                 }
             }
-
-
         }
 
-        private bool TryGetPlugin(ulong id, string modRoot, out PluginData plugin)
+        private bool TryGetPlugin(string modRoot, out string pluginFile)
         {
-            plugin = null;
 
             foreach (string file in Directory.EnumerateFiles(modRoot, "*.plugin"))
             {
                 string name = Path.GetFileName(file);
                 if (!name.StartsWith("0Harmony", StringComparison.OrdinalIgnoreCase))
                 {
-                    plugin = new WorkshopPlugin(log, id, file);
+                    pluginFile = file;
                     return true;
                 }
             }
@@ -167,10 +183,10 @@ namespace avaness.PluginLoader
             string sepm = Path.Combine(modRoot, "Data", "sepm-plugin.zip");
             if (File.Exists(sepm))
             {
-                plugin = new SEPMPlugin(log, id, sepm);
+                pluginFile = sepm;
                 return true;
             }
-
+            pluginFile = null;
             return false;
         }
 
@@ -184,42 +200,6 @@ namespace avaness.PluginLoader
         IEnumerator IEnumerable.GetEnumerator()
         {
             return plugins.Values.GetEnumerator();
-        }
-
-
-
-        private readonly static HashSet<ulong> whitelistItemIds = new HashSet<ulong>
-        {
-            // Workshop
-            2292390607, // Tool Switcher
-            2413859055, // SteamWorkshopFix
-            2413918072, // SEWorldGenPlugin v2
-            2414532651, // DecalFixPlugin
-            2415983416, // Multigrid Projector
-            2425805190, // MorePPSettings
-            2004495632, // BlockPicker
-            1937528740, // GridFilter
-            2029854486, // RemovePlanetSizeLimits
-            2171994463, // ClientFixes
-            2156683844, // SEWorldGenPlugin
-            1937530079, // Mass Rename
-            2037606896, // CameraLCD
-            2432659774, // ScrollableFOV
-        };
-
-        private readonly static HashSet<string> whitelistItemSha = new HashSet<string>()
-        {
-            "fa6d204bcb706bb5ba841e06e19b2793f324d591093e67ca0752d681fb5e6352", // Jump Selector Plugin
-            "275afaead0e5a7d83b0c5be5f13fe67b8b96e375dba4fd5cf4976f6dbce58e81"
-        };
-
-        public static bool Validate(ulong steamId, string file, out string sha256)
-        {
-            sha256 = null;
-            if (whitelistItemIds.Contains(steamId))
-                return true;
-            sha256 = LoaderTools.GetHash256(file);
-            return whitelistItemSha.Contains(sha256);
         }
     }
 }

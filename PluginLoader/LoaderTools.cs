@@ -28,10 +28,10 @@ namespace avaness.PluginLoader
             Process.GetCurrentProcess().Kill();
         }
 
-        public static void ExecuteMain(LogFile log, SEPMPlugin plugin)
+        public static void ExecuteMain(SEPMPlugin plugin)
         {
             string name = plugin.GetType().ToString();
-            plugin.Main(new Harmony(name), new Logger(name, log));
+            plugin.Main(new Harmony(name), new Logger());
         }
 
         public static string GetHash1(string file)

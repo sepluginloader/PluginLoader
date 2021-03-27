@@ -16,16 +16,17 @@ namespace avaness.PluginLoader.Data
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
-        public abstract string FriendlyName { get; }
 
         [XmlIgnore]
-        public virtual PluginStatus Status { get; set; } = PluginStatus.None;
+        public virtual PluginStatus Status { get; set; } = PluginStatus.NotInstalled;
         public virtual string StatusString
         {
             get
             {
                 switch (Status)
                 {
+                    case PluginStatus.NotInstalled:
+                        return "Not installed.";
                     case PluginStatus.PendingUpdate:
                         return "Pending Update";
                     case PluginStatus.Updated:
@@ -43,62 +44,49 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(1)]
         public virtual string Id { get; set; }
 
-        protected LogFile log;
+        [ProtoMember(2)]
+        public string FriendlyName { get; set; } = "Unknown";
+
+        [ProtoMember(3)]
+        public bool Hidden { get; set; } = false;
 
         protected PluginData()
         {
 
         }
 
-        public PluginData(LogFile log, string id)
-        {
-            this.log = log;
-            Id = id;
-        }
-
-        public abstract string GetDllFile();
+        public abstract Assembly GetAssembly();
 
         public bool TryLoadAssembly(out Assembly a)
         {
-            a = null;
-
             try
             {
                 // Get the file path
-                string dll = GetDllFile();
+                a = GetAssembly();
                 if (Status == PluginStatus.Blocked)
                     return false;
 
-                if (dll == null)
+                if (a == null)
                 {
-                    log.WriteLine("Failed to load " + ToString());
+                    LogFile.WriteLine("Failed to load " + ToString());
                     Error();
                     return false;
                 }
 
-                // Verify the file
-                if (this is SteamPlugin steam && !PluginList.Validate(steam.WorkshopId, dll, out string hash))
-                {
-                    ErrorSecurity(hash);
-                    return false;
-                }
-
-                // Load the assembly
-                a = Assembly.LoadFile(dll);
-
                 // Precompile the entire assembly in order to force any missing method exceptions
-                log.WriteLine("Precompiling " + a);
+                LogFile.WriteLine("Precompiling " + a);
                 LoaderTools.Precompile(a);
                 return true;
             }
             catch (Exception e)
             {
                 string name = ToString();
-                log.WriteLine($"Failed to load {name} because of an error: " + e);
+                LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
                 if (e is MissingMemberException)
-                    log.WriteLine($"Is {name} up to date?");
-                log.Flush();
+                    LogFile.WriteLine($"Is {name} up to date?");
+                LogFile.Flush();
                 Error();
+                a = null;
                 return false;
             }
         }
@@ -145,7 +133,7 @@ namespace avaness.PluginLoader.Data
         {
             Status = PluginStatus.Blocked;
             MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            log.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
+            LogFile.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 
         public abstract void Show();

@@ -1,6 +1,8 @@
 ﻿using ProtoBuf;
 using Sandbox.Graphics.GUI;
 using System.IO;
+using System.Reflection;
+using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
 {
@@ -9,9 +11,22 @@ namespace avaness.PluginLoader.Data
     [ProtoInclude(102, typeof(WorkshopPlugin))]
     public abstract class SteamPlugin : PluginData
     {
-        public override string FriendlyName { get; }
+        [XmlIgnore]
+        public ulong WorkshopId { get; private set; }
 
-        public ulong WorkshopId { get; }
+        public override string Id
+        {
+            get
+            {
+                return base.Id;
+            }
+            set
+            {
+                base.Id = value;
+                WorkshopId = ulong.Parse(Id);
+            }
+        }
+
         protected abstract string HashFile { get; }
         protected string root, sourceFile, hashFile;
 
@@ -19,16 +34,14 @@ namespace avaness.PluginLoader.Data
         {
         }
 
-        public SteamPlugin(LogFile log, ulong id, string sourceFile) : base(log, id.ToString())
+        public void Init(string sourceFile)
         {
-            WorkshopId = id;
+            Status = PluginStatus.None;
             this.sourceFile = sourceFile;
             root = Path.GetDirectoryName(sourceFile);
             hashFile = Path.Combine(root, HashFile);
 
             CheckForUpdates();
-
-            FriendlyName = GetName();
         }
 
         protected virtual void CheckForUpdates()
@@ -46,13 +59,11 @@ namespace avaness.PluginLoader.Data
             }
         }
 
-        protected abstract string GetName();
-
-        public override string GetDllFile()
+        public override Assembly GetAssembly()
         {
             if (Status == PluginStatus.PendingUpdate)
             {
-                log.WriteLine("Updating " + this);
+                LogFile.WriteLine("Updating " + this);
                 ApplyUpdate();
                 if (Status == PluginStatus.PendingUpdate)
                 {
@@ -68,7 +79,7 @@ namespace avaness.PluginLoader.Data
             string dll = GetAssemblyFile();
             if (dll == null || !File.Exists(dll))
                 return null;
-            return dll;
+            return Assembly.LoadFile(dll);
         }
 
         protected abstract void ApplyUpdate();
@@ -76,7 +87,7 @@ namespace avaness.PluginLoader.Data
 
         public override void Show()
         {
-            MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + WorkshopId, UrlOpenMode.SteamOrExternalWithConfirm);
+            MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
         }
     }
 }

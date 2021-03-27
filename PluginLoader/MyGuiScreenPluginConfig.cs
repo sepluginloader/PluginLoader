@@ -143,9 +143,16 @@ namespace avaness.PluginLoader
 			modTable.Clear();
 			modTable.Controls.Clear();
 			PluginList list = Main.Instance.List;
+			bool noFilter = filter == null || filter.Length == 0;
 			foreach (PluginData data in list)
 			{
-				if(FilterName(data.FriendlyName, filter))
+				bool enabled = config.IsEnabled(data.Id);
+				bool installed = data.Status != PluginStatus.NotInstalled;
+
+				if (noFilter && (data.Hidden || !installed) && !enabled)
+					continue;
+
+				if (noFilter || FilterName(data.FriendlyName, filter))
 				{
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
@@ -160,10 +167,10 @@ namespace avaness.PluginLoader
 					row.AddCell(statusCell);
 
 					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
-					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: config.IsEnabled(data.Id))
+					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
 					{
 						UserData = data,
-						Enabled = true,
+						Enabled = installed,
 						Visible = true
 					};
 					enabledBox.IsCheckedChanged += IsCheckedChanged;
@@ -185,8 +192,6 @@ namespace avaness.PluginLoader
 
 		private bool FilterName(string name, string[] filter)
         {
-			if (filter == null || filter.Length == 0)
-				return true;
 			foreach(string s in filter)
             {
 				if (!name.Contains(s, StringComparison.OrdinalIgnoreCase))
