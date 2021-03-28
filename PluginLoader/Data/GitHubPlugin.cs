@@ -59,7 +59,9 @@ namespace avaness.PluginLoader.Data
             using(Stream s = GitHub.DownloadRepo(Id, Commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
-                foreach(ZipArchiveEntry entry in zip.Entries)
+                RoslynReferences.GenerateAssemblyList();
+
+                foreach (ZipArchiveEntry entry in zip.Entries)
                 {
                     if(entry.FullName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                     {

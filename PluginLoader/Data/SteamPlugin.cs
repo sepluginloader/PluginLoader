@@ -106,7 +106,6 @@ namespace avaness.PluginLoader.Data
             {
                 if (s == hash)
                     return true;
-                LogFile.WriteLine(s + " != " + hash);
             }
 
             ErrorSecurity(hash);

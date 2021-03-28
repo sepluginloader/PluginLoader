@@ -42,8 +42,6 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
-            RoslynReferences.GenerateAssemblyList();
-
             Config = PluginConfig.Load(mainPath);
             List = new PluginList(mainPath, Config);
             

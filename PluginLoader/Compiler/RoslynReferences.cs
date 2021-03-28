@@ -17,6 +17,9 @@ namespace avaness.PluginLoader.Compiler
 
         public static void GenerateAssemblyList()
         {
+            if (allReferences.Count > 0)
+                return;
+
             Stack<Assembly> loadedAssemblies = new Stack<Assembly>(AppDomain.CurrentDomain.GetAssemblies().Where(IsValidReference));
 
             StringBuilder sb = new StringBuilder();
