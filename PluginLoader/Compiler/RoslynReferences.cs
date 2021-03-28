@@ -41,7 +41,7 @@ namespace avaness.PluginLoader.Compiler
 
                     foreach (AssemblyName name in a.GetReferencedAssemblies())
                     {
-                        if (allReferences.ContainsKey(name.Name) && TryLoadAssembly(name, out Assembly aRef))
+                        if (!allReferences.ContainsKey(name.Name) && TryLoadAssembly(name, out Assembly aRef))
                         {
                             AddAssemblyReference(aRef);
                             sb.AppendLine(name.FullName);
@@ -141,7 +141,7 @@ namespace avaness.PluginLoader.Compiler
 
             public void Add(Assembly a)
             {
-                fullNames.Add(a.FullName, MetadataReference.CreateFromFile(a.Location));
+                fullNames[a.FullName] = MetadataReference.CreateFromFile(a.Location);
             }
 
             public MetadataReference Get(string fullString)
