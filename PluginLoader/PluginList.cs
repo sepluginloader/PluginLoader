@@ -26,16 +26,6 @@ namespace avaness.PluginLoader
         {
             DownloadList(mainDirectory, config);
 
-            GitHubPlugin temp = new GitHubPlugin()
-            {
-                Id = "Casimir255/SeamlessClientPlugin",
-                FriendlyName = "TEST",
-                Commit = "c097a1e87cb3e02234648b56a4be0ed14faeb973"
-            };
-            plugins[temp.Id] = temp;
-            temp.Init(mainDirectory);
-            Save(temp, Path.Combine(mainDirectory, "temp.xml"));
-
             LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
             FindLocalPlugins(mainDirectory);

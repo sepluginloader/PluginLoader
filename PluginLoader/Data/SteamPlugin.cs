@@ -14,6 +14,10 @@ namespace avaness.PluginLoader.Data
         [XmlIgnore]
         public ulong WorkshopId { get; private set; }
 
+        [XmlArray]
+        [ProtoMember(1)]
+        public string[] AllowedHashes { get; set; }
+
         public override string Id
         {
             get
@@ -79,6 +83,8 @@ namespace avaness.PluginLoader.Data
             string dll = GetAssemblyFile();
             if (dll == null || !File.Exists(dll))
                 return null;
+            if (!VerifyAllowed(dll))
+                return null;
             return Assembly.LoadFile(dll);
         }
 
@@ -88,6 +94,23 @@ namespace avaness.PluginLoader.Data
         public override void Show()
         {
             MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
+        }
+
+        private bool VerifyAllowed(string dll)
+        {
+            if (AllowedHashes == null || AllowedHashes.Length == 0)
+                return true;
+
+            string hash = LoaderTools.GetHash256(dll);
+            foreach(string s in AllowedHashes)
+            {
+                if (s == hash)
+                    return true;
+                LogFile.WriteLine(s + " != " + hash);
+            }
+
+            ErrorSecurity(hash);
+            return false;
         }
     }
 }

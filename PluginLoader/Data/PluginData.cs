@@ -132,7 +132,7 @@ namespace avaness.PluginLoader.Data
         protected void ErrorSecurity(string hash)
         {
             Status = PluginStatus.Blocked;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load or update the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             LogFile.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 
