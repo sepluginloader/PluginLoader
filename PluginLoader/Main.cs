@@ -44,8 +44,6 @@ namespace avaness.PluginLoader
             Config = PluginConfig.Load(mainPath);
             List = new PluginList(mainPath, Config);
 
-            RoslynReferences.GenerateAssemblyList();
-
             LogFile.WriteLine("Loading config.");
             Config.Init(List);
 
