@@ -40,6 +40,8 @@ namespace avaness.PluginLoader.Data
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
+            Assembly a;
+
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
@@ -48,9 +50,15 @@ namespace avaness.PluginLoader.Data
                 File.WriteAllBytes(dllFile, data);
                 File.WriteAllText(commitFile, Commit);
                 Status = PluginStatus.Updated;
-                return Assembly.Load(data);
+                a = Assembly.Load(data);
             }
-            return Assembly.LoadFile(dllFile);
+            else
+            {
+                a = Assembly.LoadFile(dllFile);
+            }
+
+            Version = a.GetName().Version;
+            return a;
         }
 
         public byte[] CompileFromSource()

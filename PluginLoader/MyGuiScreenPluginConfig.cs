@@ -81,23 +81,25 @@ namespace avaness.PluginLoader
 				Position = origin,
 				Size = new Vector2(size.X * tableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 4,
+				ColumnsCount = 5,
 				VisibleRowsCount = 15
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
 				0.15f,
 				0.45f,
-				0.3f,
+				0.1f,
+				0.2f,
 				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnComparison(0, CellTextComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
-			modTable.SetColumnName(2, new StringBuilder("Status"));
+			modTable.SetColumnName(2, new StringBuilder("Version"));
+			modTable.SetColumnName(3, new StringBuilder("Status"));
 			modTable.SetColumnComparison(2, CellTextComparison);
-			modTable.SetColumnName(3, new StringBuilder("Enabled"));
+			modTable.SetColumnName(4, new StringBuilder("Enabled"));
 			modTable.SetColumnComparison(3, CellCheckedComparison);
 			Controls.Add(modTable);
 
@@ -162,6 +164,9 @@ namespace avaness.PluginLoader
 
 					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
 					row.AddCell(nameCell);
+
+					MyGuiControlTable.Cell versionCell = new MyGuiControlTable.Cell(data.Version?.ToString());
+					row.AddCell(versionCell);
 
 					MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
 					row.AddCell(statusCell);

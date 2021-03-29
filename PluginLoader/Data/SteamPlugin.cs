@@ -85,7 +85,9 @@ namespace avaness.PluginLoader.Data
                 return null;
             if (!VerifyAllowed(dll))
                 return null;
-            return Assembly.LoadFile(dll);
+            Assembly a = Assembly.LoadFile(dll);
+            Version = a.GetName().Version;
+            return a;
         }
 
         protected abstract void ApplyUpdate();

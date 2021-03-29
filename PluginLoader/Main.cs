@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System;
 using System.IO;
-using avaness.PluginLoader.Data;
 using VRage.FileSystem;
 using HarmonyLib;
 using System.Windows.Forms;
@@ -44,7 +43,9 @@ namespace avaness.PluginLoader
 
             Config = PluginConfig.Load(mainPath);
             List = new PluginList(mainPath, Config);
-            
+
+            RoslynReferences.GenerateAssemblyList();
+
             LogFile.WriteLine("Loading config.");
             Config.Init(List);
 

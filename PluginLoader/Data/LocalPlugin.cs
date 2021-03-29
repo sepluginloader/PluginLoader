@@ -38,7 +38,11 @@ namespace avaness.PluginLoader.Data
         public override Assembly GetAssembly()
         {
             if(File.Exists(Id))
-                return Assembly.LoadFile(Id);
+            {
+                Assembly a = Assembly.LoadFile(Id);
+                Version = a.GetName().Version;
+                return a;
+            }
             return null;
         }
 

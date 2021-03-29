@@ -18,6 +18,9 @@ namespace avaness.PluginLoader.Data
         public abstract string Source { get; }
 
         [XmlIgnore]
+        public Version Version { get; protected set; }
+
+        [XmlIgnore]
         public virtual PluginStatus Status { get; set; } = PluginStatus.NotInstalled;
         public virtual string StatusString
         {
