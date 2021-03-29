@@ -44,7 +44,7 @@ namespace avaness.PluginLoader.Compiler
 
                     foreach (AssemblyName name in a.GetReferencedAssemblies())
                     {
-                        if (!allReferences.ContainsKey(name.Name) && TryLoadAssembly(name, out Assembly aRef))
+                        if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef))
                         {
                             AddAssemblyReference(aRef);
                             sb.AppendLine(name.FullName);
@@ -60,6 +60,11 @@ namespace avaness.PluginLoader.Compiler
             }
 
             LogFile.WriteLine(sb.ToString(), false);
+        }
+
+        private static bool ContainsReference(AssemblyName name)
+        {
+            return allReferences.TryGetValue(name.Name, out AssemblyReference refs) && refs.Contains(name);
         }
 
         private static bool TryLoadAssembly(AssemblyName name, out Assembly aRef)
@@ -144,14 +149,12 @@ namespace avaness.PluginLoader.Compiler
 
             public void Add(Assembly a)
             {
-                fullNames[a.FullName] = MetadataReference.CreateFromFile(a.Location);
+                fullNames[a.GetName().Version.ToString()] = MetadataReference.CreateFromFile(a.Location);
             }
 
-            public MetadataReference Get(string fullString)
+            public bool Contains(AssemblyName name)
             {
-                if (fullNames.Count > 1 && fullNames.TryGetValue(fullString, out MetadataReference exactMatch))
-                    return exactMatch;
-                return fullNames.Values.First();
+                return fullNames.ContainsKey(name.Version.ToString());
             }
 
             public IEnumerator<MetadataReference> GetEnumerator()
