@@ -97,10 +97,11 @@ namespace avaness.PluginLoader
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
 			modTable.SetColumnName(2, new StringBuilder("Version"));
-			modTable.SetColumnName(3, new StringBuilder("Status"));
 			modTable.SetColumnComparison(2, CellTextComparison);
+			modTable.SetColumnName(3, new StringBuilder("Status"));
+			modTable.SetColumnComparison(3, CellTextComparison);
 			modTable.SetColumnName(4, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(3, CellCheckedComparison);
+			modTable.SetColumnComparison(4, CellCheckedComparison);
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
@@ -137,6 +138,15 @@ namespace avaness.PluginLoader
 
         private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
+			if(x.Text == null)
+            {
+				if (y.Text == null)
+					return 0;
+				return 1;
+            }
+
+			if (y.Text == null)
+				return -1;
 			return x.Text.CompareTo(y.Text);
         }
 
