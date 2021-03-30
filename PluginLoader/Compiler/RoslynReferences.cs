@@ -13,7 +13,7 @@ namespace avaness.PluginLoader.Compiler
 {
     public static class RoslynReferences
     {
-        private static Dictionary<string, AssemblyReference> allReferences = new Dictionary<string, AssemblyReference>();
+        private static Dictionary<string, MetadataReference> allReferences = new Dictionary<string, MetadataReference>();
 
         public static void GenerateAssemblyList()
         {
@@ -44,7 +44,7 @@ namespace avaness.PluginLoader.Compiler
 
                     foreach (AssemblyName name in a.GetReferencedAssemblies())
                     {
-                        if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef))
+                        if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef) && !aRef.IsDynamic)
                         {
                             AddAssemblyReference(aRef);
                             sb.AppendLine(name.FullName);
@@ -64,7 +64,7 @@ namespace avaness.PluginLoader.Compiler
 
         private static bool ContainsReference(AssemblyName name)
         {
-            return allReferences.TryGetValue(name.Name, out AssemblyReference refs) && refs.Contains(name);
+            return allReferences.ContainsKey(name.Name);
         }
 
         private static bool TryLoadAssembly(AssemblyName name, out Assembly aRef)
@@ -84,19 +84,13 @@ namespace avaness.PluginLoader.Compiler
         private static void AddAssemblyReference(Assembly a)
         {
             string name = a.GetName().Name;
-            if (allReferences.TryGetValue(name, out AssemblyReference refs))
-                refs.Add(a);
-            else
-                allReferences.Add(name, new AssemblyReference(a));
+            if (!allReferences.ContainsKey(name))
+                allReferences.Add(name, MetadataReference.CreateFromFile(a.Location));
         }
 
         public static IEnumerable<MetadataReference> EnumerateAllReferences()
         {
-            foreach (AssemblyReference refs in allReferences.Values)
-            {
-                foreach (MetadataReference reference in refs)
-                    yield return reference;
-            }
+            return allReferences.Values;
         }
 
         private static bool IsValidReference(Assembly a)
@@ -128,43 +122,13 @@ namespace avaness.PluginLoader.Compiler
                 {
                     Assembly a = Assembly.Load(aName);
                     LogFile.WriteLine("Reference added at runtime: " + a.FullName);
-                    AssemblyReference aRef = new AssemblyReference(a);
+                    MetadataReference aRef = MetadataReference.CreateFromFile(a.Location);
                     allReferences[a.GetName().Name] = aRef;
                 }
             }
             catch (IOException)
             {
                 LogFile.WriteLine("WARNING: Unable to find the assembly '" + name + "'!");
-            }
-        }
-
-        private class AssemblyReference : IEnumerable<MetadataReference>
-        {
-            public readonly Dictionary<string, MetadataReference> fullNames = new Dictionary<string, MetadataReference>();
-
-            public AssemblyReference(Assembly a)
-            {
-                Add(a);
-            }
-
-            public void Add(Assembly a)
-            {
-                fullNames[a.GetName().Version.ToString()] = MetadataReference.CreateFromFile(a.Location);
-            }
-
-            public bool Contains(AssemblyName name)
-            {
-                return fullNames.ContainsKey(name.Version.ToString());
-            }
-
-            public IEnumerator<MetadataReference> GetEnumerator()
-            {
-                return fullNames.Values.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return fullNames.Values.GetEnumerator();
             }
         }
     }
