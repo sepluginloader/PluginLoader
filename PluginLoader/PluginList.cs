@@ -24,8 +24,12 @@ namespace avaness.PluginLoader
 
         public PluginList(string mainDirectory, PluginConfig config)
         {
+            var lbl = Main.Instance.Label;
+
+            lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
 
+            lbl.SetText("Finding installed plugins...");
             LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
             FindLocalPlugins(mainDirectory);

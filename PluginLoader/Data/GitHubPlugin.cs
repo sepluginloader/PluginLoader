@@ -46,10 +46,13 @@ namespace avaness.PluginLoader.Data
             string commitFile = Path.Combine(cacheDir, commitHashFile);
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
             {
+                var lbl = Main.Instance.Label;
+                lbl.SetText("Downloading " + this);
                 byte[] data = CompileFromSource();
                 File.WriteAllBytes(dllFile, data);
                 File.WriteAllText(commitFile, Commit);
                 Status = PluginStatus.Updated;
+                lbl.SetText($"Compiled {this}.");
                 a = Assembly.Load(data);
             }
             else
@@ -67,11 +70,9 @@ namespace avaness.PluginLoader.Data
             using(Stream s = GitHub.DownloadRepo(Id, Commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
-                RoslynReferences.GenerateAssemblyList();
-
                 foreach (ZipArchiveEntry entry in zip.Entries)
                 {
-                    if(entry.FullName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                    if (entry.FullName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                     {
                         using (Stream entryStream = entry.Open())
                         {

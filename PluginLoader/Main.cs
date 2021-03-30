@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Sandbox.Game.World;
 using System.Diagnostics;
 using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.GUI;
 
 namespace avaness.PluginLoader
 {
@@ -18,6 +19,7 @@ namespace avaness.PluginLoader
 
         public PluginList List { get; }
         public PluginConfig Config { get; }
+        public SplashScreenLabel Label { get; private set; }
 
         private bool init;
 
@@ -25,6 +27,8 @@ namespace avaness.PluginLoader
 
         public Main()
         {
+            Label = new SplashScreenLabel();
+
             Stopwatch sw = Stopwatch.StartNew();
 
             Instance = this;
@@ -39,6 +43,8 @@ namespace avaness.PluginLoader
             LogFile.Init(mainPath);
             LogFile.WriteLine("Starting.");
 
+            RoslynReferences.GenerateAssemblyList();
+
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
             Config = PluginConfig.Load(mainPath);
@@ -50,6 +56,7 @@ namespace avaness.PluginLoader
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
+            Label.SetText("Instantiating plugins...");
             foreach (string id in Config)
             {
                 if (PluginInstance.TryGet(List[id], out PluginInstance p))
@@ -62,7 +69,10 @@ namespace avaness.PluginLoader
             LogFile.Flush();
 
             Cursor.Current = temp;
+
+            Label.SetText("Done.");
         }
+
 
         public void RegisterComponents()
         {
@@ -95,6 +105,9 @@ namespace avaness.PluginLoader
 
         public void Init(object gameInstance)
         {
+            Label.Delete();
+            Label = null;
+
             LogFile.WriteLine($"Initializing {plugins.Count} plugins...");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {

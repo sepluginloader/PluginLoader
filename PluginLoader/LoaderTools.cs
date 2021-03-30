@@ -71,7 +71,22 @@ namespace avaness.PluginLoader
         /// </summary>
         public static void Precompile(Assembly a)
         {
-            foreach (Type t in a.GetTypes())
+            Type[] types;
+            try
+            {
+                types = a.GetTypes();
+            }
+            catch(ReflectionTypeLoadException e)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("LoaderExceptions: ");
+                foreach (Exception e2 in e.LoaderExceptions)
+                    sb.Append(e2).AppendLine();
+                LogFile.WriteLine(sb.ToString());
+                throw;
+            }
+
+            foreach (Type t in types)
             {
                 // Static constructors allow for early code execution which can cause issues later in the game
                 if (HasStaticConstructor(t))

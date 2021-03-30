@@ -68,6 +68,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\System.Collections.Immutable.dll</HintPath>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -101,6 +102,7 @@
     <Compile Include="Data\SEPMPlugin.cs" />
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
+    <Compile Include="GUI\SplashScreenLabel.cs" />
     <Compile Include="Network\GitHub.cs" />
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
@@ -110,7 +112,7 @@
     <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />
-    <Compile Include="MyGuiScreenPluginConfig.cs" />
+    <Compile Include="GUI\MyGuiScreenPluginConfig.cs" />
     <Compile Include="Data\PluginData.cs" />
     <Compile Include="PluginInstance.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

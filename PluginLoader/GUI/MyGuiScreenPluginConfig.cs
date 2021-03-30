@@ -7,7 +7,7 @@ using System.Text;
 using VRage.Utils;
 using VRageMath;
 
-namespace avaness.PluginLoader
+namespace avaness.PluginLoader.GUI
 {
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
@@ -259,7 +259,7 @@ namespace avaness.PluginLoader
         private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
         {
 			PluginData original = (PluginData)checkbox.UserData;
-			if (config.IsEnabled(original.Id))
+			if (config.IsEnabled(original.Id) == checkbox.IsChecked)
 				dataChanges.Remove(original.Id);
 			else
 				dataChanges[original.Id] = checkbox.IsChecked;
