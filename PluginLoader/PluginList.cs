@@ -29,6 +29,15 @@ namespace avaness.PluginLoader
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
 
+            GitHubPlugin github = new GitHubPlugin();
+            github.Id = "viktor-ferenczi/multigrid-projector";
+            github.FriendlyName = "MultiGridProjector";
+            github.Commit = "e8b9ad25ee67afd22d6c50686f51d50f3c76e12e";
+            github.ProjectFile = "MultigridProjectorClient/MultigridProjectorClient.csproj";
+            Save(github, "test.xml");
+            github.Init(mainDirectory);
+            plugins[github.Id] = github;
+
             lbl.SetText("Finding installed plugins...");
             LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
@@ -45,7 +54,7 @@ namespace avaness.PluginLoader
                 LogFile.WriteLine("Downloading whitelist...");
                 if (!File.Exists(whitelist) | ListChanged(config.ListHash, out string hash))
                 {
-                    using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit))
+                    using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
                     using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                     {
                         XmlSerializer xml = new XmlSerializer(typeof(PluginData));

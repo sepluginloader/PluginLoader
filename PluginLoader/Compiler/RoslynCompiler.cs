@@ -18,9 +18,14 @@ namespace avaness.PluginLoader.Compiler
     {
         private readonly List<Source> source = new List<Source>();
 
-        public void Load(Source source)
+        public void Load(Stream s, string name)
         {
-            this.source.Add(source);
+            MemoryStream mem = new MemoryStream();
+            using (mem)
+            {
+                s.CopyTo(mem);
+                source.Add(new Source(mem, name));
+            }
         }
 
         public byte[] Compile()
@@ -61,7 +66,7 @@ namespace avaness.PluginLoader.Compiler
         }
 
 
-        public class Source
+        private class Source
         {
             public string Name { get; }
             public SyntaxTree Tree { get; }

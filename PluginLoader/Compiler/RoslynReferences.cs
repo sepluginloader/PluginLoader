@@ -98,22 +98,7 @@ namespace avaness.PluginLoader.Compiler
             return !a.IsDynamic && !string.IsNullOrWhiteSpace(a.Location);
         }
 
-        public static void LoadReferences(Stream s)
-        {
-            // Source: https://stackoverflow.com/a/28694200
-            XNamespace msbuild = "http://schemas.microsoft.com/developer/msbuild/2003";
-            XDocument projDefinition = XDocument.Load(s);
-            IEnumerable<string> references = projDefinition
-                .Element(msbuild + "Project")
-                .Elements(msbuild + "ItemGroup")
-                .Elements(msbuild + "Reference")
-                .Attributes("Include")    // This is where the reference is mentioned       
-                .Select(refElem => refElem.Value);
-            foreach (string reference in references)
-                LoadReference(reference);
-        }
-
-        private static void LoadReference(string name)
+        public static void LoadReference(string name)
         {
             try
             {
