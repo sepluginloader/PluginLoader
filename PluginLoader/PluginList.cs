@@ -29,15 +29,6 @@ namespace avaness.PluginLoader
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
 
-            GitHubPlugin github = new GitHubPlugin();
-            github.Id = "viktor-ferenczi/multigrid-projector";
-            github.FriendlyName = "MultiGridProjector";
-            github.Commit = "e8b9ad25ee67afd22d6c50686f51d50f3c76e12e";
-            github.ProjectFile = "MultigridProjectorClient/MultigridProjectorClient.csproj";
-            Save(github, "test.xml");
-            github.Init(mainDirectory);
-            plugins[github.Id] = github;
-
             lbl.SetText("Finding installed plugins...");
             LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins();
