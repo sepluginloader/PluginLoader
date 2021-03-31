@@ -10,6 +10,7 @@ using Sandbox.Game.World;
 using System.Diagnostics;
 using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
+using avaness.PluginLoader.Data;
 
 namespace avaness.PluginLoader
 {
@@ -59,7 +60,10 @@ namespace avaness.PluginLoader
             Label.SetText("Instantiating plugins...");
             foreach (string id in Config)
             {
-                if (PluginInstance.TryGet(List[id], out PluginInstance p))
+                PluginData data = List[id];
+                if (data is GitHubPlugin github)
+                    github.Init(mainPath);
+                if (PluginInstance.TryGet(data, out PluginInstance p))
                     plugins.Add(p);
             }
 
