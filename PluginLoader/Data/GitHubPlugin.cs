@@ -6,10 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
 {
@@ -20,8 +18,11 @@ namespace avaness.PluginLoader.Data
 
         [ProtoMember(1)]
         public string Commit { get; set; }
+
         [ProtoMember(2)]
-        public string ProjectFile { get; set; }
+        [XmlArray]
+        [XmlArrayItem("Directory")]
+        public string[] SourceDirectories { get; set; }
 
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
@@ -37,6 +38,25 @@ namespace avaness.PluginLoader.Data
             string[] nameArgs = Id.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
             if (nameArgs.Length != 2)
                 throw new Exception("Invalid GitHub name: " + Id);
+
+            if(SourceDirectories != null)
+            {
+                for (int i = SourceDirectories.Length - 1; i >= 0; i--)
+                {
+                    string path = SourceDirectories[i].Replace('\\', '/').TrimStart('/');
+                    
+                    if(path.Length == 0)
+                    {
+                        SourceDirectories.RemoveAtFast(i);
+                        continue;
+                    }
+
+                    if (path[path.Length - 1] != '/')
+                        path += '/';
+
+                    SourceDirectories[i] = path;
+                }
+            }
 
             cacheDir = Path.Combine(mainDirectory, "GitHub", nameArgs[0], nameArgs[1]);
         }
@@ -78,103 +98,48 @@ namespace avaness.PluginLoader.Data
             using(Stream s = GitHub.DownloadRepo(Id, Commit, out string fileName))
             using (ZipArchive zip = new ZipArchive(s))
             {
-                if (fileName != null && ProjectFile != null)
-                {
-                    string root = Path.GetFileNameWithoutExtension(fileName);
-                    CompileProject(compiler, zip, Path.Combine(root, ProjectFile.Replace('\\', '/')).Replace('\\', '/'));
-                }
-                else
-                {
-                    CompileAllFiles(compiler, zip);
-                }
+                foreach(ZipArchiveEntry entry in zip.Entries)
+                    CompileFromSource(compiler, entry);
             }
             return compiler.Compile();
         }
 
-        private void CompileProject(RoslynCompiler compiler, ZipArchive zip, string csprojPath)
+        private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)
         {
-            ZipArchiveEntry csprojEntry = zip.GetEntry(csprojPath);
-            if (csprojEntry == null)
-                throw new NullReferenceException(csprojPath + " Does not exist!");
-
-            using(Stream csprojStream = csprojEntry.Open())
+            if (AllowedZipPath(entry.FullName))
             {
-                // Source: https://stackoverflow.com/a/28694200
-                XNamespace msbuild = "http://schemas.microsoft.com/developer/msbuild/2003";
-                XDocument projDefinition = XDocument.Load(csprojStream);
-
-                // References
-                IEnumerable<string> references = projDefinition
-                    .Element(msbuild + "Project")
-                    .Elements(msbuild + "ItemGroup")
-                    .Elements(msbuild + "Reference")
-                    .Attributes("Include")
-                    .Select(refElem => refElem.Value);
-                foreach (string reference in references)
-                    RoslynReferences.LoadReference(reference);
-
-                string pathRoot = Path.GetDirectoryName(csprojEntry.FullName.Replace('\\', '/')).Replace('\\', '/');
-
-                // Files
-                IEnumerable<string> csFiles = projDefinition
-                    .Element(msbuild + "Project")
-                    .Elements(msbuild + "ItemGroup")
-                    .Elements(msbuild + "Compile")
-                    .Attributes("Include")
-                    .Select(refElem => GetRelativePath(pathRoot, refElem.Value));
-                foreach(string csFile in csFiles)
+                using (Stream entryStream = entry.Open())
                 {
-                    if(csFile.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-                    {
-                        ZipArchiveEntry entry = zip.GetEntry(csFile);
-                        if(entry != null)
-                        {
-                            using (Stream s = entry.Open())
-                            {
-                                compiler.Load(s, entry.FullName);
-                            }
-                        }
-                    }
+                    compiler.Load(entryStream, entry.FullName);
                 }
             }
         }
 
-        private string GetRelativePath(string root, string path)
+        private bool AllowedZipPath(string path)
         {
-            char[] seps = new char[] { '/', '\\' };
+            if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                return false;
 
-            Stack<string> s = new Stack<string>(root.Split(seps, StringSplitOptions.RemoveEmptyEntries));
-            foreach(string p in path.Split(seps, StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (p == "..")
-                    s.Pop();
-                else
-                    s.Push(p);
-            }
+            if (SourceDirectories == null || SourceDirectories.Length == 0)
+                return true;
 
-            StringBuilder sb = new StringBuilder();
-            foreach (string p in s.Reverse())
+            path = RemoveRoot(path); // Make the base of the path the root of the repository
+
+            foreach(string dir in SourceDirectories)
             {
-                if (sb.Length > 0)
-                    sb.Append('/');
-                sb.Append(p);
+                if (path.StartsWith(dir, StringComparison.Ordinal))
+                    return true;
             }
-            return sb.ToString();
+            return false;
         }
 
-        private void CompileAllFiles(RoslynCompiler compiler, ZipArchive zip)
+        private string RemoveRoot(string path)
         {
-            foreach (ZipArchiveEntry entry in zip.Entries)
-            {
-                if (entry.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-                {
-                    using (Stream entryStream = entry.Open())
-                    {
-                        compiler.Load(entryStream, entry.FullName);
-                    }
-                }
-
-            }
+            path = path.Replace('\\', '/').TrimStart('/');
+            int index = path.IndexOf('/');
+            if(index >= 0 && (index + 1) < path.Length)
+                return path.Substring(index + 1);
+            return path;
         }
 
         public override void Show()
