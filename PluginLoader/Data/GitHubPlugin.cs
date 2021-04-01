@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
@@ -26,7 +27,7 @@ namespace avaness.PluginLoader.Data
 
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
-        private string cacheDir;
+        private string cacheDir, assemblyName;
 
         public GitHubPlugin()
         {
@@ -58,7 +59,21 @@ namespace avaness.PluginLoader.Data
                 }
             }
 
+            assemblyName = MakeSafeString(nameArgs[1]);
             cacheDir = Path.Combine(mainDirectory, "GitHub", nameArgs[0], nameArgs[1]);
+        }
+
+        private string MakeSafeString(string s)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char ch in s)
+            {
+                if (char.IsLetterOrDigit(ch))
+                    sb.Append(ch);
+                else
+                    sb.Append('_');
+            }
+            return sb.ToString();
         }
 
         public override Assembly GetAssembly()
@@ -101,7 +116,7 @@ namespace avaness.PluginLoader.Data
                 foreach(ZipArchiveEntry entry in zip.Entries)
                     CompileFromSource(compiler, entry);
             }
-            return compiler.Compile();
+            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName());
         }
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)

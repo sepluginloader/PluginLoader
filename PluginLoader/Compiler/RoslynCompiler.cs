@@ -23,10 +23,10 @@ namespace avaness.PluginLoader.Compiler
             }
         }
 
-        public byte[] Compile()
+        public byte[] Compile(string assemblyName)
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
-               Path.GetRandomFileName(),
+               assemblyName,
                syntaxTrees: source.Select(x => x.Tree),
                references: RoslynReferences.EnumerateAllReferences(),
                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release));
