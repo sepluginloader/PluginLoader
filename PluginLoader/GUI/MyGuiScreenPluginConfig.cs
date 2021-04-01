@@ -102,6 +102,7 @@ namespace avaness.PluginLoader.GUI
 			modTable.SetColumnComparison(3, CellTextComparison);
 			modTable.SetColumnName(4, new StringBuilder("Enabled"));
 			modTable.SetColumnComparison(4, CellCheckedComparison);
+			modTable.SortByColumn(0);
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
@@ -158,7 +159,10 @@ namespace avaness.PluginLoader.GUI
 			bool noFilter = filter == null || filter.Length == 0;
 			foreach (PluginData data in list)
 			{
-				bool enabled = config.IsEnabled(data.Id);
+				bool enabled;
+				if(!dataChanges.TryGetValue(data.Id, out enabled))
+					enabled = config.IsEnabled(data.Id);
+
 				bool installed = data.Status != PluginStatus.NotInstalled;
 
 				if (noFilter && (data.Hidden || !installed) && !enabled)
@@ -194,6 +198,7 @@ namespace avaness.PluginLoader.GUI
 					row.AddCell(enabledCell);
 				}
 			}
+			modTable.Sort(false);
 		}
 
         private void SearchBox_TextChanged(MyGuiControlTextbox txt)
