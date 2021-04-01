@@ -14,12 +14,13 @@ namespace avaness.PluginLoader.Compiler
     public static class RoslynReferences
     {
         private static Dictionary<string, MetadataReference> allReferences = new Dictionary<string, MetadataReference>();
+        private static readonly HashSet<string> referenceBlacklist = new HashSet<string>(new[] { "System.ValueTuple" });
 
         public static void GenerateAssemblyList()
         {
             if (allReferences.Count > 0)
                 return;
-
+            
             Stack<Assembly> loadedAssemblies = new Stack<Assembly>(AppDomain.CurrentDomain.GetAssemblies().Where(IsValidReference));
 
             StringBuilder sb = new StringBuilder();
@@ -44,7 +45,7 @@ namespace avaness.PluginLoader.Compiler
 
                     foreach (AssemblyName name in a.GetReferencedAssemblies())
                     {
-                        if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef) && !aRef.IsDynamic)
+                        if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef) && IsValidReference(aRef))
                         {
                             AddAssemblyReference(aRef);
                             sb.AppendLine(name.FullName);
@@ -95,7 +96,7 @@ namespace avaness.PluginLoader.Compiler
 
         private static bool IsValidReference(Assembly a)
         {
-            return !a.IsDynamic && !string.IsNullOrWhiteSpace(a.Location);
+            return !a.IsDynamic && !string.IsNullOrWhiteSpace(a.Location) && !referenceBlacklist.Contains(a.GetName().Name);
         }
 
         public static void LoadReference(string name)
