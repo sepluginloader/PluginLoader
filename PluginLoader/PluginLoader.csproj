@@ -108,7 +108,6 @@
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
-    <Compile Include="PluginConfig.ConfigEntry.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />

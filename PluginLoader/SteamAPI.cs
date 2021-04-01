@@ -1,5 +1,4 @@
 ﻿using Steamworks;
-using System.Collections.Generic;
 
 namespace avaness.PluginLoader
 {

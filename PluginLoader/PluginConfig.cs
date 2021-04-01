@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
-using avaness.PluginLoader.Data;
-using System.Collections;
 
 namespace avaness.PluginLoader
 {
@@ -16,15 +14,16 @@ namespace avaness.PluginLoader
         private string filePath;
 
         [XmlArray]
-        public ConfigEntry[] Plugins
+        [XmlArrayItem("Id")]
+        public string[] Plugins
         {
             get
             {
-                return enabledPlugins.Select(x => new ConfigEntry(x)).ToArray();
+                return enabledPlugins.ToArray();
             }
             set
             {
-                enabledPlugins = new HashSet<string>(value.Select(x => x.Id));
+                enabledPlugins = new HashSet<string>(value);
             }
         }
 

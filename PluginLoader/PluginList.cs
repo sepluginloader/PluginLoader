@@ -7,7 +7,6 @@ using System.Xml.Serialization;
 using ProtoBuf;
 using System.Linq;
 using avaness.PluginLoader.Network;
-using System.Net.Sockets;
 using System.IO.Compression;
 
 namespace avaness.PluginLoader
