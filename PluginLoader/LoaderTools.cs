@@ -94,6 +94,8 @@ namespace avaness.PluginLoader
 
                 foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                 {
+                    if (m.HasAttribute<HarmonyReversePatch>())
+                        throw new Exception("Harmony attribute 'HarmonyReversePatch' found on the method '" + m.Name + "' is not compatible with Plugin Loader!");
                     Precompile(m);
                 }
             }
