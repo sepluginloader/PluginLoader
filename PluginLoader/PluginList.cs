@@ -13,7 +13,7 @@ namespace avaness.PluginLoader
 {
     public class PluginList : IEnumerable<PluginData>
     {
-        private readonly SortedDictionary<string, PluginData> plugins = new SortedDictionary<string, PluginData>();
+        private readonly Dictionary<string, PluginData> plugins = new Dictionary<string, PluginData>();
         
         public PluginData this[string key]
         {

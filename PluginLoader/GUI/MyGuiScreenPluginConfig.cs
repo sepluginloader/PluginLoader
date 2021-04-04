@@ -3,6 +3,7 @@ using Sandbox;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using VRage.Utils;
 using VRageMath;
@@ -19,8 +20,8 @@ namespace avaness.PluginLoader.GUI
         private const float sizeX = 1;
         private const float sizeY = 0.76f;
 
-		private Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
-		private StringBuilder tempBuilder = new StringBuilder();
+		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
+		private readonly StringBuilder tempBuilder = new StringBuilder();
 		private MyGuiControlTable modTable;
 		private PluginConfig config;
 
@@ -157,7 +158,7 @@ namespace avaness.PluginLoader.GUI
 			modTable.Controls.Clear();
 			PluginList list = Main.Instance.List;
 			bool noFilter = filter == null || filter.Length == 0;
-			foreach (PluginData data in list)
+			foreach (PluginData data in list.OrderBy(x => x.FriendlyName))
 			{
 				bool enabled;
 				if(!dataChanges.TryGetValue(data.Id, out enabled))
