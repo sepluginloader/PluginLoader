@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using System;
 using System.IO;
-using avaness.PluginLoader.Data;
 using VRage.FileSystem;
 using HarmonyLib;
 using System.Windows.Forms;
 using Sandbox.Game.World;
 using System.Diagnostics;
+using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.GUI;
+using avaness.PluginLoader.Data;
 
 namespace avaness.PluginLoader
 {
@@ -16,15 +18,18 @@ namespace avaness.PluginLoader
     {
         public static Main Instance;
 
+        public PluginList List { get; }
         public PluginConfig Config { get; }
+        public SplashScreenLabel Label { get; private set; }
 
-        private LogFile log;
         private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
 
         public Main()
         {
+            Label = new SplashScreenLabel();
+
             Stopwatch sw = Stopwatch.StartNew();
 
             Instance = this;
@@ -36,50 +41,62 @@ namespace avaness.PluginLoader
             if (!Directory.Exists(mainPath))
                 Directory.CreateDirectory(mainPath);
 
-            log = new LogFile(mainPath);
-            log.WriteLine("Starting.");
+            LogFile.Init(mainPath);
+            LogFile.WriteLine("Starting.");
+
+            RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
-            log.WriteLine("Loading config.");
-            Config = PluginConfig.Load(mainPath, log);
+            Config = PluginConfig.Load(mainPath);
+            List = new PluginList(mainPath, Config);
+
+            LogFile.WriteLine("Loading config.");
+            Config.Init(List);
 
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
 
-            foreach (PluginData data in Config.Data.Values)
+            Label.SetText("Instantiating plugins...");
+            foreach (string id in Config)
             {
-                if (data.Enabled && PluginInstance.TryGet(log, data, out PluginInstance p))
+                PluginData data = List[id];
+                if (data is GitHubPlugin github)
+                    github.Init(mainPath);
+                if (PluginInstance.TryGet(data, out PluginInstance p))
                     plugins.Add(p);
             }
 
             sw.Stop();
 
-            log.WriteLine($"Finished startup. Took {sw.ElapsedMilliseconds}ms");
-            log.Flush();
+            LogFile.WriteLine($"Finished startup. Took {sw.ElapsedMilliseconds}ms");
+            LogFile.Flush();
 
             Cursor.Current = temp;
+
+            Label.SetText("Done.");
         }
+
 
         public void RegisterComponents()
         {
-            log.WriteLine("Registering Components...");
+            LogFile.WriteLine("Registering Components...");
             foreach (PluginInstance plugin in plugins)
                 plugin.RegisterSession(MySession.Static);
-            log.Flush();
+            LogFile.Flush();
         }
 
         public void DisablePlugins()
         {
             Config.Disable();
             plugins.Clear();
-            log.WriteLine("Disabled all plugins.");
-            log.Flush();
+            LogFile.WriteLine("Disabled all plugins.");
+            LogFile.Flush();
         }
 
         public void InstantiatePlugins()
         {
-            log.WriteLine($"Loading {plugins.Count} plugins...");
+            LogFile.WriteLine($"Loading {plugins.Count} plugins...");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
@@ -87,19 +104,22 @@ namespace avaness.PluginLoader
                     plugins.RemoveAtFast(i);
             }
 
-            log.Flush();
+            LogFile.Flush();
         }
 
         public void Init(object gameInstance)
         {
-            log.WriteLine($"Initializing {plugins.Count} plugins...");
+            Label.Delete();
+            Label = null;
+
+            LogFile.WriteLine($"Initializing {plugins.Count} plugins...");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
                 if(!p.Init(gameInstance))
                     plugins.RemoveAtFast(i);
             }
-            log.Flush();
+            LogFile.Flush();
             init = true;
         }
 
@@ -123,8 +143,7 @@ namespace avaness.PluginLoader
             plugins.Clear();
 
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
-            log?.Dispose();
-            log = null;
+            LogFile.Dispose();
             Instance = null;
         }
 
@@ -135,17 +154,17 @@ namespace avaness.PluginLoader
             if (args.Name.Contains("0Harmony"))
             {
                 if (assembly != null)
-                    log.WriteLine("Resolving 0Harmony for " + assembly);
+                    LogFile.WriteLine("Resolving 0Harmony for " + assembly);
                 else
-                    log.WriteLine("Resolving 0Harmony");
+                    LogFile.WriteLine("Resolving 0Harmony");
                 return typeof(Harmony).Assembly;
             }
             else if (args.Name.Contains("SEPluginManager"))
             {
                 if (assembly != null)
-                    log.WriteLine("Resolving SEPluginManager for " + assembly);
+                    LogFile.WriteLine("Resolving SEPluginManager for " + assembly);
                 else
-                    log.WriteLine("Resolving SEPluginManager");
+                    LogFile.WriteLine("Resolving SEPluginManager");
                 return typeof(SEPluginManager.SEPMPlugin).Assembly;
             }
             return null;

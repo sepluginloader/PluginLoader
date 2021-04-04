@@ -10,15 +10,13 @@ namespace avaness.PluginLoader
 {
     public class PluginInstance
     {
-        private readonly LogFile log;
         private readonly Type mainType;
         private readonly PluginData data;
         private readonly Assembly mainAssembly;
         private IPlugin plugin;
 
-        private PluginInstance(LogFile log, PluginData data, Assembly mainAssembly, Type mainType)
+        private PluginInstance(PluginData data, Assembly mainAssembly, Type mainType)
         {
-            this.log = log;
             this.data = data;
             this.mainAssembly = mainAssembly;
             this.mainType = mainType;
@@ -47,7 +45,7 @@ namespace avaness.PluginLoader
             {
 
                 if (plugin is SEPluginManager.SEPMPlugin sepm)
-                    LoaderTools.ExecuteMain(log, sepm);
+                    LoaderTools.ExecuteMain(sepm);
                 plugin.Init(gameInstance);
                 return true;
             }
@@ -73,7 +71,7 @@ namespace avaness.PluginLoader
                         count++;
                     }
                     if(count > 0)
-                        log.WriteLine($"Registered {count} session components from: {mainAssembly.FullName}");
+                        LogFile.WriteLine($"Registered {count} session components from: {mainAssembly.FullName}");
                 }
                 catch (Exception e)
                 {
@@ -104,20 +102,20 @@ namespace avaness.PluginLoader
                 catch (Exception e)
                 {
                     data.Status = PluginStatus.Error;
-                    log.WriteLine($"Failed to dispose {data} because of an error: {e}");
+                    LogFile.WriteLine($"Failed to dispose {data} because of an error: {e}");
                 }
             }
         }
 
         private void ThrowError(string error)
         {
-            log.WriteLine(error);
-            log.Flush();
+            LogFile.WriteLine(error);
+            LogFile.Flush();
             data.Error();
             Dispose();
         }
 
-        public static bool TryGet(LogFile log, PluginData data, out PluginInstance instance)
+        public static bool TryGet(PluginData data, out PluginInstance instance)
         {
             instance = null;
             if (!data.TryLoadAssembly(out Assembly a))
@@ -126,13 +124,13 @@ namespace avaness.PluginLoader
             Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
             if (pluginType == null)
             {
-                log.WriteLine($"Failed to load {data} because it does not contain an IPlugin.");
-                log.Flush();
+                LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin.");
+                LogFile.Flush();
                 data.Error();
                 return false;
             }
 
-            instance = new PluginInstance(log, data, a, pluginType);
+            instance = new PluginInstance(data, a, pluginType);
             return true;
         }
 

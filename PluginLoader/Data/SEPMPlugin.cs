@@ -1,10 +1,12 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
 namespace avaness.PluginLoader.Data
 {
+    [ProtoContract]
     public class SEPMPlugin : SteamPlugin
     {
         private const string NameFile = "name.txt";
@@ -18,9 +20,6 @@ namespace avaness.PluginLoader.Data
         {
 
         }
-
-        public SEPMPlugin(LogFile log, ulong id, string zipFile) : base(log, id, zipFile)
-        { }
 
         protected override void CheckForUpdates()
         {
@@ -45,31 +44,6 @@ namespace avaness.PluginLoader.Data
             if (!Directory.Exists(dataFolder))
                 return null;
             return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.Equals("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-        }
-
-        protected override string GetName()
-        {
-            if (Status == PluginStatus.PendingUpdate)
-            {
-                using (ZipArchive archive = ZipFile.OpenRead(sourceFile))
-                {
-                    ZipArchiveEntry nameEntry = archive.Entries.First(e => e.FullName == NameFile);
-                    if (nameEntry != null)
-                    {
-                        string temp = new StreamReader(nameEntry.Open()).ReadToEnd();
-                        if (temp.Length != 0)
-                            return temp;
-                    }
-                }
-            }
-            else
-            {
-                string nameFile = Path.Combine(dataFolder, NameFile);
-                if (File.Exists(nameFile))
-                    return File.ReadAllText(nameFile);
-            }
-
-            return Id;
         }
     }
 }

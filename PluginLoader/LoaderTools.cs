@@ -28,10 +28,10 @@ namespace avaness.PluginLoader
             Process.GetCurrentProcess().Kill();
         }
 
-        public static void ExecuteMain(LogFile log, SEPMPlugin plugin)
+        public static void ExecuteMain(SEPMPlugin plugin)
         {
             string name = plugin.GetType().ToString();
-            plugin.Main(new Harmony(name), new Logger(name, log));
+            plugin.Main(new Harmony(name), new Logger());
         }
 
         public static string GetHash1(string file)
@@ -71,7 +71,22 @@ namespace avaness.PluginLoader
         /// </summary>
         public static void Precompile(Assembly a)
         {
-            foreach (Type t in a.GetTypes())
+            Type[] types;
+            try
+            {
+                types = a.GetTypes();
+            }
+            catch(ReflectionTypeLoadException e)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("LoaderExceptions: ");
+                foreach (Exception e2 in e.LoaderExceptions)
+                    sb.Append(e2).AppendLine();
+                LogFile.WriteLine(sb.ToString());
+                throw;
+            }
+
+            foreach (Type t in types)
             {
                 // Static constructors allow for early code execution which can cause issues later in the game
                 if (HasStaticConstructor(t))
@@ -79,6 +94,8 @@ namespace avaness.PluginLoader
 
                 foreach (MethodInfo m in t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                 {
+                    if (m.HasAttribute<HarmonyReversePatch>())
+                        throw new Exception("Harmony attribute 'HarmonyReversePatch' found on the method '" + m.Name + "' is not compatible with Plugin Loader!");
                     Precompile(m);
                 }
             }

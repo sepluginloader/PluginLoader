@@ -3,11 +3,12 @@ using Sandbox;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using VRage.Utils;
 using VRageMath;
 
-namespace avaness.PluginLoader
+namespace avaness.PluginLoader.GUI
 {
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
@@ -19,9 +20,10 @@ namespace avaness.PluginLoader
         private const float sizeX = 1;
         private const float sizeY = 0.76f;
 
-		private Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
-		private StringBuilder tempBuilder = new StringBuilder();
+		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
+		private readonly StringBuilder tempBuilder = new StringBuilder();
 		private MyGuiControlTable modTable;
+		private PluginConfig config;
 
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
@@ -30,6 +32,7 @@ namespace avaness.PluginLoader
 			m_drawEvenWithoutFocus = true;
 			CanHideOthers = true;
 			CanBeHidden = true;
+			config = Main.Instance.Config;
 		}
 
         public override string GetFriendlyName()
@@ -46,6 +49,9 @@ namespace avaness.PluginLoader
         public override void RecreateControls(bool constructor)
 		{
 			base.RecreateControls(constructor);
+
+			config = Main.Instance.Config;
+
 			var title = AddCaption("Plugin List");
 
 			Vector2 size = m_size.Value;
@@ -76,24 +82,28 @@ namespace avaness.PluginLoader
 				Position = origin,
 				Size = new Vector2(size.X * tableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 4,
+				ColumnsCount = 5,
 				VisibleRowsCount = 15
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
 				0.15f,
 				0.45f,
-				0.3f,
+				0.1f,
+				0.2f,
 				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnComparison(0, CellTextComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
-			modTable.SetColumnName(2, new StringBuilder("Status"));
+			modTable.SetColumnName(2, new StringBuilder("Version"));
 			modTable.SetColumnComparison(2, CellTextComparison);
-			modTable.SetColumnName(3, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(3, CellCheckedComparison);
+			modTable.SetColumnName(3, new StringBuilder("Status"));
+			modTable.SetColumnComparison(3, CellTextComparison);
+			modTable.SetColumnName(4, new StringBuilder("Enabled"));
+			modTable.SetColumnComparison(4, CellCheckedComparison);
+			modTable.SortByColumn(0);
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
@@ -107,7 +117,7 @@ namespace avaness.PluginLoader
 
 			origin.Y += space;
 
-			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Restart"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Save & Restart"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
 			MyGuiControlButton btnSave = new MyGuiControlButton(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Save changes. Changes will take effect next time the game starts.", text: new StringBuilder("Save"), onButtonClick: OnSaveButtonClick);
 
@@ -130,6 +140,15 @@ namespace avaness.PluginLoader
 
         private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
+			if(x.Text == null)
+            {
+				if (y.Text == null)
+					return 0;
+				return 1;
+            }
+
+			if (y.Text == null)
+				return -1;
 			return x.Text.CompareTo(y.Text);
         }
 
@@ -137,10 +156,20 @@ namespace avaness.PluginLoader
 		{
 			modTable.Clear();
 			modTable.Controls.Clear();
-			PluginConfig config = Main.Instance.Config;
-			foreach (PluginData data in config.Data.Values)
+			PluginList list = Main.Instance.List;
+			bool noFilter = filter == null || filter.Length == 0;
+			foreach (PluginData data in list.OrderBy(x => x.FriendlyName))
 			{
-				if(FilterName(data.FriendlyName, filter))
+				bool enabled;
+				if(!dataChanges.TryGetValue(data.Id, out enabled))
+					enabled = config.IsEnabled(data.Id);
+
+				bool installed = data.Status != PluginStatus.NotInstalled;
+
+				if (noFilter && (data.Hidden || !installed) && !enabled)
+					continue;
+
+				if (noFilter || FilterName(data.FriendlyName, filter))
 				{
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
@@ -151,14 +180,17 @@ namespace avaness.PluginLoader
 					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
 					row.AddCell(nameCell);
 
+					MyGuiControlTable.Cell versionCell = new MyGuiControlTable.Cell(data.Version?.ToString());
+					row.AddCell(versionCell);
+
 					MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
 					row.AddCell(statusCell);
 
 					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
-					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: data.Enabled)
+					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
 					{
 						UserData = data,
-						Enabled = true,
+						Enabled = installed,
 						Visible = true
 					};
 					enabledBox.IsCheckedChanged += IsCheckedChanged;
@@ -167,6 +199,7 @@ namespace avaness.PluginLoader
 					row.AddCell(enabledCell);
 				}
 			}
+			modTable.Sort(false);
 		}
 
         private void SearchBox_TextChanged(MyGuiControlTextbox txt)
@@ -180,8 +213,6 @@ namespace avaness.PluginLoader
 
 		private bool FilterName(string name, string[] filter)
         {
-			if (filter == null || filter.Length == 0)
-				return true;
 			foreach(string s in filter)
             {
 				if (!name.Contains(s, StringComparison.OrdinalIgnoreCase))
@@ -234,7 +265,7 @@ namespace avaness.PluginLoader
         private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
         {
 			PluginData original = (PluginData)checkbox.UserData;
-			if (original.Enabled == checkbox.IsChecked)
+			if (config.IsEnabled(original.Id) == checkbox.IsChecked)
 				dataChanges.Remove(original.Id);
 			else
 				dataChanges[original.Id] = checkbox.IsChecked;
@@ -258,10 +289,7 @@ namespace avaness.PluginLoader
 			{
 				PluginConfig config = Main.Instance.Config;
 				foreach (KeyValuePair<string, bool> kv in dataChanges)
-				{
-					if (config.Data.TryGetValue(kv.Key, out PluginData data))
-						data.Enabled = kv.Value;
-				}
+					config.SetEnabled(kv.Key, kv.Value);
 				config.Save();
 				dataChanges.Clear();
 			}

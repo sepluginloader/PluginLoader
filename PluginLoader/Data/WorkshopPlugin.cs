@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using ProtoBuf;
+using System.IO;
 using VRage;
 
 namespace avaness.PluginLoader.Data
 {
+    [ProtoContract]
     public class WorkshopPlugin : SteamPlugin
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Workshop);
@@ -14,9 +16,6 @@ namespace avaness.PluginLoader.Data
         {
 
         }
-
-        public WorkshopPlugin(LogFile log, ulong id, string pluginFile) : base(log, id, pluginFile)
-		{ }
 
         protected override void CheckForUpdates()
         {
@@ -36,21 +35,9 @@ namespace avaness.PluginLoader.Data
                 base.CheckForUpdates();
         }
 
-        protected override string GetName()
-        {
-            string name = Path.GetFileNameWithoutExtension(sourceFile).Replace('_', ' ');
-            if (string.IsNullOrWhiteSpace(name))
-                return Id;
-            else
-                return name;
-        }
-
         protected override void ApplyUpdate()
         {
-            if (Security.Validate(WorkshopId, sourceFile, out string hash))
-                File.Copy(sourceFile, assembly, true);
-            else
-                ErrorSecurity(hash);
+            File.Copy(sourceFile, assembly, true);
         }
 
         protected override string GetAssemblyFile()
