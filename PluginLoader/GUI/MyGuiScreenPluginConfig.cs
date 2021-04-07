@@ -23,6 +23,7 @@ namespace avaness.PluginLoader.GUI
 		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
 		private readonly StringBuilder tempBuilder = new StringBuilder();
 		private MyGuiControlTable modTable;
+		private MyGuiControlLabel countLabel;
 		private PluginConfig config;
 
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
@@ -104,15 +105,18 @@ namespace avaness.PluginLoader.GUI
 			modTable.SetColumnName(4, new StringBuilder("Enabled"));
 			modTable.SetColumnComparison(4, CellCheckedComparison);
 			modTable.SortByColumn(0);
+			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
 
 			origin.Y += modTable.Size.Y + space;
 
+			countLabel = new MyGuiControlLabel(new Vector2(origin.X - (modTable.Size.X * 0.5f), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+			Controls.Add(countLabel);
+
 			ResetTable();
-            modTable.ItemDoubleClicked += RowDoubleClicked;
 
 			MyGuiControlSeparatorList midBar = new MyGuiControlSeparatorList();
-			midBar.AddHorizontal(new Vector2(origin.X - barWidth / 2, origin.Y), barWidth);
+            midBar.AddHorizontal(new Vector2(origin.X - barWidth / 2, origin.Y), barWidth);
 			Controls.Add(midBar);
 
 			origin.Y += space;
@@ -199,6 +203,7 @@ namespace avaness.PluginLoader.GUI
 					row.AddCell(enabledCell);
 				}
 			}
+			countLabel.Text = modTable.RowsCount + "/" + list.Count;
 			modTable.Sort(false);
 		}
 

@@ -14,7 +14,9 @@ namespace avaness.PluginLoader
     public class PluginList : IEnumerable<PluginData>
     {
         private readonly Dictionary<string, PluginData> plugins = new Dictionary<string, PluginData>();
-        
+
+        public int Count => plugins.Count;
+
         public PluginData this[string key]
         {
             get => plugins[key];
