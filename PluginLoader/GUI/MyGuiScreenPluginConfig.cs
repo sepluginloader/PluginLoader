@@ -1,5 +1,6 @@
 ﻿using avaness.PluginLoader.Data;
 using Sandbox;
+using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,6 @@ namespace avaness.PluginLoader.GUI
         private const float sizeY = 0.76f;
 
 		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
-		private readonly StringBuilder tempBuilder = new StringBuilder();
 		private MyGuiControlTable modTable;
 		private MyGuiControlLabel countLabel;
 		private PluginConfig config;
@@ -67,16 +67,12 @@ namespace avaness.PluginLoader.GUI
 
 			origin.Y += space;
 
-			MyGuiControlTextbox searchBox = new MyGuiControlTextbox(origin)
-			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				Size = new Vector2(size.X * tableWidth, 0),
-			};
+			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
+			searchBox.Size = new Vector2(size.X * tableWidth, searchBox.Size.Y);
 			Controls.Add(searchBox);
-            searchBox.TextChanged += SearchBox_TextChanged;
+            searchBox.OnTextChanged += SearchBox_TextChanged;
 
 			origin.Y += searchBox.Size.Y + MyGuiConstants.TEXTBOX_TEXT_OFFSET.Y;
-			MyLog.Default.WriteLine($"Margin: {searchBox.Margin} Size: {searchBox.Size} GetSize: {searchBox.GetSize() ?? new Vector2()} Rect: {searchBox.Rectangle} FocusRect: {searchBox.FocusRectangle}");
 
 			modTable = new MyGuiControlTable
 			{
@@ -207,13 +203,10 @@ namespace avaness.PluginLoader.GUI
 			modTable.Sort(false);
 		}
 
-        private void SearchBox_TextChanged(MyGuiControlTextbox txt)
+		private void SearchBox_TextChanged(string txt)
         {
-			txt.GetText(tempBuilder);
-			string s = tempBuilder.ToString().Trim();
-			string[] args = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] args = txt.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 			ResetTable(args);
-			tempBuilder.Clear();
         }
 
 		private bool FilterName(string name, string[] filter)
