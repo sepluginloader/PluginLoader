@@ -35,6 +35,20 @@ namespace avaness.PluginLoader
             FindWorkshopPlugins();
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins.");
+            FindPluginGroups();
+        }
+
+        private void FindPluginGroups()
+        {
+            int groups = 0;
+            foreach (var group in plugins.Values.Where(x => !string.IsNullOrWhiteSpace(x.GroupId)).GroupBy(x => x.GroupId))
+            {
+                groups++;
+                foreach (PluginData data in group)
+                    data.Group.AddRange(group.Where(x => x != data));
+            }
+            if (groups > 0)
+                LogFile.WriteLine($"Found {groups} plugin groups.");
         }
 
         private void DownloadList(string mainDirectory, PluginConfig config)

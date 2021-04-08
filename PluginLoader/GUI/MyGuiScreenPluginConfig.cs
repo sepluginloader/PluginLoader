@@ -25,6 +25,7 @@ namespace avaness.PluginLoader.GUI
 		private MyGuiControlTable modTable;
 		private MyGuiControlLabel countLabel;
 		private PluginConfig config;
+		private string[] tableFilter;
 
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
@@ -201,6 +202,7 @@ namespace avaness.PluginLoader.GUI
 			}
 			countLabel.Text = modTable.RowsCount + "/" + list.Count;
 			modTable.Sort(false);
+			tableFilter = filter;
 		}
 
 		private void SearchBox_TextChanged(string txt)
@@ -262,11 +264,33 @@ namespace avaness.PluginLoader.GUI
 
         private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
         {
-			PluginData original = (PluginData)checkbox.UserData;
-			if (config.IsEnabled(original.Id) == checkbox.IsChecked)
-				dataChanges.Remove(original.Id);
+            PluginData original = (PluginData)checkbox.UserData;
+            SetEnabled(original, checkbox.IsChecked);
+			if(original.Group.Count > 0 && checkbox.IsChecked)
+            {
+				bool changedAlts = false;
+				foreach (PluginData alt in original.Group)
+                {
+					bool changed = SetEnabled(alt, false);
+					if (!changedAlts)
+						changedAlts = changed;
+				}
+				if(changedAlts)
+					ResetTable(tableFilter);
+			}
+        }
+
+        private bool SetEnabled(PluginData original, bool enabled)
+        {
+            if (config.IsEnabled(original.Id) == enabled)
+            {
+				return dataChanges.Remove(original.Id);
+			}
 			else
-				dataChanges[original.Id] = checkbox.IsChecked;
+            {
+				dataChanges[original.Id] = enabled;
+				return true;
+			}
 		}
 
         private void OnCloseButtonClick(MyGuiControlButton btn)

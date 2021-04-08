@@ -53,6 +53,12 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(3)]
         public bool Hidden { get; set; } = false;
 
+        [ProtoMember(4)]
+        public string GroupId { get; set; }
+
+        [XmlIgnore]
+        public List<PluginData> Group { get; } = new List<PluginData>();
+
         protected PluginData()
         {
 
