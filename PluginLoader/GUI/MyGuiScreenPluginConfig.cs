@@ -118,15 +118,12 @@ namespace avaness.PluginLoader.GUI
 
 			origin.Y += space;
 
-			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Save & Restart"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
-			MyGuiControlButton btnSave = new MyGuiControlButton(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Save changes. Changes will take effect next time the game starts.", text: new StringBuilder("Save"), onButtonClick: OnSaveButtonClick);
+			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
 
-			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Close"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
-
-			AlignRow(origin, btnSpace, btnRestart, btnSave, btnClose);
+			AlignRow(origin, btnSpace, btnRestart, btnClose);
 			Controls.Add(btnRestart);
-			Controls.Add(btnSave);
 			Controls.Add(btnClose);
 
 			CloseButtonEnabled = true;
@@ -232,12 +229,6 @@ namespace avaness.PluginLoader.GUI
 			}
         }
 
-        private void OnSaveButtonClick(MyGuiControlButton btn)
-        {
-			Save();
-			CloseScreen();
-		}
-
         private void AlignRow(Vector2 origin, float spacing, params MyGuiControlBase[] elements)
         {
 			if (elements.Length == 0)
@@ -301,11 +292,31 @@ namespace avaness.PluginLoader.GUI
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
 		{
-			Save();
-			LoaderTools.Restart();
+			if(dataChanges.Count == 0)
+            {
+				CloseScreen();
+            }
+			else
+			{
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes"), callback: AskRestartResult));
+			}
 		}
 
-		private void Save()
+        private void AskRestartResult(MyGuiScreenMessageBox.ResultEnum result)
+        {
+			if(result == MyGuiScreenMessageBox.ResultEnum.YES)
+            {
+				Save();
+				LoaderTools.Restart();
+			}
+			else if(result == MyGuiScreenMessageBox.ResultEnum.NO)
+            {
+				Save();
+				CloseScreen();
+            }
+        }
+
+        private void Save()
         {
 			if(dataChanges.Count > 0)
 			{
