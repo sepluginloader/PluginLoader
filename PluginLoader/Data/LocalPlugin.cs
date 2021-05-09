@@ -79,6 +79,11 @@ namespace avaness.PluginLoader.Data
 
             Assembly assembly = Assembly.LoadFile(assemblyPath);
             LogFile.WriteLine("Resolving " + assembly.GetName().Name + " for " + args.RequestingAssembly.FullName);
+
+            Main main = Main.Instance;
+            if (!main.Config.IsEnabled(assemblyPath))
+                main.List.Remove(assemblyPath);
+
             return assembly;
         }
     }

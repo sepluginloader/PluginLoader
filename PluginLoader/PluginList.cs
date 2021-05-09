@@ -38,6 +38,11 @@ namespace avaness.PluginLoader
             FindPluginGroups();
         }
 
+        public bool Remove(string id)
+        {
+            return plugins.Remove(id);
+        }
+
         private void FindPluginGroups()
         {
             int groups = 0;
@@ -145,7 +150,8 @@ namespace avaness.PluginLoader
                 if(!dll.Contains(Path.DirectorySeparatorChar + "GitHub" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 {
                     LocalPlugin local = new LocalPlugin(dll);
-                    if (!local.FriendlyName.StartsWith("0Harmony"))
+                    string name = local.FriendlyName;
+                    if (!name.StartsWith("0Harmony") && !name.StartsWith("Microsoft"))
                         plugins[local.Id] = local;
                 }
             }
