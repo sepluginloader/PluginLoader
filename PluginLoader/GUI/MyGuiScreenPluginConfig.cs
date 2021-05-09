@@ -121,10 +121,13 @@ namespace avaness.PluginLoader.GUI
 			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
 			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
+			
+			MyGuiControlButton btnShow = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Open the source of the selected plugin.", new StringBuilder("Info"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnInfoButtonClick);
 
-			AlignRow(origin, btnSpace, btnRestart, btnClose);
+			AlignRow(origin, btnSpace, btnRestart, btnClose, btnShow);
 			Controls.Add(btnRestart);
 			Controls.Add(btnClose);
+			Controls.Add(btnShow);
 
 			CloseButtonEnabled = true;
         }
@@ -284,7 +287,17 @@ namespace avaness.PluginLoader.GUI
 			}
 		}
 
-        private void OnCloseButtonClick(MyGuiControlButton btn)
+		private void OnInfoButtonClick(MyGuiControlButton btn)
+		{
+			if(modTable.SelectedRowIndex.HasValue)
+            {
+				PluginData data = modTable.SelectedRow.UserData as PluginData;
+				if (data != null)
+					data.Show();
+            }
+		}
+
+		private void OnCloseButtonClick(MyGuiControlButton btn)
         {
 			dataChanges.Clear();
 			CloseScreen();
