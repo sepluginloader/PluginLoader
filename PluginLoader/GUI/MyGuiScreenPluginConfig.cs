@@ -178,7 +178,10 @@ namespace avaness.PluginLoader.GUI
 					MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
 					row.AddCell(sourceCell);
 
-					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName);
+					string tip = null;
+					if (!string.IsNullOrWhiteSpace(data.Tooltip))
+						tip = data.Tooltip;
+					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip);
 					row.AddCell(nameCell);
 
 					MyGuiControlTable.Cell versionCell = new MyGuiControlTable.Cell(data.Version?.ToString());

@@ -56,6 +56,9 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(4)]
         public string GroupId { get; set; }
 
+        [ProtoMember(5)]
+        public string Tooltip { get; set; }
+
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
