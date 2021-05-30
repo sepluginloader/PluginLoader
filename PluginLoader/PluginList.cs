@@ -140,7 +140,7 @@ namespace avaness.PluginLoader
 
         public bool IsInstalled(string id)
         {
-            return plugins.TryGetValue(id, out PluginData data) && data.Status != PluginStatus.NotInstalled;
+            return plugins.TryGetValue(id, out PluginData data) && data.Status != PluginStatus.NotAvailable;
         }
 
         private void FindLocalPlugins(string mainDirectory)

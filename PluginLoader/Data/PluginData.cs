@@ -21,15 +21,15 @@ namespace avaness.PluginLoader.Data
         public Version Version { get; protected set; }
 
         [XmlIgnore]
-        public virtual PluginStatus Status { get; set; } = PluginStatus.NotInstalled;
+        public virtual PluginStatus Status { get; set; } = PluginStatus.NotAvailable;
         public virtual string StatusString
         {
             get
             {
                 switch (Status)
                 {
-                    case PluginStatus.NotInstalled:
-                        return "Not installed.";
+                    case PluginStatus.NotAvailable:
+                        return "Not subscribed.";
                     case PluginStatus.PendingUpdate:
                         return "Pending Update";
                     case PluginStatus.Updated:

@@ -165,7 +165,7 @@ namespace avaness.PluginLoader.GUI
 				if(!dataChanges.TryGetValue(data.Id, out enabled))
 					enabled = config.IsEnabled(data.Id);
 
-				bool installed = data.Status != PluginStatus.NotInstalled;
+				bool installed = data.Status != PluginStatus.NotAvailable;
 
 				if (noFilter && (data.Hidden || !installed) && !enabled)
 					continue;

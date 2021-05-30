@@ -2,6 +2,6 @@
 {
     public enum PluginStatus
     {
-        None, NotInstalled, PendingUpdate, Updated, Error, Blocked
+        None, NotAvailable, PendingUpdate, Updated, Error, Blocked
     }
 }
