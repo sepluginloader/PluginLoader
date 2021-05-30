@@ -161,23 +161,20 @@ namespace avaness.PluginLoader
         {
             string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
 
-            foreach (string mod in Directory.EnumerateDirectories(workshop))
+            foreach(PluginData data in plugins.Values)
             {
-
-                try
+                if (data is SteamPlugin steam)
                 {
-                    string folder = Path.GetFileName(mod);
-                    if (ulong.TryParse(folder, out ulong modId) && SteamAPI.IsSubscribed(modId) && TryGetPlugin(mod, out string newPlugin))
+                    try
                     {
-                        if (plugins.TryGetValue(folder, out PluginData data) && data is SteamPlugin steam)
-                            steam.Init(newPlugin);
-                        else
-                            LogFile.WriteLine($"The item {folder} is not on the plugin list.");
+                        string path = Path.Combine(workshop, steam.Id);
+                        if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
+                            steam.Init(dllFile);
                     }
-                }
-                catch (Exception e)
-                {
-                    LogFile.WriteLine($"An error occurred while searching {mod} for a plugin: {e}");
+                    catch (Exception e)
+                    {
+                        LogFile.WriteLine($"An error occurred while searching for the workshop plugin {data}: {e}");
+                    }
                 }
             }
         }
