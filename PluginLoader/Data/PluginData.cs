@@ -28,8 +28,6 @@ namespace avaness.PluginLoader.Data
             {
                 switch (Status)
                 {
-                    case PluginStatus.NotAvailable:
-                        return "Not subscribed.";
                     case PluginStatus.PendingUpdate:
                         return "Pending Update";
                     case PluginStatus.Updated:

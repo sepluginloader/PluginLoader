@@ -29,10 +29,9 @@ namespace avaness.PluginLoader
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
-
-            lbl.SetText("Finding installed plugins...");
+            
             LogFile.WriteLine("Finding installed plugins...");
-            FindWorkshopPlugins();
+            FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins.");
             FindPluginGroups();
@@ -157,24 +156,26 @@ namespace avaness.PluginLoader
             }
         }
 
-        private void FindWorkshopPlugins()
+        private void FindWorkshopPlugins(PluginConfig config)
         {
-            string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
+            List<SteamPlugin> steamPlugins = new List<SteamPlugin>(plugins.Values.Select(x => x as SteamPlugin).Where(x => x != null));
 
-            foreach(PluginData data in plugins.Values)
+            Main.Instance.Label.SetText($"Updating working items...");
+
+            SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
+
+            string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
+            foreach (SteamPlugin steam in steamPlugins)
             {
-                if (data is SteamPlugin steam)
+                try
                 {
-                    try
-                    {
-                        string path = Path.Combine(workshop, steam.Id);
-                        if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
-                            steam.Init(dllFile);
-                    }
-                    catch (Exception e)
-                    {
-                        LogFile.WriteLine($"An error occurred while searching for the workshop plugin {data}: {e}");
-                    }
+                    string path = Path.Combine(workshop, steam.Id);
+                    if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
+                        steam.Init(dllFile);
+                }
+                catch (Exception e)
+                {
+                    LogFile.WriteLine($"An error occurred while searching for the workshop plugin {steam}: {e}");
                 }
             }
         }

@@ -165,9 +165,7 @@ namespace avaness.PluginLoader.GUI
 				if(!dataChanges.TryGetValue(data.Id, out enabled))
 					enabled = config.IsEnabled(data.Id);
 
-				bool installed = data.Status != PluginStatus.NotAvailable;
-
-				if (noFilter && (data.Hidden || !installed) && !enabled)
+				if (noFilter && data.Hidden && !enabled)
 					continue;
 
 				if (noFilter || FilterName(data.FriendlyName, filter))
@@ -194,7 +192,6 @@ namespace avaness.PluginLoader.GUI
 					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
 					{
 						UserData = data,
-						Enabled = installed,
 						Visible = true
 					};
 					enabledBox.IsCheckedChanged += IsCheckedChanged;
