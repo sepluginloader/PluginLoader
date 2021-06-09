@@ -17,7 +17,7 @@ namespace avaness.PluginLoader
 
         public static void WriteLine(string text, bool gameLog = true)
         {
-            writer?.WriteLine($"{DateTime.Now} {text}");
+            writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
             if(gameLog)
                 MyLog.Default.WriteLine($"[PluginLoader] {text}");
         }

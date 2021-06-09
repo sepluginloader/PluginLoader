@@ -45,7 +45,7 @@ namespace avaness.PluginLoader
             {
                 if (!plugins.Exists(id))
                 {
-                    LogFile.WriteLine($"{id} is no longer available.");
+                    LogFile.WriteLine($"{id} is no longer available");
                     toRemove.Add(id);
                 }
             }
@@ -53,7 +53,8 @@ namespace avaness.PluginLoader
             foreach (string id in toRemove)
                 enabledPlugins.Remove(id);
 
-            Save();
+            if (toRemove.Count > 0)
+                Save();
         }
 
         public void Disable()
@@ -66,7 +67,7 @@ namespace avaness.PluginLoader
         {
             try
             {
-                LogFile.WriteLine("Saving config.");
+                LogFile.WriteLine("Saving config");
                 XmlSerializer serializer = new XmlSerializer(typeof(PluginConfig));
                 if (File.Exists(filePath))
                     File.Delete(filePath);
@@ -116,7 +117,7 @@ namespace avaness.PluginLoader
         {
             return enabledPlugins.Contains(id);
         }
-        
+
         public void SetEnabled(string id, bool enabled)
         {
             if (enabled)

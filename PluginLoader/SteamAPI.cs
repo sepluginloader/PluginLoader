@@ -31,7 +31,7 @@ namespace avaness.PluginLoader
         public static void Update(IEnumerable<ulong> ids)
         {
             var modItems = new List<MyObjectBuilder_Checkpoint.ModItem>(ids.Select(x => new MyObjectBuilder_Checkpoint.ModItem(x, "Steam")));
-            LogFile.WriteLine($"Updating {modItems.Count} workshop items.");
+            LogFile.WriteLine($"Updating {modItems.Count} workshop items");
 
             // Source: MyWorkshop.DownloadWorldModsBlocking
             MyWorkshop.ResultData result = new MyWorkshop.ResultData();
@@ -58,7 +58,7 @@ namespace avaness.PluginLoader
                 }
                 else
                 {
-                    LogFile.WriteLine("Unable to update workshop items.");
+                    LogFile.WriteLine("Unable to update workshop items");
                 }
 
             }

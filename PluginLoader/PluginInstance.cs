@@ -124,7 +124,7 @@ namespace avaness.PluginLoader
             Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
             if (pluginType == null)
             {
-                LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin.");
+                LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
                 LogFile.Flush();
                 data.Error();
                 return false;

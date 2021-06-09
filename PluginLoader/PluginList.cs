@@ -30,10 +30,9 @@ namespace avaness.PluginLoader
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
             
-            LogFile.WriteLine("Finding installed plugins...");
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
-            LogFile.WriteLine($"Found {plugins.Count} plugins.");
+            LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
         }
 
@@ -61,7 +60,7 @@ namespace avaness.PluginLoader
                     data.Group.AddRange(group.Where(x => x != data));
             }
             if (groups > 0)
-                LogFile.WriteLine($"Found {groups} plugin groups.");
+                LogFile.WriteLine($"Found {groups} plugin groups");
         }
 
         private void DownloadList(string mainDirectory, PluginConfig config)
@@ -70,7 +69,7 @@ namespace avaness.PluginLoader
 
             try
             {
-                LogFile.WriteLine("Downloading whitelist...");
+                LogFile.WriteLine("Downloading whitelist");
                 if (!File.Exists(whitelist) | ListChanged(config.ListHash, out string hash))
                 {
                     using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
@@ -91,14 +90,15 @@ namespace avaness.PluginLoader
                         }
                     }
                     
-                    LogFile.WriteLine("Saving whitelist to disk...");
+                    LogFile.WriteLine("Saving whitelist to disk");
                     using (Stream binFile = File.Create(whitelist))
                     {
                         Serializer.Serialize(binFile, plugins.Values.ToArray());
                     }
-                    LogFile.WriteLine("Whitelist updated.");
+                    LogFile.WriteLine("Whitelist updated");
 
                     config.ListHash = hash;
+                    config.Save();
                     return;
                 }
             }
@@ -111,13 +111,13 @@ namespace avaness.PluginLoader
             {
                 try
                 {
-                    LogFile.WriteLine("Reading whitelist from cache...");
+                    LogFile.WriteLine("Reading whitelist from cache");
                     using (Stream binFile = File.OpenRead(whitelist))
                     {
                         foreach (PluginData data in Serializer.Deserialize<PluginData[]>(binFile))
                             plugins[data.Id] = data;
                     }
-                    LogFile.WriteLine("Whitelist retrieved from disk.");
+                    LogFile.WriteLine("Whitelist retrieved from disk");
                 }
                 catch (Exception e)
                 {
@@ -169,7 +169,7 @@ namespace avaness.PluginLoader
         {
             List<SteamPlugin> steamPlugins = new List<SteamPlugin>(plugins.Values.Select(x => x as SteamPlugin).Where(x => x != null));
 
-            Main.Instance.Label.SetText($"Updating working items...");
+            Main.Instance.Label.SetText($"Updating workshop items...");
 
             SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
 

@@ -11,6 +11,7 @@ using System.Diagnostics;
 using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
+using avaness.PluginLoader.Patch;
 
 namespace avaness.PluginLoader
 {
@@ -42,8 +43,9 @@ namespace avaness.PluginLoader
                 Directory.CreateDirectory(mainPath);
 
             LogFile.Init(mainPath);
-            LogFile.WriteLine("Starting.");
+            LogFile.WriteLine("Starting");
 
+            Label.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
@@ -51,14 +53,16 @@ namespace avaness.PluginLoader
             Config = PluginConfig.Load(mainPath);
             List = new PluginList(mainPath, Config);
 
-            Label.SetText("Loading config...");
-            LogFile.WriteLine("Loading config.");
             Config.Init(List);
 
+            Label.SetText("Patching...");
+            LogFile.WriteLine("Patching");
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
+            LogFile.WriteLine("Patched");
 
             Label.SetText("Instantiating plugins...");
+            LogFile.WriteLine("Instantiating plugins");
             foreach (string id in Config)
             {
                 PluginData data = List[id];
@@ -81,7 +85,7 @@ namespace avaness.PluginLoader
 
         public void RegisterComponents()
         {
-            LogFile.WriteLine("Registering Components...");
+            LogFile.WriteLine("Registering components");
             foreach (PluginInstance plugin in plugins)
                 plugin.RegisterSession(MySession.Static);
             LogFile.Flush();
@@ -91,13 +95,13 @@ namespace avaness.PluginLoader
         {
             Config.Disable();
             plugins.Clear();
-            LogFile.WriteLine("Disabled all plugins.");
+            LogFile.WriteLine("Disabled all plugins");
             LogFile.Flush();
         }
 
         public void InstantiatePlugins()
         {
-            LogFile.WriteLine($"Loading {plugins.Count} plugins...");
+            LogFile.WriteLine($"Loading {plugins.Count} plugins");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
@@ -113,7 +117,7 @@ namespace avaness.PluginLoader
             Label.Delete();
             Label = null;
 
-            LogFile.WriteLine($"Initializing {plugins.Count} plugins...");
+            LogFile.WriteLine($"Initializing {plugins.Count} plugins");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];

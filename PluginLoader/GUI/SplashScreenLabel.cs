@@ -20,6 +20,7 @@ namespace avaness.PluginLoader.GUI
             lbl.AutoSize = true;
             form.Controls.Add(lbl);
             draw = form.GetType().GetMethod("Draw", BindingFlags.Instance | BindingFlags.NonPublic);
+            SetText("");
         }
 
         public void SetText(string msg)
