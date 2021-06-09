@@ -37,6 +37,15 @@ namespace avaness.PluginLoader
             FindPluginGroups();
         }
 
+        /// <summary>
+        /// Ensures the user is subscribed to the steam plugin.
+        /// </summary>
+        public void SubscribeToItem(string id)
+        {
+            if(plugins.TryGetValue(id, out PluginData data) && data is SteamPlugin steam)
+                SteamAPI.SubscribeToItem(steam.WorkshopId);
+        }
+
         public bool Remove(string id)
         {
             return plugins.Remove(id);

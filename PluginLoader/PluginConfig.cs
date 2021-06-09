@@ -120,9 +120,14 @@ namespace avaness.PluginLoader
         public void SetEnabled(string id, bool enabled)
         {
             if (enabled)
+            {
                 enabledPlugins.Add(id);
+                Main.Instance.List.SubscribeToItem(id);
+            }
             else
+            {
                 enabledPlugins.Remove(id);
+            }
         }
     }
 }
