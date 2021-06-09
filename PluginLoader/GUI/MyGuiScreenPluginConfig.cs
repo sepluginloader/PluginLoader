@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage.Audio;
+using VRage.Game;
 using VRage.Utils;
 using VRageMath;
 
@@ -27,6 +29,26 @@ namespace avaness.PluginLoader.GUI
 		private PluginConfig config;
 		private string[] tableFilter;
 
+		private static bool allItemsVisible = false;
+
+		// Source: MyTerminalControlPanel
+		private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
+		{
+			Normal = "Textures\\GUI\\Controls\\button_hide.dds",
+			Highlight = "Textures\\GUI\\Controls\\button_hide.dds",
+			Focus = "Textures\\GUI\\Controls\\button_hide_focus.dds",
+			SizePx = new Vector2(40f, 40f)
+		};
+
+		// Source: MyTerminalControlPanel
+		private static MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
+		{
+			Normal = "Textures\\GUI\\Controls\\button_unhide.dds",
+			Highlight = "Textures\\GUI\\Controls\\button_unhide.dds",
+			Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
+			SizePx = new Vector2(40f, 40f)
+		};
+
 		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
 			EnabledBackgroundFade = true;
@@ -42,13 +64,13 @@ namespace avaness.PluginLoader.GUI
             return "MyGuiScreenPluginConfig";
         }
 
-        public override void LoadContent()
-        {
+		public override void LoadContent()
+		{
 			base.LoadContent();
 			RecreateControls(true);
-        }
+		}
 
-        public override void RecreateControls(bool constructor)
+		public override void RecreateControls(bool constructor)
 		{
 			base.RecreateControls(constructor);
 
@@ -68,17 +90,35 @@ namespace avaness.PluginLoader.GUI
 
 			origin.Y += space;
 
+			float totalTableWidth = size.X * tableWidth;
+
 			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
-			searchBox.Size = new Vector2(size.X * tableWidth, searchBox.Size.Y);
-			Controls.Add(searchBox);
+			float extraSpaceWidth = searchBox.Size.Y;
+			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
+			searchBox.Position = new Vector2(origin.X - (extraSpaceWidth / 2), origin.Y);
             searchBox.OnTextChanged += SearchBox_TextChanged;
+			Controls.Add(searchBox);
+
+			MyGuiControlButton btnVisibility = new MyGuiControlButton(new Vector2(origin.X + (searchBox.Size.X / 2), origin.Y), MyGuiControlButtonStyleEnum.SquareSmall, new Vector2(extraSpaceWidth), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, buttonScale: 0.5f);
+
+			if (allItemsVisible || config.Count == 0)
+            {
+				allItemsVisible = true;
+                btnVisibility.Icon = IconHide;
+            }
+            else
+            {
+                btnVisibility.Icon = IconShow;
+            }
+
+            Controls.Add(btnVisibility);
 
 			origin.Y += searchBox.Size.Y + MyGuiConstants.TEXTBOX_TEXT_OFFSET.Y;
 
 			modTable = new MyGuiControlTable
 			{
 				Position = origin,
-				Size = new Vector2(size.X * tableWidth, size.Y * tableHeight),
+				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
 				ColumnsCount = 5,
 				VisibleRowsCount = 15
@@ -132,6 +172,21 @@ namespace avaness.PluginLoader.GUI
 			CloseButtonEnabled = true;
         }
 
+        private void OnVisibilityClick(MyGuiControlButton btn)
+        {
+			if(allItemsVisible)
+            {
+				allItemsVisible = false;
+				btn.Icon = IconShow;
+            }
+			else
+            {
+				allItemsVisible = true;
+				btn.Icon = IconHide;
+            }
+			ResetTable(tableFilter);
+        }
+
         private int CellCheckedComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
 			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
@@ -165,10 +220,10 @@ namespace avaness.PluginLoader.GUI
 				if(!dataChanges.TryGetValue(data.Id, out enabled))
 					enabled = config.IsEnabled(data.Id);
 
-				if (noFilter && data.Hidden && !enabled)
-					continue;
+                if (noFilter && (data.Hidden || !allItemsVisible) && !enabled)
+                    continue;
 
-				if (noFilter || FilterName(data.FriendlyName, filter))
+                if (noFilter || FilterName(data.FriendlyName, filter))
 				{
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
