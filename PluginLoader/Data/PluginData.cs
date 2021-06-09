@@ -21,7 +21,7 @@ namespace avaness.PluginLoader.Data
         public Version Version { get; protected set; }
 
         [XmlIgnore]
-        public virtual PluginStatus Status { get; set; } = PluginStatus.NotAvailable;
+        public virtual PluginStatus Status { get; set; } = PluginStatus.None;
         public virtual string StatusString
         {
             get
@@ -69,6 +69,12 @@ namespace avaness.PluginLoader.Data
 
         public bool TryLoadAssembly(out Assembly a)
         {
+            if (Status == PluginStatus.Error)
+            {
+                a = null;
+                return false;
+            }
+
             try
             {
                 // Get the file path

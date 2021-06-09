@@ -43,7 +43,7 @@ namespace avaness.PluginLoader
 
             foreach (string id in enabledPlugins)
             {
-                if (!plugins.IsInstalled(id))
+                if (!plugins.Exists(id))
                 {
                     LogFile.WriteLine($"{id} is no longer available.");
                     toRemove.Add(id);

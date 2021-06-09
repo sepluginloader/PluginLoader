@@ -146,9 +146,9 @@ namespace avaness.PluginLoader
             return current == null || current != hash;
         }
 
-        public bool IsInstalled(string id)
+        public bool Exists(string id)
         {
-            return plugins.TryGetValue(id, out PluginData data) && data.Status != PluginStatus.NotAvailable;
+            return plugins.TryGetValue(id, out PluginData data);
         }
 
         private void FindLocalPlugins(string mainDirectory)
@@ -181,6 +181,8 @@ namespace avaness.PluginLoader
                     string path = Path.Combine(workshop, steam.Id);
                     if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
                         steam.Init(dllFile);
+                    else if (config.IsEnabled(steam.Id))
+                        steam.Status = PluginStatus.Error;
                 }
                 catch (Exception e)
                 {
