@@ -99,7 +99,7 @@ namespace avaness.PluginLoader.GUI
             searchBox.OnTextChanged += SearchBox_TextChanged;
 			Controls.Add(searchBox);
 
-			MyGuiControlButton btnVisibility = new MyGuiControlButton(new Vector2(origin.X + (searchBox.Size.X / 2), origin.Y), MyGuiControlButtonStyleEnum.SquareSmall, new Vector2(extraSpaceWidth), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, buttonScale: 0.5f);
+			MyGuiControlButton btnVisibility = new MyGuiControlButton(new Vector2(origin.X + (searchBox.Size.X / 2), origin.Y), MyGuiControlButtonStyleEnum.SquareSmall, new Vector2(extraSpaceWidth), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Toggle visibility", buttonScale: 0.5f);
 
 			if (allItemsVisible || config.Count == 0)
             {

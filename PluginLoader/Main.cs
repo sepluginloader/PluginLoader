@@ -59,7 +59,6 @@ namespace avaness.PluginLoader
             LogFile.WriteLine("Patching");
             Harmony harmony = new Harmony("avaness.PluginLoader");
             harmony.PatchAll();
-            LogFile.WriteLine("Patched");
 
             Label.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
