@@ -257,6 +257,7 @@ namespace avaness.PluginLoader.GUI
 			}
 			countLabel.Text = modTable.RowsCount + "/" + list.Count;
 			modTable.Sort(false);
+			modTable.SelectedRowIndex = null;
 			tableFilter = filter;
 		}
 
