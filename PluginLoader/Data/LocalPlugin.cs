@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using VRage;
+using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -85,6 +86,11 @@ namespace avaness.PluginLoader.Data
                 main.List.Remove(assemblyPath);
 
             return assembly;
+        }
+
+        public override IMyModContext GetContext()
+        {
+            return new PluginContext(FriendlyName, Path.GetFileName(Id), Path.GetDirectoryName(Id), "LocalPlugin");
         }
     }
 }

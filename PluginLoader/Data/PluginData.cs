@@ -153,5 +153,7 @@ namespace avaness.PluginLoader.Data
         }
 
         public abstract void Show();
+
+        public abstract VRage.Game.ModAPI.IMyModContext GetContext();
     }
 }

@@ -68,6 +68,7 @@ namespace avaness.PluginLoader
                     {
                         MySessionComponentBase comp = (MySessionComponentBase)Activator.CreateInstance(t);
                         session.RegisterComponent(comp, comp.UpdateOrder, comp.Priority);
+                        comp.ModContext = data.GetContext();
                         count++;
                     }
                     if(count > 0)

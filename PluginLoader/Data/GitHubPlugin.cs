@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -160,6 +161,11 @@ namespace avaness.PluginLoader.Data
         public override void Show()
         {
             MyGuiSandbox.OpenUrl("https://github.com/" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
+        }
+
+        public override IMyModContext GetContext()
+        {
+            return new PluginContext(FriendlyName, Id, cacheDir, "GitHubPlugin");
         }
     }
 }

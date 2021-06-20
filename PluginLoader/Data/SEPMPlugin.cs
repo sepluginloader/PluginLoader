@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -44,6 +45,11 @@ namespace avaness.PluginLoader.Data
             if (!Directory.Exists(dataFolder))
                 return null;
             return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.Equals("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        }
+
+        public override IMyModContext GetContext()
+        {
+            return new PluginContext(FriendlyName, WorkshopId + ".sbm", Path.GetDirectoryName(root));
         }
     }
 }

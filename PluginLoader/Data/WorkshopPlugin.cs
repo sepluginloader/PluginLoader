@@ -1,6 +1,7 @@
 ﻿using ProtoBuf;
 using System.IO;
 using VRage;
+using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -43,6 +44,11 @@ namespace avaness.PluginLoader.Data
         protected override string GetAssemblyFile()
         {
             return assembly;
+        }
+
+        public override IMyModContext GetContext()
+        {
+            return new PluginContext(FriendlyName, WorkshopId + ".sbm", root);
         }
     }
 }
