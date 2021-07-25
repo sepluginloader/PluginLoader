@@ -57,6 +57,9 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(5)]
         public string Tooltip { get; set; }
 
+        [ProtoMember(6)]
+        public string Author { get; set; }
+
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
@@ -153,7 +156,5 @@ namespace avaness.PluginLoader.Data
         }
 
         public abstract void Show();
-
-        public abstract VRage.Game.ModAPI.IMyModContext GetContext();
     }
 }

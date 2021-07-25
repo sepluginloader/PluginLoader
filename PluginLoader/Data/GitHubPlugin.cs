@@ -162,10 +162,5 @@ namespace avaness.PluginLoader.Data
         {
             MyGuiSandbox.OpenUrl("https://github.com/" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
         }
-
-        public override IMyModContext GetContext()
-        {
-            return new PluginContext(FriendlyName, Id, cacheDir, "GitHubPlugin");
-        }
     }
 }

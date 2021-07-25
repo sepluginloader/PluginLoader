@@ -46,10 +46,5 @@ namespace avaness.PluginLoader.Data
                 return null;
             return Directory.EnumerateFiles(dataFolder, "*.dll").Where(s => !s.Equals("0Harmony.dll", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
         }
-
-        public override IMyModContext GetContext()
-        {
-            return new PluginContext(FriendlyName, WorkshopId + ".sbm", Path.GetDirectoryName(root));
-        }
     }
 }

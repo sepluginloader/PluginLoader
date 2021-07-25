@@ -120,27 +120,30 @@ namespace avaness.PluginLoader.GUI
 				Position = origin,
 				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 5,
+				ColumnsCount = 6,
 				VisibleRowsCount = 15
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
-				0.15f,
-				0.45f,
+				0.13f,
+				0.34f,
+				0.18f,
 				0.1f,
-				0.2f,
+				0.15f,
 				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnComparison(0, CellTextComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
-			modTable.SetColumnName(2, new StringBuilder("Version"));
+			modTable.SetColumnName(2, new StringBuilder("Author"));
 			modTable.SetColumnComparison(2, CellTextComparison);
-			modTable.SetColumnName(3, new StringBuilder("Status"));
+			modTable.SetColumnName(3, new StringBuilder("Version"));
 			modTable.SetColumnComparison(3, CellTextComparison);
-			modTable.SetColumnName(4, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(4, CellCheckedComparison);
+			modTable.SetColumnName(4, new StringBuilder("Status"));
+			modTable.SetColumnComparison(4, CellTextComparison);
+			modTable.SetColumnName(5, new StringBuilder("Enabled"));
+			modTable.SetColumnComparison(5, CellCheckedComparison);
 			modTable.SortByColumn(0);
 			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
@@ -228,20 +231,18 @@ namespace avaness.PluginLoader.GUI
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
 
-					MyGuiControlTable.Cell sourceCell = new MyGuiControlTable.Cell(data.Source);
-					row.AddCell(sourceCell);
+                    row.AddCell(new MyGuiControlTable.Cell(data.Source));
 
-					string tip = null;
+					string tip = data.FriendlyName;
 					if (!string.IsNullOrWhiteSpace(data.Tooltip))
-						tip = data.Tooltip;
-					MyGuiControlTable.Cell nameCell = new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip);
-					row.AddCell(nameCell);
+						tip += "\n" +  data.Tooltip;
+                    row.AddCell(new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip));
 
-					MyGuiControlTable.Cell versionCell = new MyGuiControlTable.Cell(data.Version?.ToString());
-					row.AddCell(versionCell);
+					row.AddCell(new MyGuiControlTable.Cell(data.Author, toolTip: data.Author));
 
-					MyGuiControlTable.Cell statusCell = new MyGuiControlTable.Cell(data.StatusString);
-					row.AddCell(statusCell);
+					row.AddCell(new MyGuiControlTable.Cell(data.Version?.ToString()));
+
+                    row.AddCell(new MyGuiControlTable.Cell(data.StatusString));
 
 					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
 					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)

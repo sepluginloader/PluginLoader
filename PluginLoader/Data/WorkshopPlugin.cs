@@ -45,10 +45,5 @@ namespace avaness.PluginLoader.Data
         {
             return assembly;
         }
-
-        public override IMyModContext GetContext()
-        {
-            return new PluginContext(FriendlyName, WorkshopId + ".sbm", root);
-        }
     }
 }
