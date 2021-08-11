@@ -20,20 +20,28 @@ namespace avaness.PluginLoader.GUI
             form = LoaderTools.GetMainForm();
             form.Invalidate();
             form.BackgroundImage = Properties.Resources.BGImage;
+            form.Size = new Size(Convert.ToInt32(SystemParameters.VirtualScreenWidth), Convert.ToInt32(SystemParameters.VirtualScreenHeight));
             form.StartPosition = FormStartPosition.Manual;
-            form.Location = new Point(form.Width / 2 - form.Width / 2 + form.Location.X,
-                                      form.Height / 2 - form.Height / 2 + form.Location.Y);
+            form.Location = new Point(0, 0);
             form.Show();
-            //form.Size = new Size(Convert.ToInt32(SystemParameters.VirtualScreenWidth), Convert.ToInt32(SystemParameters.VirtualScreenHeight));
+            lbl = new Label();
+            lbl.Location = new Point(Convert.ToInt32(SystemParameters.VirtualScreenWidth / 2) - (lbl.Width / 2), Convert.ToInt32(SystemParameters.VirtualScreenHeight / 1.1) - (lbl.Height / 2));
+            lbl.TextAlign = ContentAlignment.MiddleCenter;
+            lbl.AutoSize = true;
+            lbl.BackColor = Color.Transparent;
+            lbl.ForeColor = Color.White;
+            lbl.Font = new Font(FontFamily.GenericSansSerif, 25, FontStyle.Regular);
+            form.Controls.Add(lbl);
         }
         
         public void SetText(string msg)
         {
 
-            //lbl.Text = "[Plugin Loader]\n" + msg;
-            //if (draw != null)
-            //    draw.Invoke(form, new object[0]);
-            //Application.DoEvents();
+            lbl.Text = "[Plugin Loader]\n" + msg;
+            if (draw != null)
+                draw.Invoke(form, new object[0]);
+            lbl.Location = new Point(Convert.ToInt32(SystemParameters.VirtualScreenWidth / 2) - (lbl.Width / 2), Convert.ToInt32(SystemParameters.VirtualScreenHeight / 1.1) - (lbl.Height / 2));
+            System.Windows.Forms.Application.DoEvents();
         }
 
         public void Delete()
