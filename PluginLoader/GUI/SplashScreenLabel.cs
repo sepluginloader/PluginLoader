@@ -1,6 +1,11 @@
 ﻿using System.Windows.Forms;
 using System.Reflection;
 using System.Drawing;
+using System.Drawing.Text;
+using System.Runtime.InteropServices;
+using System;
+using System.IO;
+using System.Windows;
 
 namespace avaness.PluginLoader.GUI
 {
@@ -12,23 +17,23 @@ namespace avaness.PluginLoader.GUI
 
         public SplashScreenLabel()
         {
-            lbl = new Label();
-            lbl.Name = "PluginLoaderInfo";
-            lbl.Font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold);
             form = LoaderTools.GetMainForm();
-            lbl.MaximumSize = new Size(form.Width, form.Height);
-            lbl.AutoSize = true;
-            form.Controls.Add(lbl);
-            draw = form.GetType().GetMethod("Draw", BindingFlags.Instance | BindingFlags.NonPublic);
-            SetText("");
+            form.Invalidate();
+            form.BackgroundImage = Properties.Resources.BGImage;
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new Point(form.Width / 2 - form.Width / 2 + form.Location.X,
+                                      form.Height / 2 - form.Height / 2 + form.Location.Y);
+            form.Show();
+            //form.Size = new Size(Convert.ToInt32(SystemParameters.VirtualScreenWidth), Convert.ToInt32(SystemParameters.VirtualScreenHeight));
         }
-
+        
         public void SetText(string msg)
         {
-            lbl.Text = "[Plugin Loader]\n" + msg;
-            if(draw != null)
-                draw.Invoke(form, new object[0]);
-            Application.DoEvents();
+
+            //lbl.Text = "[Plugin Loader]\n" + msg;
+            //if (draw != null)
+            //    draw.Invoke(form, new object[0]);
+            //Application.DoEvents();
         }
 
         public void Delete()
