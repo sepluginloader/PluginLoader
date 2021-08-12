@@ -21,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -43,7 +42,6 @@
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
       <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="PresentationFramework" />
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\ProtoBuf.Net.dll</HintPath>
     </Reference>
@@ -96,13 +94,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\VRage.Math.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Platform.Windows">
-      <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\VRage.Platform.Windows.dll</HintPath>
-    </Reference>
-    <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
@@ -112,7 +103,12 @@
     <Compile Include="Data\SEPMPlugin.cs" />
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
-    <Compile Include="GUI\SplashScreenLabel.cs" />
+    <Compile Include="GUI\SplashScreen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\SplashScreen.Designer.cs">
+      <DependentUpon>SplashScreen.cs</DependentUpon>
+    </Compile>
     <Compile Include="Network\GitHub.cs" />
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
@@ -127,27 +123,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PluginList.cs" />
     <Compile Include="Compiler\RoslynCompiler.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="SEPM\Logger.cs" />
     <Compile Include="SEPM\SEPMPlugin.cs" />
     <Compile Include="SteamAPI.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    <EmbeddedResource Include="GUI\SplashScreen.resx">
+      <DependentUpon>SplashScreen.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BGImage.jpg" />
-    <None Include="Resources\space_engineers.ttf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\LoadingWheel.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -157,7 +140,7 @@ echo %25target%25
 set counter=1
 :waitfile
 2&gt;nul (
- &gt;&gt;%25target%25 (call )
+&gt;&gt;%25target%25 (call )
 ) &amp;&amp; (goto copyfile) || (echo File is in use.)
 set /a counter=counter+1
 echo Trying attempt #%25counter%25
@@ -167,6 +150,7 @@ goto waitfile
 :copyfile
 echo Copying file.
 copy /y "$(TargetPath)" %25target%25
-copy /y "$(TargetPath)" "%25appdata%25\SpaceEngineers\Mods\Plugin Loader\$(TargetName) "</PostBuildEvent>
+copy /y "$(TargetPath)" "%25appdata%25\SpaceEngineers\Mods\Plugin Loader\$(TargetName) "
+		</PostBuildEvent>
   </PropertyGroup>
 </Project>

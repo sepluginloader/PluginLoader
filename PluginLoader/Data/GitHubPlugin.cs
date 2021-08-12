@@ -41,13 +41,13 @@ namespace avaness.PluginLoader.Data
             if (nameArgs.Length != 2)
                 throw new Exception("Invalid GitHub name: " + Id);
 
-            if(SourceDirectories != null)
+            if (SourceDirectories != null)
             {
                 for (int i = SourceDirectories.Length - 1; i >= 0; i--)
                 {
                     string path = SourceDirectories[i].Replace('\\', '/').TrimStart('/');
-                    
-                    if(path.Length == 0)
+
+                    if (path.Length == 0)
                     {
                         SourceDirectories.RemoveAtFast(i);
                         continue;
@@ -88,7 +88,7 @@ namespace avaness.PluginLoader.Data
             string commitFile = Path.Combine(cacheDir, commitHashFile);
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
             {
-                var lbl = Main.Instance.Label;
+                var lbl = Main.Instance.Splash;
                 lbl.SetText("Downloading " + this);
                 byte[] data = CompileFromSource();
                 File.WriteAllBytes(dllFile, data);
@@ -111,10 +111,10 @@ namespace avaness.PluginLoader.Data
         public byte[] CompileFromSource()
         {
             RoslynCompiler compiler = new RoslynCompiler();
-            using(Stream s = GitHub.DownloadRepo(Id, Commit, out string fileName))
+            using (Stream s = GitHub.DownloadRepo(Id, Commit, out string fileName))
             using (ZipArchive zip = new ZipArchive(s))
             {
-                foreach(ZipArchiveEntry entry in zip.Entries)
+                foreach (ZipArchiveEntry entry in zip.Entries)
                     CompileFromSource(compiler, entry);
             }
             return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName());
@@ -141,7 +141,7 @@ namespace avaness.PluginLoader.Data
 
             path = RemoveRoot(path); // Make the base of the path the root of the repository
 
-            foreach(string dir in SourceDirectories)
+            foreach (string dir in SourceDirectories)
             {
                 if (path.StartsWith(dir, StringComparison.Ordinal))
                     return true;
@@ -153,7 +153,7 @@ namespace avaness.PluginLoader.Data
         {
             path = path.Replace('\\', '/').TrimStart('/');
             int index = path.IndexOf('/');
-            if(index >= 0 && (index + 1) < path.Length)
+            if (index >= 0 && (index + 1) < path.Length)
                 return path.Substring(index + 1);
             return path;
         }

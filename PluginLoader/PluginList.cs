@@ -25,11 +25,11 @@ namespace avaness.PluginLoader
 
         public PluginList(string mainDirectory, PluginConfig config)
         {
-            var lbl = Main.Instance.Label;
+            var lbl = Main.Instance.Splash;
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
-            
+
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
@@ -41,7 +41,7 @@ namespace avaness.PluginLoader
         /// </summary>
         public void SubscribeToItem(string id)
         {
-            if(plugins.TryGetValue(id, out PluginData data) && data is SteamPlugin steam)
+            if (plugins.TryGetValue(id, out PluginData data) && data is SteamPlugin steam)
                 SteamAPI.SubscribeToItem(steam.WorkshopId);
         }
 
@@ -76,20 +76,20 @@ namespace avaness.PluginLoader
                     using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                     {
                         XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-                        foreach(var entry in zipFile.Entries)
+                        foreach (var entry in zipFile.Entries)
                         {
                             if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
                                 continue;
 
-                            using(Stream entryStream = entry.Open())
-                            using(StreamReader entryReader = new StreamReader(entryStream))
+                            using (Stream entryStream = entry.Open())
+                            using (StreamReader entryReader = new StreamReader(entryStream))
                             {
                                 PluginData data = (PluginData)xml.Deserialize(entryReader);
                                 plugins[data.Id] = data;
                             }
                         }
                     }
-                    
+
                     LogFile.WriteLine("Saving whitelist to disk");
                     using (Stream binFile = File.Create(whitelist))
                     {
@@ -155,7 +155,7 @@ namespace avaness.PluginLoader
         {
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
-                if(!dll.Contains(Path.DirectorySeparatorChar + "GitHub" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                if (!dll.Contains(Path.DirectorySeparatorChar + "GitHub" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 {
                     LocalPlugin local = new LocalPlugin(dll);
                     string name = local.FriendlyName;
@@ -169,7 +169,7 @@ namespace avaness.PluginLoader
         {
             List<SteamPlugin> steamPlugins = new List<SteamPlugin>(plugins.Values.Select(x => x as SteamPlugin).Where(x => x != null));
 
-            Main.Instance.Label.SetText($"Updating workshop items...");
+            Main.Instance.Splash.SetText($"Updating workshop items...");
 
             SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
 

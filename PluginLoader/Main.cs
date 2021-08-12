@@ -21,7 +21,7 @@ namespace avaness.PluginLoader
 
         public PluginList List { get; }
         public PluginConfig Config { get; }
-        public SplashScreenLabel Label { get; private set; }
+        public SplashScreen Splash { get; private set; }
 
         private bool init;
 
@@ -29,7 +29,7 @@ namespace avaness.PluginLoader
 
         public Main()
         {
-            Label = new SplashScreenLabel();
+            Splash = new SplashScreen();
 
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -45,7 +45,7 @@ namespace avaness.PluginLoader
             LogFile.Init(mainPath);
             LogFile.WriteLine("Starting");
 
-            Label.SetText("Finding references...");
+            Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
@@ -55,14 +55,16 @@ namespace avaness.PluginLoader
 
             Config.Init(List);
 
-            Label.SetText("Patching...");
+            Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
-            Label.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
-            foreach (string id in Config)
+            var enabledPlugins = Config.Plugins;
+            for (var i = 0; i < enabledPlugins.Length; i++)
             {
+                var id = enabledPlugins[i];
+                Splash.SetText($"Instantiating plugins... [{(i + 1) / enabledPlugins.Length:P0}]");
                 PluginData data = List[id];
                 if (data is GitHubPlugin github)
                     github.Init(mainPath);
@@ -77,7 +79,7 @@ namespace avaness.PluginLoader
 
             Cursor.Current = temp;
 
-            Label.SetText("Done.");
+            Splash.SetText($"Done. Took {sw.ElapsedMilliseconds:N0} ms");
         }
 
 
@@ -112,16 +114,18 @@ namespace avaness.PluginLoader
 
         public void Init(object gameInstance)
         {
-            Label.Delete();
-            Label = null;
-
             LogFile.WriteLine($"Initializing {plugins.Count} plugins");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
+                Splash.SetText($"Initializing plugins... [{(i + 1) / plugins.Count:P0}]");
                 PluginInstance p = plugins[i];
-                if(!p.Init(gameInstance))
+                if (!p.Init(gameInstance))
                     plugins.RemoveAtFast(i);
             }
+
+            Splash.Dispose();
+            Splash = null;
+
             LogFile.Flush();
             init = true;
         }
