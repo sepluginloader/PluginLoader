@@ -99,6 +99,10 @@
     <Reference Include="VRage.Platform.Windows">
       <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\VRage.Platform.Windows.dll</HintPath>
     </Reference>
+    <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Games\steamapps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
