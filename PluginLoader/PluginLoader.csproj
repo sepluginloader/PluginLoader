@@ -123,6 +123,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PluginList.cs" />
     <Compile Include="Compiler\RoslynCompiler.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SEPM\Logger.cs" />
     <Compile Include="SEPM\SEPMPlugin.cs" />
     <Compile Include="SteamAPI.cs" />
@@ -131,6 +136,14 @@
     <EmbeddedResource Include="GUI\SplashScreen.resx">
       <DependentUpon>SplashScreen.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BGImage.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -49,9 +49,11 @@ namespace avaness.PluginLoader.GUI
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Image = global::avaness.PluginLoader.Properties.Resources.BGImage;
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(690, 400);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
             // 
@@ -73,6 +75,7 @@ namespace avaness.PluginLoader.GUI
             this.TopMost = true;
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
+
         }
 
         private System.Windows.Forms.PictureBox pictureBox1;
