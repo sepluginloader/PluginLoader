@@ -146,6 +146,9 @@
     <None Include="Resources\BGImage.jpg" />
     <None Include="Resources\space_engineers.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LoadingWheel.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>@echo off
