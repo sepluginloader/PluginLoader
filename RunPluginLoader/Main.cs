@@ -37,7 +37,7 @@ namespace avaness.RunPluginLoader
             catch (Exception e)
             {
                 Log("Error: " + e);
-                MessageBox.Show(GetMainForm(), "Plugin Loader crashed: " + e);
+                MessageBox.Show(GetMainForm(), "Plugin Loader crashed: " + e + " Space Engineers will still continue loading without Plugin Loader.");
             }
         }
 

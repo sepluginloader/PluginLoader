@@ -79,7 +79,7 @@ namespace avaness.PluginLoader
 
             Cursor.Current = temp;
 
-            Splash.SetText($"Done. Took {sw.ElapsedMilliseconds:N0} ms");
+            Splash.SetText($"Done. (Took {sw.ElapsedMilliseconds:N0} ms)\n Loading Space Engineers...");
         }
 
 

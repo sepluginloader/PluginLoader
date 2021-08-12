@@ -2,11 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
 {
+    
+
+
     [XmlInclude(typeof(WorkshopPlugin))]
     [XmlInclude(typeof(SEPMPlugin))]
     [XmlInclude(typeof(GitHubPlugin))]
