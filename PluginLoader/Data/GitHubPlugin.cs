@@ -90,7 +90,7 @@ namespace avaness.PluginLoader.Data
             {
                 var lbl = Main.Instance.Label;
                 lbl.SetText("Downloading " + this);
-                byte[] data = CompileFromSource();
+                byte[] data = CompileFromSource(x => lbl.SetValue(x));
                 File.WriteAllBytes(dllFile, data);
                 File.WriteAllText(commitFile, Commit);
                 Status = PluginStatus.Updated;
@@ -108,14 +108,20 @@ namespace avaness.PluginLoader.Data
 
 
 
-        public byte[] CompileFromSource()
+        public byte[] CompileFromSource(Action<float> callback = null)
         {
             RoslynCompiler compiler = new RoslynCompiler();
             using(Stream s = GitHub.DownloadRepo(Id, Commit, out string fileName))
             using (ZipArchive zip = new ZipArchive(s))
             {
-                foreach(ZipArchiveEntry entry in zip.Entries)
+                callback?.Invoke(0);
+                for (int i = 0; i < zip.Entries.Count; i++)
+                {
+                    ZipArchiveEntry entry = zip.Entries[i];
                     CompileFromSource(compiler, entry);
+                    callback?.Invoke(i / (float)zip.Entries.Count);
+                }
+                callback?.Invoke(1);
             }
             return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName());
         }
