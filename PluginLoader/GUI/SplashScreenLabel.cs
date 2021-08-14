@@ -17,7 +17,9 @@ namespace avaness.PluginLoader.GUI
             lbl.Font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold);
             form = LoaderTools.GetMainForm();
             lbl.MaximumSize = new Size(form.Width, form.Height);
-            lbl.AutoSize = true;
+            lbl.Dock = DockStyle.Top;
+            lbl.AutoSize = false;
+            lbl.TextAlign = ContentAlignment.MiddleCenter;
             form.Controls.Add(lbl);
             draw = form.GetType().GetMethod("Draw", BindingFlags.Instance | BindingFlags.NonPublic);
             SetText("");
@@ -25,7 +27,7 @@ namespace avaness.PluginLoader.GUI
 
         public void SetText(string msg)
         {
-            lbl.Text = "[Plugin Loader]\n" + msg;
+            lbl.Text = "[Plugin Loader] " + msg;
             if(draw != null)
                 draw.Invoke(form, new object[0]);
             Application.DoEvents();
