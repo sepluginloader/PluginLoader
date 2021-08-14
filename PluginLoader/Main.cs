@@ -77,7 +77,8 @@ namespace avaness.PluginLoader
 
             Cursor.Current = temp;
 
-            Label.SetText("Done.");
+            Label.Delete();
+            Label = null;
         }
 
 
@@ -112,9 +113,6 @@ namespace avaness.PluginLoader
 
         public void Init(object gameInstance)
         {
-            Label.Delete();
-            Label = null;
-
             LogFile.WriteLine($"Initializing {plugins.Count} plugins");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
