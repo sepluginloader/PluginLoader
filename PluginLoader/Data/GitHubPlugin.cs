@@ -89,12 +89,12 @@ namespace avaness.PluginLoader.Data
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
             {
                 var lbl = Main.Instance.Label;
-                lbl.SetText("Downloading " + this);
-                byte[] data = CompileFromSource(x => lbl.SetValue(x));
+                lbl.SetText($"Downloading '{FriendlyName}'");
+                byte[] data = CompileFromSource(x => lbl.SetBarValue(x));
                 File.WriteAllBytes(dllFile, data);
                 File.WriteAllText(commitFile, Commit);
                 Status = PluginStatus.Updated;
-                lbl.SetText($"Compiled {this}.");
+                lbl.SetText($"Compiled '{FriendlyName}'");
                 a = Assembly.Load(data);
             }
             else

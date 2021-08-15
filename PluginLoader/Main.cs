@@ -21,7 +21,7 @@ namespace avaness.PluginLoader
 
         public PluginList List { get; }
         public PluginConfig Config { get; }
-        public SplashScreenLabel Label { get; private set; }
+        public SplashScreen Label { get; private set; }
 
         private bool init;
 
@@ -29,7 +29,7 @@ namespace avaness.PluginLoader
 
         public Main()
         {
-            Label = new SplashScreenLabel();
+            Label = new SplashScreen();
 
             Stopwatch sw = Stopwatch.StartNew();
 

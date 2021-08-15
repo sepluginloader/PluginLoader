@@ -102,7 +102,9 @@
     <Compile Include="Data\SEPMPlugin.cs" />
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
-    <Compile Include="GUI\SplashScreenLabel.cs" />
+    <Compile Include="GUI\SplashScreen.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Network\GitHub.cs" />
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
@@ -120,6 +122,9 @@
     <Compile Include="SEPM\Logger.cs" />
     <Compile Include="SEPM\SEPMPlugin.cs" />
     <Compile Include="SteamAPI.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="splash.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
