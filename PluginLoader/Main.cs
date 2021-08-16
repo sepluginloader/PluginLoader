@@ -29,9 +29,9 @@ namespace avaness.PluginLoader
 
         public Main()
         {
-            Splash = new SplashScreen();
-
             Stopwatch sw = Stopwatch.StartNew();
+
+            Splash = new SplashScreen();
 
             Instance = this;
 
