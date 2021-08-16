@@ -21,7 +21,7 @@ namespace avaness.PluginLoader
 
         public PluginList List { get; }
         public PluginConfig Config { get; }
-        public SplashScreen Label { get; private set; }
+        public SplashScreen Splash { get; private set; }
 
         private bool init;
 
@@ -29,7 +29,7 @@ namespace avaness.PluginLoader
 
         public Main()
         {
-            Label = new SplashScreen();
+            Splash = new SplashScreen();
 
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -45,7 +45,7 @@ namespace avaness.PluginLoader
             LogFile.Init(mainPath);
             LogFile.WriteLine("Starting");
 
-            Label.SetText("Finding references...");
+            Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
@@ -55,11 +55,11 @@ namespace avaness.PluginLoader
 
             Config.Init(List);
 
-            Label.SetText("Patching...");
+            Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
-            Label.SetText("Instantiating plugins...");
+            Splash.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
             foreach (string id in Config)
             {
@@ -77,8 +77,8 @@ namespace avaness.PluginLoader
 
             Cursor.Current = temp;
 
-            Label.Delete();
-            Label = null;
+            Splash.Delete();
+            Splash = null;
         }
 
 

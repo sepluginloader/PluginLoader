@@ -25,7 +25,7 @@ namespace avaness.PluginLoader
 
         public PluginList(string mainDirectory, PluginConfig config)
         {
-            var lbl = Main.Instance.Label;
+            var lbl = Main.Instance.Splash;
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
@@ -169,7 +169,7 @@ namespace avaness.PluginLoader
         {
             List<SteamPlugin> steamPlugins = new List<SteamPlugin>(plugins.Values.Select(x => x as SteamPlugin).Where(x => x != null));
 
-            Main.Instance.Label.SetText($"Updating workshop items...");
+            Main.Instance.Splash.SetText($"Updating workshop items...");
 
             SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
 

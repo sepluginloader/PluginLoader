@@ -15,6 +15,7 @@ namespace avaness.PluginLoader.GUI
 
 		private readonly bool invalid;
 		private readonly Label lbl;
+		private readonly PictureBox gifBox;
 		private readonly RectangleF bar;
 
 		private float barValue = float.NaN;
@@ -58,7 +59,7 @@ namespace avaness.PluginLoader.GUI
 			};
 			Controls.Add(lbl);
 
-			PictureBox gifBox = new PictureBox()
+			gifBox = new PictureBox()
 			{
 				Name = "PluginLoaderAnimation",
 				Image = gif,
@@ -98,6 +99,7 @@ namespace avaness.PluginLoader.GUI
 			
 			lbl.Text = msg;
 			barValue = float.NaN;
+			gifBox.Invalidate();
 			ForceUpdate();
 		}
 
@@ -107,12 +109,12 @@ namespace avaness.PluginLoader.GUI
 				return;
 
 			barValue = percent;
+			gifBox.Invalidate();
 			ForceUpdate();
 		}
 
 		private void ForceUpdate()
 		{
-			Refresh();
 			Application.DoEvents();
 		}
 
@@ -131,6 +133,7 @@ namespace avaness.PluginLoader.GUI
 			if (invalid)
 				return;
 
+			gifBox.Paint -= OnPictureBoxDraw;
 			Close();
 			Dispose();
 			ForceUpdate();

@@ -88,7 +88,7 @@ namespace avaness.PluginLoader.Data
             string commitFile = Path.Combine(cacheDir, commitHashFile);
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
             {
-                var lbl = Main.Instance.Label;
+                var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
                 byte[] data = CompileFromSource(x => lbl.SetBarValue(x));
                 File.WriteAllBytes(dllFile, data);
