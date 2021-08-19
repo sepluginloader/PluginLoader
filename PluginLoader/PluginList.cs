@@ -180,9 +180,14 @@ namespace avaness.PluginLoader
                 {
                     string path = Path.Combine(workshop, steam.Id);
                     if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
+                    {
                         steam.Init(dllFile);
+                    }
                     else if (config.IsEnabled(steam.Id))
+                    {
                         steam.Status = PluginStatus.Error;
+                        LogFile.WriteLine($"The plugin '{steam}' is missing and cannot be loaded.");
+                    }
                 }
                 catch (Exception e)
                 {
