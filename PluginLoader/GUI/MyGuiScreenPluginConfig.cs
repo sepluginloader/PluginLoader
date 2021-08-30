@@ -24,6 +24,7 @@ namespace avaness.PluginLoader.GUI
         private const float sizeY = 0.76f;
 
 		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
+		private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
 		private MyGuiControlTable modTable;
 		private MyGuiControlLabel countLabel;
 		private PluginConfig config;
@@ -215,6 +216,7 @@ namespace avaness.PluginLoader.GUI
 		{
 			modTable.Clear();
 			modTable.Controls.Clear();
+			dataCheckboxes.Clear();
 			PluginList list = Main.Instance.List;
 			bool noFilter = filter == null || filter.Length == 0;
 			foreach (PluginData data in list.OrderBy(x => x.FriendlyName))
@@ -253,6 +255,7 @@ namespace avaness.PluginLoader.GUI
 					enabledBox.IsCheckedChanged += IsCheckedChanged;
 					enabledCell.Control = enabledBox;
 					modTable.Controls.Add(enabledBox);
+					dataCheckboxes.Add(data.Id, enabledBox);
 					row.AddCell(enabledCell);
 				}
 			}
@@ -319,15 +322,15 @@ namespace avaness.PluginLoader.GUI
             SetEnabled(original, checkbox.IsChecked);
 			if(original.Group.Count > 0 && checkbox.IsChecked)
             {
-				bool changedAlts = false;
 				foreach (PluginData alt in original.Group)
-                {
-					bool changed = SetEnabled(alt, false);
-					if (!changedAlts)
-						changedAlts = changed;
+				{
+					if (SetEnabled(alt, false) && dataCheckboxes.TryGetValue(alt.Id, out MyGuiControlCheckbox altBox))
+                    {
+						altBox.IsCheckedChanged -= IsCheckedChanged;
+						altBox.IsChecked = false;
+						altBox.IsCheckedChanged += IsCheckedChanged;
+					}
 				}
-				if(changedAlts)
-					ResetTable(tableFilter);
 			}
         }
 
