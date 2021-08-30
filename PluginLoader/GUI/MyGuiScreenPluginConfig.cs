@@ -134,17 +134,17 @@ namespace avaness.PluginLoader.GUI
 				0.1f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
-			modTable.SetColumnComparison(0, CellTextComparison);
+			modTable.SetColumnComparison(0, CellTextOrDataComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
 			modTable.SetColumnName(2, new StringBuilder("Author"));
-			modTable.SetColumnComparison(2, CellTextComparison);
+			modTable.SetColumnComparison(2, CellTextOrDataComparison);
 			modTable.SetColumnName(3, new StringBuilder("Version"));
-			modTable.SetColumnComparison(3, CellTextComparison);
+			modTable.SetColumnComparison(3, CellTextOrDataComparison);
 			modTable.SetColumnName(4, new StringBuilder("Status"));
-			modTable.SetColumnComparison(4, CellTextComparison);
+			modTable.SetColumnComparison(4, CellTextOrDataComparison);
 			modTable.SetColumnName(5, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(5, CellCheckedComparison);
+			modTable.SetColumnComparison(5, CellCheckedOrDataComparison);
 			modTable.SortByColumn(5);
 			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
@@ -191,7 +191,7 @@ namespace avaness.PluginLoader.GUI
 			ResetTable(tableFilter);
         }
 
-        private int CellCheckedComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        private int CellCheckedOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
 			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
             {
@@ -202,7 +202,15 @@ namespace avaness.PluginLoader.GUI
 			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
         }
 
-        private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+		private int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        {
+			int result = TextComparison(x.Text, y.Text);
+			if (result != 0)
+				return result;
+			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
+		}
+
+		private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
 			return TextComparison(x.Text, y.Text);
         }
@@ -228,7 +236,7 @@ namespace avaness.PluginLoader.GUI
 			dataCheckboxes.Clear();
 			PluginList list = Main.Instance.List;
 			bool noFilter = filter == null || filter.Length == 0;
-			foreach (PluginData data in list.OrderBy(x => x.FriendlyName))
+			foreach (PluginData data in list)
 			{
 				bool enabled;
 				if(!dataChanges.TryGetValue(data.Id, out enabled))
@@ -241,21 +249,22 @@ namespace avaness.PluginLoader.GUI
 				{
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
+					StringBuilder name = new StringBuilder(data.FriendlyName);
 
-                    row.AddCell(new MyGuiControlTable.Cell(data.Source));
+                    row.AddCell(new MyGuiControlTable.Cell(data.Source, name));
 
 					string tip = data.FriendlyName;
 					if (!string.IsNullOrWhiteSpace(data.Tooltip))
 						tip += "\n" +  data.Tooltip;
                     row.AddCell(new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip));
 
-					row.AddCell(new MyGuiControlTable.Cell(data.Author, toolTip: data.Author));
+					row.AddCell(new MyGuiControlTable.Cell(data.Author, name, toolTip: data.Author));
 
-					row.AddCell(new MyGuiControlTable.Cell(data.Version?.ToString()));
+					row.AddCell(new MyGuiControlTable.Cell(data.Version?.ToString(), name));
 
-                    row.AddCell(new MyGuiControlTable.Cell(data.StatusString));
+                    row.AddCell(new MyGuiControlTable.Cell(data.StatusString, name));
 
-					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: new StringBuilder(data.FriendlyName));
+					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: name);
 					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
 					{
 						UserData = data,
