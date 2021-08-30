@@ -30,7 +30,7 @@ namespace avaness.PluginLoader.GUI
 		private PluginConfig config;
 		private string[] tableFilter;
 
-		private static bool allItemsVisible = false;
+		private static bool allItemsVisible = true;
 
 		// Source: MyTerminalControlPanel
 		private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
@@ -145,7 +145,7 @@ namespace avaness.PluginLoader.GUI
 			modTable.SetColumnComparison(4, CellTextComparison);
 			modTable.SetColumnName(5, new StringBuilder("Enabled"));
 			modTable.SetColumnComparison(5, CellCheckedComparison);
-			modTable.SortByColumn(0);
+			modTable.SortByColumn(5);
 			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
 
@@ -194,23 +194,32 @@ namespace avaness.PluginLoader.GUI
         private int CellCheckedComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
 			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
-				return xBox.IsChecked.CompareTo(yBox.IsChecked);
-			return 0;
+            {
+				int result = yBox.IsChecked.CompareTo(xBox.IsChecked);
+				if (result != 0)
+					return result;
+			}
+			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
         }
 
         private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
-			if(x.Text == null)
-            {
-				if (y.Text == null)
+			return TextComparison(x.Text, y.Text);
+        }
+
+		private int TextComparison(StringBuilder x, StringBuilder y)
+        {
+			if (x == null)
+			{
+				if (y == null)
 					return 0;
 				return 1;
-            }
+			}
 
-			if (y.Text == null)
+			if (y == null)
 				return -1;
-			return x.Text.CompareTo(y.Text);
-        }
+			return x.CompareTo(y);
+		}
 
         private void ResetTable(string[] filter = null)
 		{
@@ -246,7 +255,7 @@ namespace avaness.PluginLoader.GUI
 
                     row.AddCell(new MyGuiControlTable.Cell(data.StatusString));
 
-					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell();
+					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: new StringBuilder(data.FriendlyName));
 					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
 					{
 						UserData = data,
