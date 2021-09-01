@@ -34,6 +34,13 @@ namespace avaness.RunPluginLoader
                     Log("Failed to find PluginLoader!");
                 }
             }
+            catch (ReflectionTypeLoadException re)
+            {
+                Log("Error: " + re);
+                foreach (Exception e in re.LoaderExceptions)
+                    Log(e.ToString());
+                MessageBox.Show(GetMainForm(), "Plugin Loader crashed! Check game log for more info.");
+            }
             catch (Exception e)
             {
                 Log("Error: " + e);
