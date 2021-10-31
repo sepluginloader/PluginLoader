@@ -15,7 +15,7 @@ using avaness.PluginLoader.Patch;
 
 namespace avaness.PluginLoader
 {
-    public class Main : IPlugin
+    public class Main : IHandleInputPlugin
     {
         public static Main Instance;
 
@@ -132,6 +132,19 @@ namespace avaness.PluginLoader
                 {
                     PluginInstance p = plugins[i];
                     if (!p.Update())
+                        plugins.RemoveAtFast(i);
+                }
+            }
+        }
+
+        public void HandleInput()
+        {
+            if(init)
+            {
+                for (int i = plugins.Count - 1; i >= 0; i--)
+                {
+                    PluginInstance p = plugins[i];
+                    if (!p.HandleInput())
                         plugins.RemoveAtFast(i);
                 }
             }

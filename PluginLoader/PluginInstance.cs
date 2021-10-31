@@ -1,6 +1,8 @@
 ﻿using avaness.PluginLoader.Data;
+using HarmonyLib;
 using Sandbox.Game.World;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using VRage.Game.Components;
@@ -14,6 +16,7 @@ namespace avaness.PluginLoader
         private readonly PluginData data;
         private readonly Assembly mainAssembly;
         private IPlugin plugin;
+        private IHandleInputPlugin inputPlugin;
 
         private PluginInstance(PluginData data, Assembly mainAssembly, Type mainType)
         {
@@ -27,6 +30,7 @@ namespace avaness.PluginLoader
             try
             {
                 plugin = (IPlugin)Activator.CreateInstance(mainType);
+                inputPlugin = plugin as IHandleInputPlugin;
                 return true;
             }
             catch (Exception e) 
@@ -90,6 +94,15 @@ namespace avaness.PluginLoader
             return true;
         }
 
+        public bool HandleInput()
+        {
+            if (plugin == null)
+                return false;
+
+            inputPlugin?.HandleInput();
+            return true;
+        }
+
         public void Dispose()
         {
             if(plugin != null)
@@ -97,7 +110,8 @@ namespace avaness.PluginLoader
                 try
                 {
                     plugin.Dispose();
-                    plugin = null; 
+                    plugin = null;
+                    inputPlugin = null;
                 }
                 catch (Exception e)
                 {

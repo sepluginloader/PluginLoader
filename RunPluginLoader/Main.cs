@@ -8,9 +8,9 @@ using VRage.Utils;
 
 namespace avaness.RunPluginLoader
 {
-    public class Main : IPlugin
+    public class Main : IHandleInputPlugin
     {
-        private readonly IPlugin pluginLoader;
+        private readonly IHandleInputPlugin pluginLoader;
         private readonly Assembly harmony;
 
         public Main()
@@ -26,7 +26,7 @@ namespace avaness.RunPluginLoader
                 Type pluginLoaderMain = pluginLoaderAssembly.GetTypes().Where(t => pluginType.IsAssignableFrom(t) && t.Name.Contains("Main")).FirstOrDefault();
                 if (pluginLoaderMain != null)
                 {
-                    pluginLoader = (IPlugin)Activator.CreateInstance(pluginLoaderMain);
+                    pluginLoader = (IHandleInputPlugin)Activator.CreateInstance(pluginLoaderMain);
                     Log($"PluginLoader started.");
                 }
                 else
@@ -78,6 +78,11 @@ namespace avaness.RunPluginLoader
         public void Update()
         {
             pluginLoader?.Update();
+        }
+
+        public void HandleInput()
+        {
+            pluginLoader?.HandleInput();
         }
 
         private static string GetAssemblyDirectory()
