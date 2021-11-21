@@ -33,12 +33,13 @@ namespace avaness.PluginLoader.Patch
                 else
                     currentMods = new HashSet<ulong>();
 
-                PluginList list = Main.Instance.List;
-                List<MyWorkshopItem> items = SteamAPI.ResolveDependencies(Main.Instance.Config.Plugins.Select(id => list[id]).OfType<ModPlugin>().Select(mod => mod.WorkshopId));
+                List<ulong> whitelistedWorkshopIds = Main.Instance.List.OfType<ModPlugin>().Select(mod => mod.WorkshopId).ToList();
+                List<MyWorkshopItem> items = SteamAPI.ResolveDependencies(Main.Instance.Config.Plugins.Select(id => Main.Instance.List[id]).OfType<ModPlugin>().Select(mod => mod.WorkshopId));
 
-                SteamAPI.Update(items.Select(item => item.Id));
-
-                List<MyWorkshopItem> filteredItems = items.Where(item => !currentMods.Contains(item.Id)).ToList();
+                List<MyWorkshopItem> filteredItems = items.Where(item => !currentMods.Contains(item.Id) && whitelistedWorkshopIds.Contains(item.Id)).ToList();
+                
+                SteamAPI.Update(filteredItems.Select(item => item.Id));
+                
                 foreach (MyWorkshopItem item in filteredItems)
                 {
                     AddMod(__instance, item);
