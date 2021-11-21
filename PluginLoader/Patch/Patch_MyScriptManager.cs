@@ -16,7 +16,6 @@ namespace avaness.PluginLoader.Patch
     public static class Patch_MyScripManager
     {
         private static Action<MyScriptManager, string, MyModContext> loadScripts;
-        private static string workshopPath;
 
         static Patch_MyScripManager()
         {
@@ -27,8 +26,6 @@ namespace avaness.PluginLoader.Patch
         {
             try
             {
-                workshopPath = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
-
                 HashSet<ulong> currentMods;
                 if (MySession.Static.Mods != null)
                     currentMods = new HashSet<ulong>(MySession.Static.Mods.Select(x => x.PublishedFileId));
@@ -39,8 +36,11 @@ namespace avaness.PluginLoader.Patch
                 foreach (string id in Main.Instance.Config.Plugins)
                 {
                     PluginData data = list[id];
-                    if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId))
-                        AddMod(__instance, mod.WorkshopId);
+                    if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)
+                    {
+                        LogFile.WriteLine("Loading client mod scripts for " + mod.WorkshopId);
+                        loadScripts(__instance, mod.ModLocation, mod.GetModContext());
+                    }
                 }
             }
             catch (Exception e)
@@ -48,19 +48,6 @@ namespace avaness.PluginLoader.Patch
                 LogFile.WriteLine("An error occured while loading client mods: " + e);
                 throw;
             }
-        }
-
-        private static void AddMod(MyScriptManager scriptManager, ulong modItemId)
-        {
-            string modLocation = Path.Combine(workshopPath, modItemId.ToString());
-            if (!Directory.Exists(modLocation))
-                return;
-
-            MyModContext modContext = new MyModContext();
-            modContext.Init(new MyObjectBuilder_Checkpoint.ModItem(modItemId, "Steam"));
-            modContext.Init(modItemId.ToString(), null, modLocation);
-            LogFile.WriteLine("Loading client mod " + modItemId);
-            loadScripts(scriptManager, modLocation, modContext);
         }
     }
 }

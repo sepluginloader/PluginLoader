@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
 using VRage;
+using VRage.Game;
 using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
@@ -46,6 +47,43 @@ namespace avaness.PluginLoader.Data
         public override void Show()
         {
             MyGuiSandbox.OpenUrl("https://steamcommunity.com/workshop/filedetails/?id=" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
+        }
+
+        private string modLocation;
+        public string ModLocation
+        {
+            get
+            {
+                if (modLocation != null)
+                    return modLocation;
+                modLocation = Path.Combine(Path.GetFullPath(@"..\..\..\workshop\content\244850\"), WorkshopId.ToString());
+                return modLocation;
+            }
+        }
+
+        public bool Exists => Directory.Exists(ModLocation);
+
+        public MyObjectBuilder_Checkpoint.ModItem GetModItem()
+        {
+            var modItem = new MyObjectBuilder_Checkpoint.ModItem(WorkshopId, "Steam");
+            modItem.SetModData(new WorkshopItem(ModLocation));
+            return modItem;
+        }
+
+        class WorkshopItem : VRage.GameServices.MyWorkshopItem
+        {
+            public WorkshopItem(string folder)
+            {
+                Folder = folder;
+            }
+        }
+
+        public MyModContext GetModContext()
+        {
+            MyModContext modContext = new MyModContext();
+            modContext.Init(new MyObjectBuilder_Checkpoint.ModItem(WorkshopId, "Steam"));
+            modContext.Init(WorkshopId.ToString(), null, ModLocation);
+            return modContext;
         }
     }
 }
