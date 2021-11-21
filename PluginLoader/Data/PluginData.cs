@@ -10,6 +10,7 @@ namespace avaness.PluginLoader.Data
     [XmlInclude(typeof(WorkshopPlugin))]
     [XmlInclude(typeof(SEPMPlugin))]
     [XmlInclude(typeof(GitHubPlugin))]
+    [XmlInclude(typeof(ModPlugin))]
     [ProtoContract]
     [ProtoInclude(100, typeof(SteamPlugin))]
     [ProtoInclude(103, typeof(GitHubPlugin))]
