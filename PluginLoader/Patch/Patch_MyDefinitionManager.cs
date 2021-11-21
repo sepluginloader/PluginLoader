@@ -22,12 +22,15 @@ namespace avaness.PluginLoader.Patch
         public static void Prefix(ref List<MyObjectBuilder_Checkpoint.ModItem> mods)
         {
             if (ModsCache.HasValue && ModsCache.Value.Item1 == MySession.Static)
+            {
+                mods = new List<MyObjectBuilder_Checkpoint.ModItem>(mods);
                 mods.AddRange(ModsCache.Value.Item2.Select(item =>
                 {
                     MyObjectBuilder_Checkpoint.ModItem modItem = new MyObjectBuilder_Checkpoint.ModItem(item.Id, item.ServiceName);
                     modItem.SetModData(item);
                     return modItem;
                 }));
+            }
             ModsCache = null;
         }
     }
