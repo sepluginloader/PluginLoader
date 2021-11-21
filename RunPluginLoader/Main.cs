@@ -40,11 +40,25 @@ namespace avaness.RunPluginLoader
                 foreach (Exception e in re.LoaderExceptions)
                     Log(e.ToString());
                 MessageBox.Show(GetMainForm(), "Plugin Loader crashed! Check game log for more info.");
+                CloseCustomSplashScreen();
             }
             catch (Exception e)
             {
                 Log("Error: " + e);
                 MessageBox.Show(GetMainForm(), "Plugin Loader crashed: " + e);
+                CloseCustomSplashScreen();
+            }
+        }
+
+        private void CloseCustomSplashScreen()
+        {
+            foreach (Form f in Application.OpenForms)
+            {
+                if (f.Name == "SplashScreenPluginLoader")
+                {
+                    f.Close();
+                    break;
+                }
             }
         }
 
