@@ -56,15 +56,11 @@ namespace avaness.PluginLoader.Patch
         
         private static void AddMod(MyScriptManager scriptManager, MyWorkshopItem item)
         {
-            string modLocation = Path.Combine(Path.GetFullPath(@"..\..\..\workshop\content\244850\"), item.Id.ToString());
-            if (!Directory.Exists(modLocation))
-                return;
-
             MyModContext modContext = new MyModContext();
             modContext.Init(new MyObjectBuilder_Checkpoint.ModItem(item.Id, item.ServiceName));
-            modContext.Init(item.Id.ToString(), null, modLocation);
+            modContext.Init(item.Id.ToString(), null, item.Folder);
             LogFile.WriteLine("Loading client mod scripts " + item.Id);
-            loadScripts(scriptManager, modLocation, modContext);
+            loadScripts(scriptManager, item.Folder, modContext);
         }
     }
 }
