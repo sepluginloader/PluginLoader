@@ -10,39 +10,25 @@ using avaness.PluginLoader.Data;
 using System.Collections.Generic;
 using System.IO;
 using Sandbox.Definitions;
+using VRage.GameServices;
 
 namespace avaness.PluginLoader.Patch
 {
     [HarmonyPatch(typeof(MyDefinitionManager), "LoadData")]
     public static class Patch_MyDefinitionManager
     {
+        internal static (MySession, List<MyWorkshopItem>)? ModsCache;
 
         public static void Prefix(ref List<MyObjectBuilder_Checkpoint.ModItem> mods)
         {
-
-            try
-            {
-                HashSet<ulong> currentMods = new HashSet<ulong>(mods.Select(x => x.PublishedFileId));
-                List<MyObjectBuilder_Checkpoint.ModItem> newMods = new List<MyObjectBuilder_Checkpoint.ModItem>(mods);
-
-                PluginList list = Main.Instance.List;
-                foreach (string id in Main.Instance.Config.Plugins)
+            if (ModsCache.HasValue && ModsCache.Value.Item1 == MySession.Static)
+                mods.AddRange(ModsCache.Value.Item2.Select(item =>
                 {
-                    PluginData data = list[id];
-                    if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)
-                    {
-                        LogFile.WriteLine("Loading client mod definitions for " + mod.WorkshopId);
-                        newMods.Add(mod.GetModItem());
-                    }
-                }
-
-                mods = newMods;
-            }
-            catch (Exception e)
-            {
-                LogFile.WriteLine("An error occured while loading client mods: " + e);
-                throw;
-            }
+                    MyObjectBuilder_Checkpoint.ModItem modItem = new MyObjectBuilder_Checkpoint.ModItem(item.Id, item.ServiceName);
+                    modItem.SetModData(item);
+                    return modItem;
+                }));
+            ModsCache = null;
         }
     }
 }

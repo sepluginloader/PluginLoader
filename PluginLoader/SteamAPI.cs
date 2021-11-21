@@ -10,6 +10,7 @@ using VRage.Utils;
 using HarmonyLib;
 using System.Reflection;
 using System.Text;
+using VRage.GameServices;
 
 namespace avaness.PluginLoader
 {
@@ -86,5 +87,51 @@ namespace avaness.PluginLoader
 			return resultData;
 		}
 
+        public static List<MyWorkshopItem> ResolveDependencies(IEnumerable<ulong> workshopIds)
+        {
+            List<MyWorkshopItem> ret = null;
+            Parallel.Start(delegate
+            {
+                ret = MyWorkshop.GetModsDependencyHiearchy(new HashSet<WorkshopId>(workshopIds.Select(b => new WorkshopId(b, MyGameService.GetDefaultUGC().ServiceName))), out _)
+                    .Distinct(WorkshopItemIdComparer.Instance).ToList();
+            });
+            while (ret == null)
+            {
+                MyGameService.Update();
+                Thread.Sleep(10);
+            }
+            return ret;
+        }
+
+        private class WorkshopItemIdComparer : IEqualityComparer<MyWorkshopItem>
+        {
+            public static readonly WorkshopItemIdComparer Instance = new WorkshopItemIdComparer();
+            public bool Equals(MyWorkshopItem x, MyWorkshopItem y)
+            {
+                if (ReferenceEquals(x, y))
+                    return true;
+                if (ReferenceEquals(x, null))
+                    return false;
+                if (ReferenceEquals(y, null))
+                    return false;
+                if (x.GetType() != y.GetType())
+                    return false;
+
+                return x.Title == y.Title && x.ItemType == y.ItemType && x.Id == y.Id && x.OwnerId == y.OwnerId && x.ServiceName == y.ServiceName;
+            }
+
+            public int GetHashCode(MyWorkshopItem obj)
+            {
+                unchecked
+                {
+                    var hashCode = (obj.Title != null ? obj.Title.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (int)obj.ItemType;
+                    hashCode = (hashCode * 397) ^ obj.Id.GetHashCode();
+                    hashCode = (hashCode * 397) ^ obj.OwnerId.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (obj.ServiceName != null ? obj.ServiceName.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
 	}
 }

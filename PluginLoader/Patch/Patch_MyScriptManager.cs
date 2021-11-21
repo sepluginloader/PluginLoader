@@ -9,6 +9,7 @@ using VRage.Utils;
 using avaness.PluginLoader.Data;
 using System.Collections.Generic;
 using System.IO;
+using VRage.GameServices;
 
 namespace avaness.PluginLoader.Patch
 {
@@ -33,21 +34,37 @@ namespace avaness.PluginLoader.Patch
                     currentMods = new HashSet<ulong>();
 
                 PluginList list = Main.Instance.List;
-                foreach (string id in Main.Instance.Config.Plugins)
+                List<MyWorkshopItem> items = SteamAPI.ResolveDependencies(Main.Instance.Config.Plugins.Select(id => list[id]).OfType<ModPlugin>().Select(mod => mod.WorkshopId));
+
+                SteamAPI.Update(items.Select(item => item.Id));
+
+                List<MyWorkshopItem> filteredItems = items.Where(item => !currentMods.Contains(item.Id)).ToList();
+                foreach (MyWorkshopItem item in filteredItems)
                 {
-                    PluginData data = list[id];
-                    if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)
-                    {
-                        LogFile.WriteLine("Loading client mod scripts for " + mod.WorkshopId);
-                        loadScripts(__instance, mod.ModLocation, mod.GetModContext());
-                    }
+                    AddMod(__instance, item);
                 }
+
+                // Idk how "transfer" mods without calling resolve again
+                Patch_MyDefinitionManager.ModsCache = (MySession.Static, filteredItems);
             }
             catch (Exception e)
             {
                 LogFile.WriteLine("An error occured while loading client mods: " + e);
                 throw;
             }
+        }
+        
+        private static void AddMod(MyScriptManager scriptManager, MyWorkshopItem item)
+        {
+            string modLocation = Path.Combine(Path.GetFullPath(@"..\..\..\workshop\content\244850\"), item.Id.ToString());
+            if (!Directory.Exists(modLocation))
+                return;
+
+            MyModContext modContext = new MyModContext();
+            modContext.Init(new MyObjectBuilder_Checkpoint.ModItem(item.Id, item.ServiceName));
+            modContext.Init(item.Id.ToString(), null, modLocation);
+            LogFile.WriteLine("Loading client mod scripts " + item.Id);
+            loadScripts(scriptManager, modLocation, modContext);
         }
     }
 }
