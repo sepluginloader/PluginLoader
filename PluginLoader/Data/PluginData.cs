@@ -13,6 +13,7 @@ namespace avaness.PluginLoader.Data
     [ProtoContract]
     [ProtoInclude(100, typeof(SteamPlugin))]
     [ProtoInclude(103, typeof(GitHubPlugin))]
+    [ProtoInclude(104, typeof(ModPlugin))]
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
@@ -70,7 +71,7 @@ namespace avaness.PluginLoader.Data
 
         public abstract Assembly GetAssembly();
 
-        public bool TryLoadAssembly(out Assembly a)
+        public virtual bool TryLoadAssembly(out Assembly a)
         {
             if (Status == PluginStatus.Error)
             {

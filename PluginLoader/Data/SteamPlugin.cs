@@ -9,7 +9,7 @@ namespace avaness.PluginLoader.Data
     [ProtoContract]
     [ProtoInclude(101, typeof(SEPMPlugin))]
     [ProtoInclude(102, typeof(WorkshopPlugin))]
-    public abstract class SteamPlugin : PluginData
+    public abstract class SteamPlugin : PluginData, ISteamItem
     {
         [XmlIgnore]
         public ulong WorkshopId { get; private set; }

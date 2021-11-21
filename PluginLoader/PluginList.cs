@@ -167,25 +167,26 @@ namespace avaness.PluginLoader
 
         private void FindWorkshopPlugins(PluginConfig config)
         {
-            List<SteamPlugin> steamPlugins = new List<SteamPlugin>(plugins.Values.Select(x => x as SteamPlugin).Where(x => x != null));
+            List<ISteamItem> steamPlugins = new List<ISteamItem>(plugins.Values.Select(x => x as ISteamItem).Where(x => x != null));
 
             Main.Instance.Splash.SetText($"Updating workshop items...");
 
             SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
 
             string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
-            foreach (SteamPlugin steam in steamPlugins)
+            foreach (ISteamItem steam in steamPlugins)
             {
                 try
                 {
                     string path = Path.Combine(workshop, steam.Id);
-                    if (Directory.Exists(path) && TryGetPlugin(path, out string dllFile))
+                    if(Directory.Exists(path))
                     {
-                        steam.Init(dllFile);
+                        if (steam is SteamPlugin plugin && TryGetPlugin(path, out string dllFile))
+                            plugin.Init(dllFile);
                     }
                     else if (config.IsEnabled(steam.Id))
                     {
-                        steam.Status = PluginStatus.Error;
+                        ((PluginData)steam).Status = PluginStatus.Error;
                         LogFile.WriteLine($"The plugin '{steam}' is missing and cannot be loaded.");
                     }
                 }

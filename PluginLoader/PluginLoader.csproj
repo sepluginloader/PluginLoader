@@ -96,10 +96,12 @@
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
+    <Compile Include="Data\ISteamItem.cs" />
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\SEPMPlugin.cs" />
     <Compile Include="Data\SteamPlugin.cs" />
+    <Compile Include="Data\ModPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
     <Compile Include="GUI\SplashScreen.cs">
       <SubType>Form</SubType>
@@ -109,6 +111,7 @@
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
+    <Compile Include="Patch\Patch_MyScriptManager.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />
