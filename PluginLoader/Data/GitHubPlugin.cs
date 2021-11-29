@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -96,6 +96,7 @@ namespace avaness.PluginLoader.Data
                 Status = PluginStatus.Updated;
                 lbl.SetText($"Compiled '{FriendlyName}'");
                 a = Assembly.Load(data);
+                CountDownload(a);
             }
             else
             {
@@ -103,10 +104,27 @@ namespace avaness.PluginLoader.Data
             }
 
             Version = a.GetName().Version;
+
             return a;
         }
 
-
+        private void CountDownload(Assembly a)
+        {
+            var version = a.GetName().Version.ToString();
+            try
+            {
+                GitHub.DownloadRelease(Id, version, "README.md").Close();
+                LogFile.WriteLine($"Plugin {Id} download counted for release {version}");
+            }
+            catch (WebException e)
+            {
+                LogFile.WriteLine($"Plugin {Id} is missing release {version}, download not counted");
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine($"Failed to count download of plugin {Id}: {e}");
+            }
+        }
 
         public byte[] CompileFromSource(Action<float> callback = null)
         {
