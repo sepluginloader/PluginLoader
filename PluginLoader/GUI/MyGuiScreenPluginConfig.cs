@@ -4,9 +4,7 @@ using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using VRage.Audio;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
@@ -29,6 +27,7 @@ namespace avaness.PluginLoader.GUI
 		private MyGuiControlLabel countLabel;
 		private PluginConfig config;
 		private string[] tableFilter;
+		private bool usageLoaded;
 
 		private static bool allItemsVisible = true;
 
@@ -121,17 +120,18 @@ namespace avaness.PluginLoader.GUI
 				Position = origin,
 				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 6,
+				ColumnsCount = 7,
 				VisibleRowsCount = 15
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
 				0.13f,
-				0.34f,
-				0.18f,
-				0.1f,
+				0.30f,
 				0.15f,
 				0.1f,
+				0.16f,
+				0.08f,
+				0.08f,
 			});
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnComparison(0, CellTextOrDataComparison);
@@ -143,9 +143,11 @@ namespace avaness.PluginLoader.GUI
 			modTable.SetColumnComparison(3, CellTextOrDataComparison);
 			modTable.SetColumnName(4, new StringBuilder("Status"));
 			modTable.SetColumnComparison(4, CellTextOrDataComparison);
-			modTable.SetColumnName(5, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(5, CellCheckedOrDataComparison);
-			modTable.SortByColumn(5);
+			modTable.SetColumnName(5, new StringBuilder("Usage"));
+			modTable.SetColumnComparison(5, CellDataComparison);
+			modTable.SetColumnName(6, new StringBuilder("Enabled"));
+			modTable.SetColumnComparison(6, CellCheckedOrDataComparison);
+			modTable.SortByColumn(6);
 			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
 
@@ -165,7 +167,7 @@ namespace avaness.PluginLoader.GUI
 			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
 			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
-			
+
 			MyGuiControlButton btnShow = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Open the source of the selected plugin.", new StringBuilder("Info"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnInfoButtonClick);
 
 			AlignRow(origin, btnSpace, btnRestart, btnClose, btnShow);
@@ -207,6 +209,11 @@ namespace avaness.PluginLoader.GUI
 			int result = TextComparison(x.Text, y.Text);
 			if (result != 0)
 				return result;
+			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
+		}
+
+		private int CellDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        {
 			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
 		}
 
@@ -263,6 +270,10 @@ namespace avaness.PluginLoader.GUI
 					row.AddCell(new MyGuiControlTable.Cell(data.Version?.ToString(), name));
 
                     row.AddCell(new MyGuiControlTable.Cell(data.StatusString, name));
+
+                    row.AddCell(new MyGuiControlTable.Cell(
+	                    data.Usage == null ? "" : $"{data.Usage}",
+	                    new StringBuilder(data.Usage == null ? "" : $"{data.Usage:000000}")));
 
 					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: name);
 					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
@@ -417,6 +428,38 @@ namespace avaness.PluginLoader.GUI
 				config.Save();
 				dataChanges.Clear();
 			}
+        }
+
+        public override bool Update(bool hasFocus)
+        {
+	        if (Main.Instance.UsageAvailable && !usageLoaded)
+	        {
+		        LoadUsage();
+		        usageLoaded = true;
+	        }
+
+	        return base.Update(hasFocus);
+        }
+
+        private void LoadUsage()
+        {
+	        for (var i = 0; i < modTable.RowsCount; i++)
+	        {
+		        var row = modTable.GetRow(i);
+		        if (!(row.UserData is PluginData plugin))
+			        return;
+
+		        var cell = row.GetCell(5);
+		        if (cell.Text.Length > 0)
+			        return;
+
+		        if (plugin.Usage == null)
+			        return;
+
+		        cell.Text.Append($"{plugin.Usage}");
+		        if (cell.UserData is StringBuilder sb)
+			        sb.Append($"{plugin.Usage:000000}");
+	        }
         }
     }
 }

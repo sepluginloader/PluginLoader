@@ -65,6 +65,8 @@ namespace avaness.PluginLoader.Data
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
+        [XmlIgnore] public int? Usage { get; protected set; }
+
         protected PluginData()
         {
 

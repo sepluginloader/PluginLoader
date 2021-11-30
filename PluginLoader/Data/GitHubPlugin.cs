@@ -10,6 +10,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using LitJson;
 
 namespace avaness.PluginLoader.Data
 {
@@ -82,41 +83,44 @@ namespace avaness.PluginLoader.Data
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
+            var lbl = Main.Instance.Splash;
+
             Assembly a;
 
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
-            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
+            if (File.Exists(dllFile) && File.Exists(commitFile) && File.ReadAllText(commitFile) == Commit)
             {
-                var lbl = Main.Instance.Splash;
-                lbl.SetText($"Downloading '{FriendlyName}'");
-                byte[] data = CompileFromSource(x => lbl.SetBarValue(x));
-                File.WriteAllBytes(dllFile, data);
-                File.WriteAllText(commitFile, Commit);
-                Status = PluginStatus.Updated;
-                lbl.SetText($"Compiled '{FriendlyName}'");
-                a = Assembly.Load(data);
-                CountDownload(a);
-            }
-            else
-            {
+                lbl.SetText($"Loading '{FriendlyName}'");
                 a = Assembly.LoadFile(dllFile);
+                Version = a.GetName().Version;
+                return a;
             }
 
+            lbl.SetText($"Downloading '{FriendlyName}'");
+            byte[] data = CompileFromSource(x => lbl.SetBarValue(x));
+            File.WriteAllBytes(dllFile, data);
+            File.WriteAllText(commitFile, Commit);
+            Status = PluginStatus.Updated;
+
+            lbl.SetText($"Compiled '{FriendlyName}'");
+            a = Assembly.Load(data);
             Version = a.GetName().Version;
+
+            CountDownload();
 
             return a;
         }
 
-        private void CountDownload(Assembly a)
+        private void CountDownload()
         {
-            var version = a.GetName().Version.ToString();
+            var version = Version.ToString();
             try
             {
                 GitHub.DownloadRelease(Id, version, "README.md").Close();
                 LogFile.WriteLine($"Plugin {Id} download counted for release {version}");
             }
-            catch (WebException e)
+            catch (WebException)
             {
                 LogFile.WriteLine($"Plugin {Id} is missing release {version}, download not counted");
             }
@@ -185,6 +189,38 @@ namespace avaness.PluginLoader.Data
         public override void Show()
         {
             MyGuiSandbox.OpenUrl("https://github.com/" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
+        }
+
+        public void UpdateUsage()
+        {
+            try
+            {
+                var version = Version.ToString();
+                var stream = GitHub.DownloadReposApi(Id, "releases");
+                var reader = new StreamReader(stream);
+                var json = JsonMapper.ToObject(reader);
+                foreach (var release in json)
+                {
+                    if (!(release is JsonData r))
+                        continue;
+
+                    if (r["name"].ToString() != version && r["tag_name"].ToString() != version)
+                        continue;
+
+                    foreach (var asset in r["assets"])
+                    {
+                        if (asset is JsonData a && a["name"].ToString() == "README.md")
+                        {
+                            Usage = int.Parse(a["download_count"].ToString());
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine($"Failed to retrieve GitHub release statistics for plugin {Id}: {e}");
+            }
         }
     }
 }

@@ -8,10 +8,10 @@ using HarmonyLib;
 using System.Windows.Forms;
 using Sandbox.Game.World;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
-using avaness.PluginLoader.Patch;
 
 namespace avaness.PluginLoader
 {
@@ -26,6 +26,10 @@ namespace avaness.PluginLoader
         private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
+        private Task usageUpdateTask;
+        private bool stopUsageUpdate;
+
+        public bool UsageAvailable { get; private set; }
 
         public Main()
         {
@@ -59,16 +63,10 @@ namespace avaness.PluginLoader
             LogFile.WriteLine("Patching");
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
-            Splash.SetText("Instantiating plugins...");
-            LogFile.WriteLine("Instantiating plugins");
-            foreach (string id in Config)
-            {
-                PluginData data = List[id];
-                if (data is GitHubPlugin github)
-                    github.Init(mainPath);
-                if (PluginInstance.TryGet(data, out PluginInstance p))
-                    plugins.Add(p);
-            }
+            LoadPlugins(mainPath);
+
+            var pluginIds = Config.Plugins.ToArray(id => id);
+            usageUpdateTask = Task.Run(() => UpdateUsage(pluginIds));
 
             sw.Stop();
 
@@ -81,6 +79,39 @@ namespace avaness.PluginLoader
             Splash = null;
         }
 
+        private void UpdateUsage(string[] pluginIds)
+        {
+            foreach (var id in pluginIds)
+            {
+                if(stopUsageUpdate)
+                    break;
+
+                PluginData plugin = List[id];
+                if (plugin.Usage != null)
+                    continue;
+
+                if (plugin is GitHubPlugin gitHubPlugin)
+                    gitHubPlugin.UpdateUsage();
+            }
+
+            UsageAvailable = true;
+        }
+
+        private void LoadPlugins(string mainPath)
+        {
+            Splash.SetText("Loading plugins...");
+            LogFile.WriteLine("Loading plugins");
+            foreach (string id in Config)
+            {
+                PluginData data = List[id];
+
+                if (data is GitHubPlugin github)
+                    github.Init(mainPath);
+
+                if (PluginInstance.TryGet(data, out PluginInstance p))
+                    plugins.Add(p);
+            }
+        }
 
         public void RegisterComponents()
         {
@@ -100,7 +131,7 @@ namespace avaness.PluginLoader
 
         public void InstantiatePlugins()
         {
-            LogFile.WriteLine($"Loading {plugins.Count} plugins");
+            LogFile.WriteLine($"Instantiating {plugins.Count} plugins");
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
@@ -152,6 +183,13 @@ namespace avaness.PluginLoader
 
         public void Dispose()
         {
+            stopUsageUpdate = true;
+            if (usageUpdateTask != null)
+            {
+                usageUpdateTask.Wait();
+                usageUpdateTask = null;
+            }
+
             foreach (PluginInstance p in plugins)
                 p.Dispose();
             plugins.Clear();
@@ -160,7 +198,6 @@ namespace avaness.PluginLoader
             LogFile.Dispose();
             Instance = null;
         }
-
 
         private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {
