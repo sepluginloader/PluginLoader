@@ -44,6 +44,8 @@ namespace avaness.PluginLoader.Data
             }
         }
 
+        [XmlIgnore] public bool IsLocal => Source == "Local";
+
         [ProtoMember(1)]
         public virtual string Id { get; set; }
 
@@ -108,7 +110,6 @@ namespace avaness.PluginLoader.Data
                 if (e is MissingMemberException)
                     LogFile.WriteLine($"Is {name} up to date?");
 
-                LogFile.Flush();
                 Error();
                 a = null;
                 return false;

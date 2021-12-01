@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using avaness.PluginLoader.Stats;
+using avaness.PluginLoader.Stats.Model;
 using VRage;
 using VRage.Audio;
 using VRage.Game;
@@ -25,8 +27,7 @@ namespace avaness.PluginLoader.GUI
         private const float BarWidth = 0.85f;
         private const float Spacing = 0.0175f;
 
-        private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
-        private readonly Dictionary<string, bool> afterRebootEnableFlags = new Dictionary<string, bool>();
+        private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new();
         private readonly PluginDetailsPanel pluginDetails;
 
         private MyGuiControlTable pluginTable;
@@ -34,6 +35,9 @@ namespace avaness.PluginLoader.GUI
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
+
+        public readonly Dictionary<string, bool> AfterRebootEnableFlags = new();
+        public PluginStats PluginStats;
 
         private PluginData SelectedPlugin
         {
@@ -46,7 +50,7 @@ namespace avaness.PluginLoader.GUI
         #region Icons
 
         // Source: MyTerminalControlPanel
-        private static readonly MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
+        private static readonly MyGuiHighlightTexture IconHide = new()
         {
             Normal = "Textures\\GUI\\Controls\\button_hide.dds",
             Highlight = "Textures\\GUI\\Controls\\button_hide.dds",
@@ -55,7 +59,7 @@ namespace avaness.PluginLoader.GUI
         };
 
         // Source: MyTerminalControlPanel
-        private static readonly MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
+        private static readonly MyGuiHighlightTexture IconShow = new()
         {
             Normal = "Textures\\GUI\\Controls\\button_unhide.dds",
             Highlight = "Textures\\GUI\\Controls\\button_unhide.dds",
@@ -65,10 +69,15 @@ namespace avaness.PluginLoader.GUI
 
         #endregion
 
+        public static void OpenMenu()
+        {
+            MyGuiSandbox.AddScreen(new MyGuiScreenPluginConfig());
+        }
+
         /// <summary>
         /// The plugins screen, the constructor itself sets up the menu properties.
         /// </summary>
-        public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(1f, 0.97f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
+        private MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(1f, 0.97f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
         {
             EnabledBackgroundFade = true;
             m_closeOnEsc = true;
@@ -78,9 +87,12 @@ namespace avaness.PluginLoader.GUI
             CloseButtonEnabled = true;
 
             foreach (var plugin in Main.Instance.List)
-                afterRebootEnableFlags[plugin.Id] = plugin.Enabled;
+                AfterRebootEnableFlags[plugin.Id] = plugin.Enabled;
 
-            pluginDetails = new PluginDetailsPanel(afterRebootEnableFlags);
+            // FIXME: Move into a background thread
+            PluginStats = StatsClient.DownloadStats();
+
+            pluginDetails = new PluginDetailsPanel(this);
         }
 
         public override string GetFriendlyName()
@@ -92,12 +104,21 @@ namespace avaness.PluginLoader.GUI
         {
             base.LoadContent();
             RecreateControls(true);
+            PlayerConsent.OnConsentChanged += OnConsentChanged;
         }
 
         public override void UnloadContent()
         {
+            PlayerConsent.OnConsentChanged -= OnConsentChanged;
             pluginDetails.OnPluginToggled -= EnablePlugin;
             base.UnloadContent();
+        }
+
+        private void OnConsentChanged()
+        {
+            PluginStats = StatsClient.DownloadStats();
+            RefreshTable();
+            pluginDetails.LoadPluginData();
         }
 
         /// <summary>
@@ -107,15 +128,15 @@ namespace avaness.PluginLoader.GUI
         {
             base.RecreateControls(constructor);
 
-            MyGuiControlLabel title = AddCaption("Plugins List");
+            var title = AddCaption("Plugins List");
 
             // Sets the origin relative to the center of the caption on the X axis and to the bottom the caption on the y axis.
-            Vector2 origin = title.Position += new Vector2(0f, title.Size.Y / 2);
+            var origin = title.Position += new Vector2(0f, title.Size.Y / 2);
 
             origin.Y += Spacing;
 
             // Adds a bar right below the caption.
-            MyGuiControlSeparatorList titleBar = new MyGuiControlSeparatorList();
+            var titleBar = new MyGuiControlSeparatorList();
             titleBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
             Controls.Add(titleBar);
 
@@ -123,7 +144,7 @@ namespace avaness.PluginLoader.GUI
 
             // Change the position of this to move the entire middle section of the menu, the menu bars, menu title, and bottom buttons won't move
             // Adds a search bar right below the bar on the left side of the menu.
-            MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(new Vector2(origin.X - (BarWidth / 2), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+            var searchBox = new MyGuiControlSearchBox(new Vector2(origin.X - (BarWidth / 2), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
 
             // Changing the search box X size will change the plugin list length.
             searchBox.Size = new Vector2(0.4f, searchBox.Size.Y);
@@ -133,7 +154,7 @@ namespace avaness.PluginLoader.GUI
             #region Visibility Button
 
             // Adds a button to show only enabled plugins. Located right of the search bar.
-            MyGuiControlButton buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (BarWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
+            var buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (BarWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
 
             if (allItemsVisible || Config.Count == 0)
             {
@@ -192,20 +213,22 @@ namespace avaness.PluginLoader.GUI
             origin.Y += Spacing + pluginTable.Size.Y;
 
             // Adds the bar at the bottom between just above the buttons.
-            MyGuiControlSeparatorList bottomBar = new MyGuiControlSeparatorList();
+            var bottomBar = new MyGuiControlSeparatorList();
             bottomBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
             Controls.Add(bottomBar);
 
             origin.Y += Spacing;
 
             // Adds buttons at bottom of menu
-            MyGuiControlButton buttonRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+            var buttonRestart = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+            var buttonClose = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Closes the dialog without saving changes to plugin selection", new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCancelButtonClick);
+            var buttonConsent = new MyGuiControlButton(origin, PlayerConsent.HasConsentGiven ? MyGuiControlButtonStyleEnum.Tiny : MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Give or withdraw your consent for data handling", new StringBuilder(PlayerConsent.HasConsentGiven ? "..." : "Consent"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnConsentButtonClick);
 
-            MyGuiControlButton buttonClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
-
-            AlignRow(origin, 0.02f, buttonRestart, buttonClose);
+            // FIXME: Use MyLayoutHorizontal instead
+            AlignRow(origin + new Vector2(0.1f, 0f), 0.05f, buttonRestart, buttonClose, buttonConsent);
             Controls.Add(buttonRestart);
             Controls.Add(buttonClose);
+            Controls.Add(buttonConsent);
 
             // Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
             pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (BarWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
@@ -285,7 +308,7 @@ namespace avaness.PluginLoader.GUI
             var noFilter = filter == null || filter.Length == 0;
             foreach (var plugin in list)
             {
-                var enabled = afterRebootEnableFlags[plugin.Id];
+                var enabled = AfterRebootEnableFlags[plugin.Id];
 
                 if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
@@ -418,15 +441,18 @@ namespace avaness.PluginLoader.GUI
 
         private void EnablePlugin(PluginData plugin, bool enable)
         {
-            if (enable == afterRebootEnableFlags[plugin.Id])
+            if (enable == AfterRebootEnableFlags[plugin.Id])
                 return;
 
-            afterRebootEnableFlags[plugin.Id] = enable;
+            AfterRebootEnableFlags[plugin.Id] = enable;
 
             SetPluginCheckbox(plugin, enable);
 
             if (enable)
                 DisableOtherPluginsInSameGroup(plugin);
+
+            if (enable && !PlayerConsent.HasConsentRequested)
+                PlayerConsent.ShowDialog();
         }
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
@@ -445,12 +471,17 @@ namespace avaness.PluginLoader.GUI
                     EnablePlugin(other, false);
         }
 
-        private void OnCloseButtonClick(MyGuiControlButton btn)
+        private void OnCancelButtonClick(MyGuiControlButton btn)
         {
             CloseScreen();
         }
 
-        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != afterRebootEnableFlags[plugin.Id]);
+        private void OnConsentButtonClick(MyGuiControlButton obj)
+        {
+            PlayerConsent.ShowDialog();
+        }
+
+        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != AfterRebootEnableFlags[plugin.Id]);
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
         {
@@ -469,7 +500,7 @@ namespace avaness.PluginLoader.GUI
                 return;
 
             foreach (var plugin in Main.Instance.List)
-                Config.SetEnabled(plugin.Id, afterRebootEnableFlags[plugin.Id]);
+                Config.SetEnabled(plugin.Id, AfterRebootEnableFlags[plugin.Id]);
 
             Config.Save();
         }
