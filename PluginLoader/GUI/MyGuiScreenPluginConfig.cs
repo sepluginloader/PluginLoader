@@ -18,10 +18,10 @@ namespace avaness.PluginLoader.GUI
 		private const float barWidth = 0.75f;
 		private const float space = 0.01f;
 		private const float btnSpace = 0.02f;
-		private const float tableWidth = 0.8f;
+		private const float tableWidth = 0.4f;
 		private const float tableHeight = 0.7f;
-        private const float sizeX = 1;
-        private const float sizeY = 0.76f;
+        private const float sizeX = 0.878f;
+        private const float sizeY = 0.97f;
 
 		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
 		private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
@@ -77,10 +77,14 @@ namespace avaness.PluginLoader.GUI
 
 			config = Main.Instance.Config;
 
-			var title = AddCaption("Plugin List");
+			MyGuiControlLabel title = AddCaption("Plugin List");
 
 			Vector2 size = m_size.Value;
 			Vector2 origin = title.Position;
+
+			Vector2 tableOffSet = new Vector2(-0.576f, -0.432f);
+			Vector2 searchBoxOffSet = new Vector2(-0.576f, -0.47f);
+			Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
 
 			origin.Y += title.GetTextSize().Y / 2 + space;
 
@@ -93,10 +97,10 @@ namespace avaness.PluginLoader.GUI
 
 			float totalTableWidth = size.X * tableWidth;
 
-			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
+			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(null, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
 			float extraSpaceWidth = searchBox.Size.Y;
 			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
-			searchBox.Position = new Vector2(origin.X - (extraSpaceWidth / 2), origin.Y);
+			searchBox.Position = searchBoxOffSet + new Vector2(minSizeGui.X, 0.067f);
             searchBox.OnTextChanged += SearchBox_TextChanged;
 			Controls.Add(searchBox);
 
@@ -118,34 +122,37 @@ namespace avaness.PluginLoader.GUI
 
 			modTable = new MyGuiControlTable
 			{
-				Position = origin,
+				Position = tableOffSet + new Vector2(minSizeGui.X, 0.067f),
 				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 6,
-				VisibleRowsCount = 15
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+				ColumnsCount = 2,
+				VisibleRowsCount = 21
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
-				0.13f,
-				0.34f,
-				0.18f,
-				0.1f,
-				0.15f,
-				0.1f,
-			});
+				0.267f,
+				0.77f,
+				//0.18f,
+				//0.1f,
+				//0.15f,
+				//0.1f,
+			});     
 			modTable.SetColumnName(0, new StringBuilder("Source"));
 			modTable.SetColumnComparison(0, CellTextOrDataComparison);
 			modTable.SetColumnName(1, new StringBuilder("Name"));
 			modTable.SetColumnComparison(1, CellTextComparison);
-			modTable.SetColumnName(2, new StringBuilder("Author"));
-			modTable.SetColumnComparison(2, CellTextOrDataComparison);
-			modTable.SetColumnName(3, new StringBuilder("Version"));
-			modTable.SetColumnComparison(3, CellTextOrDataComparison);
-			modTable.SetColumnName(4, new StringBuilder("Status"));
-			modTable.SetColumnComparison(4, CellTextOrDataComparison);
-			modTable.SetColumnName(5, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(5, CellCheckedOrDataComparison);
-			modTable.SortByColumn(5);
+			//modTable.SetColumnName(2, new StringBuilder("Author"));
+			//modTable.SetColumnComparison(2, CellTextOrDataComparison);
+			//modTable.SetColumnName(3, new StringBuilder("Version"));
+			//modTable.SetColumnComparison(3, CellTextOrDataComparison);
+			//modTable.SetColumnName(4, new StringBuilder("Status"));
+			//modTable.SetColumnComparison(4, CellTextOrDataComparison);
+			//modTable.SetColumnName(5, new StringBuilder("Enabled"));
+			//modTable.SetColumnComparison(5, CellCheckedOrDataComparison);
+			//modTable.SortByColumn(5);
+
+			modTable.SortByColumn(1);
+
 			modTable.ItemDoubleClicked += RowDoubleClicked;
 			Controls.Add(modTable);
 
