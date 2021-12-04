@@ -353,7 +353,7 @@ namespace avaness.PluginLoader.GUI
                     {
 						altBox.IsCheckedChanged -= IsCheckedChanged;
 						altBox.IsChecked = false;
-						altBox.IsCheckedChanged += IsCheckedChanged;
+						altBox.IsCheckedChanged += IsCheckedChanged; 
 					}
 				}
 			}
