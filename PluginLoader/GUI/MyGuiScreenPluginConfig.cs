@@ -83,7 +83,8 @@ namespace avaness.PluginLoader.GUI
 			Vector2 origin = title.Position;
 
 			Vector2 tableOffSet = new Vector2(-0.576f, -0.432f);
-			Vector2 searchBoxOffSet = new Vector2(-0.576f, -0.47f);
+			Vector2 searchBoxOffSet = new Vector2(-0.576f, -0.471f);
+			Vector2 visibilityButtonOffSet = new Vector2(-0.252f, -0.471f);
 			Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
 
 			origin.Y += title.GetTextSize().Y / 2 + space;
@@ -97,14 +98,13 @@ namespace avaness.PluginLoader.GUI
 
 			float totalTableWidth = size.X * tableWidth;
 
-			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(null, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(searchBoxOffSet + new Vector2(minSizeGui.X, 0.067f), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
 			float extraSpaceWidth = searchBox.Size.Y;
 			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
-			searchBox.Position = searchBoxOffSet + new Vector2(minSizeGui.X, 0.067f);
             searchBox.OnTextChanged += SearchBox_TextChanged;
 			Controls.Add(searchBox);
 
-			MyGuiControlButton btnVisibility = new MyGuiControlButton(new Vector2(origin.X + (searchBox.Size.X / 2), origin.Y), MyGuiControlButtonStyleEnum.SquareSmall, new Vector2(extraSpaceWidth), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Toggle visibility", buttonScale: 0.5f);
+			MyGuiControlButton btnVisibility = new MyGuiControlButton(visibilityButtonOffSet + new Vector2(minSizeGui.X, 0.067f), MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Toggle hidden plugins.", buttonScale: 0.5f);
 
 			if (allItemsVisible || config.Count == 0)
             {
@@ -353,7 +353,7 @@ namespace avaness.PluginLoader.GUI
                     {
 						altBox.IsCheckedChanged -= IsCheckedChanged;
 						altBox.IsChecked = false;
-						altBox.IsCheckedChanged += IsCheckedChanged; 
+						altBox.IsCheckedChanged += IsCheckedChanged;
 					}
 				}
 			}
