@@ -70,6 +70,7 @@ namespace avaness.PluginLoader.GUI
 			Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
 			SizePx = new Vector2(40f, 40f)
 		};
+        private MyLayoutTable layoutTable;
 
         public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
 		{
@@ -119,13 +120,13 @@ namespace avaness.PluginLoader.GUI
 
 			float totalTableWidth = size.X * tableWidth;
 
-			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(searchBoxOffSet + new Vector2(minSizeGui.X, 0.067f), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(searchBoxOffSet + new Vector2(minSizeGui.X, 0.08f), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
 			float extraSpaceWidth = searchBox.Size.Y;
 			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
             searchBox.OnTextChanged += SearchBox_TextChanged;
 			Controls.Add(searchBox);
 
-			MyGuiControlButton btnVisibility = new MyGuiControlButton(visibilityButtonOffSet + new Vector2(minSizeGui.X, 0.067f), MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Toggle hidden plugins.", buttonScale: 0.5f);
+			MyGuiControlButton btnVisibility = new MyGuiControlButton(visibilityButtonOffSet + new Vector2(minSizeGui.X, 0.08f), MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Toggle hidden plugins.", buttonScale: 0.5f);
 
 			if (allItemsVisible || config.Count == 0)
             {
@@ -143,7 +144,7 @@ namespace avaness.PluginLoader.GUI
 
 			modTable = new MyGuiControlTable
 			{
-				Position = tableOffSet + new Vector2(minSizeGui.X, 0.067f),
+				Position = tableOffSet + new Vector2(minSizeGui.X, 0.08f),
 				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
 				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
 				ColumnsCount = 2,
@@ -190,17 +191,99 @@ namespace avaness.PluginLoader.GUI
 			Controls.Add(btnShow);
 
 			CloseButtonEnabled = true;
-
-			InitRight();
 		}
 
-        private void InitRight()
+        private void RefreshRight(PluginData data)
         {
+			// Hides existing controls so the old and new won't overlap. There is no way to remove the existing controls. OnRemoving just sets the controls in their default position.
+			if (pluginNameLabel != null)
+			{
+				pluginNameLabel.Visible = false;
+			}
+			if (pluginNameText != null)
+			{
+				pluginNameText.Visible = false;
+			}
+			if (authorLabel != null)
+            {
+				authorLabel.Visible = false;
+			}
+			if (authorText != null)
+			{
+				authorText.Visible = false;
+			}
+			if (versionLabel != null)
+            {
+				versionLabel.Visible = false;
+			}
+			if (versionText != null)
+            {
+				versionText.Visible = false;
+			}
+			if (statusLabel != null)
+            {
+				statusLabel.Visible = false;
+			}
+			if (statusText != null)
+            {
+				statusText.Visible = false;
+			}
+			if (usageLabel != null)
+            {
+				usageLabel.Visible = false;
+			}
+			if (usageText != null)
+			{
+				usageText.Visible = false;
+			}
+			if (ratingLabel != null)
+			{
+				ratingLabel.Visible = false;
+			}
+			if (ratingDisplay != null)
+			{
+				ratingDisplay.Visible = false;
+			}
+			if (buttonRateUp != null)
+			{
+				buttonRateUp.Visible = false;
+			}
+			if (iconRateUp != null)
+			{
+				iconRateUp.Visible = false;
+			}
+			if (buttonRateDown != null)
+			{
+				buttonRateDown.Visible = false;
+			}
+			if (iconRateDown != null)
+			{
+				iconRateDown.Visible = false;
+			}
+			if (descriptionText != null)
+			{
+				descriptionText.Visible = false;
+			}
+			if (descriptionPanel != null)
+			{
+				descriptionPanel.Visible = false;
+			}
+			if (toggleButtonLabel != null)
+			{
+				toggleButtonLabel.Visible = false;
+			}
+			if (toggleButton != null)
+			{
+				toggleButton.Visible = false;
+			}
+
+
 			Vector2 layoutTableOffset = new Vector2(-0.2f, -0.471f);
 			Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
-			MyLayoutTable layoutTable = new MyLayoutTable(this, layoutTableOffset + new Vector2(minSizeGui.X, 0.067f), new Vector2(1f, 1f));
+			layoutTable = new MyLayoutTable(this, layoutTableOffset + new Vector2(minSizeGui.X, 0.067f), new Vector2(1f, 1f));
 			layoutTable.SetColumnWidths(345f, 345f);
 			layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
+			
 
 			pluginNameLabel = new MyGuiControlLabel
 			{
@@ -302,27 +385,59 @@ namespace avaness.PluginLoader.GUI
 			// Left side of table.
 			layoutTable.Add(pluginNameLabel, MyAlignH.Left, MyAlignV.Center, 0, 0);
 			layoutTable.Add(authorLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
-			layoutTable.Add(versionLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
-			layoutTable.Add(statusLabel, MyAlignH.Left, MyAlignV.Center, 3, 0);
-			layoutTable.Add(usageLabel, MyAlignH.Left, MyAlignV.Center, 4, 0);
-			layoutTable.Add(ratingLabel, MyAlignH.Left, MyAlignV.Center, 5, 0);
-			layoutTable.AddWithSize(descriptionPanel, MyAlignH.Left, MyAlignV.Top, 6, 0, 3, 2);
-			layoutTable.AddWithSize(descriptionText, MyAlignH.Left, MyAlignV.Top, 6, 0, 3, 2);
-			layoutTable.Add(toggleButtonLabel, MyAlignH.Left, MyAlignV.Top, 9, 0);
+
+			int rowLeft;
+
+			if (data.Version != null || data.Status != PluginStatus.None)
+            {
+				layoutTable.Add(versionLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
+				layoutTable.Add(statusLabel, MyAlignH.Left, MyAlignV.Center, 3, 0);
+				rowLeft = 4;
+			}
+            else
+            {
+				rowLeft = 2;
+            }
+
+			layoutTable.Add(usageLabel, MyAlignH.Left, MyAlignV.Center, rowLeft, 0);
+			++rowLeft;
+			layoutTable.Add(ratingLabel, MyAlignH.Left, MyAlignV.Center, rowLeft, 0);
+			++rowLeft;
+			layoutTable.AddWithSize(descriptionPanel, MyAlignH.Center, MyAlignV.Top, rowLeft, 0, 3, 2);
+
+			descriptionPanel.Size += new Vector2(0.01f, 0f);
+
+			layoutTable.AddWithSize(descriptionText, MyAlignH.Left, MyAlignV.Bottom, rowLeft, 0, 3, 2);
+			rowLeft += 3;
+			layoutTable.Add(toggleButtonLabel, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
 
 
 			// Right side of table.
 			layoutTable.Add(pluginNameText, MyAlignH.Left, MyAlignV.Center, 0, 1);
 			layoutTable.Add(authorText, MyAlignH.Left, MyAlignV.Center, 1, 1);
-			layoutTable.Add(versionText, MyAlignH.Left, MyAlignV.Center, 2, 1);
-			layoutTable.Add(statusText, MyAlignH.Left, MyAlignV.Center, 3, 1);
-			layoutTable.Add(usageText, MyAlignH.Left, MyAlignV.Center, 4, 1);
-			layoutTable.Add(ratingDisplay, MyAlignH.Left, MyAlignV.Center, 5, 1);
-			layoutTable.Add(buttonRateUp, MyAlignH.Right, MyAlignV.Center, 5, 1);
-			layoutTable.Add(iconRateUp, MyAlignH.Center, MyAlignV.Center, 5, 1);
-			layoutTable.Add(buttonRateDown, MyAlignH.Right, MyAlignV.Center, 5, 1);
-			layoutTable.Add(iconRateDown, MyAlignH.Center, MyAlignV.Center, 5, 1);
-			layoutTable.Add(toggleButton, MyAlignH.Left, MyAlignV.Top, 9, 1);
+
+			int rowRight;
+
+			if (data.Version != null || data.Status != PluginStatus.None)
+			{
+				layoutTable.Add(versionText, MyAlignH.Left, MyAlignV.Center, 2, 1);
+				layoutTable.Add(statusText, MyAlignH.Left, MyAlignV.Center, 3, 1);
+				rowRight = 4;
+			}
+			else
+			{
+				rowRight = 2;
+			}
+
+			layoutTable.Add(usageText, MyAlignH.Left, MyAlignV.Center, rowRight, 1);
+			++rowRight;
+			layoutTable.Add(ratingDisplay, MyAlignH.Left, MyAlignV.Center, rowRight, 1);
+			layoutTable.Add(buttonRateUp, MyAlignH.Right, MyAlignV.Center, rowRight, 1);
+			layoutTable.Add(iconRateUp, MyAlignH.Center, MyAlignV.Center, rowRight, 1);
+			layoutTable.Add(buttonRateDown, MyAlignH.Right, MyAlignV.Center, rowRight, 1);
+			layoutTable.Add(iconRateDown, MyAlignH.Center, MyAlignV.Center, rowRight, 1);
+			rowRight += 4;
+			layoutTable.Add(toggleButton, MyAlignH.Left, MyAlignV.Top, rowRight, 1);
 			buttonRateUp.PositionX -= 0.05f;
 			iconRateUp.Position = buttonRateUp.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateUp.Size.X / 2f, 0f);
 			iconRateDown.Position = buttonRateDown.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateDown.Size.X / 2f, 0f);
@@ -351,7 +466,7 @@ namespace avaness.PluginLoader.GUI
 				int result = yBox.IsChecked.CompareTo(xBox.IsChecked);
 				if (result != 0)
 					return result;
-			}
+			} 
 			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
         }
 
@@ -466,6 +581,7 @@ namespace avaness.PluginLoader.GUI
 				MyGuiControlTable.Row row = table.GetRow(i);
 				if (row.UserData is PluginData data)
                 {
+					RefreshRight(data);
 					pluginNameText.Text = data.FriendlyName;
 
 					if (data.Author != null)
