@@ -15,12 +15,12 @@ namespace avaness.PluginLoader.GUI
 {
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
-		private const float barWidth = 0.912f;
+		private const float barWidth = 0.99f;
 		private const float space = 0.01f;
 		private const float btnSpace = 0.02f;
-		private const float tableWidth = 0.4f;
+		private const float tableWidth = 0.48f;
 		private const float tableHeight = 0.7f;
-        private const float sizeX = 0.878f;
+        private const float sizeX = 1f;
         private const float sizeY = 0.97f;
 
 		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
@@ -52,6 +52,7 @@ namespace avaness.PluginLoader.GUI
 		private MyGuiControlCompositePanel descriptionPanel;
         private MyGuiControlLabel toggleButtonLabel;
         private MyGuiControlCheckbox toggleButton;
+        private MyGuiControlButton infoButton;
 
         // Source: MyTerminalControlPanel
         private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
@@ -101,12 +102,13 @@ namespace avaness.PluginLoader.GUI
 
 			MyGuiControlLabel title = AddCaption("Plugin List");
 
-			Vector2 size = m_size.Value;
+			Vector2 size = new Vector2(0.878f, 0.97f);
 			Vector2 origin = title.Position;
 
-			Vector2 tableOffSet = new Vector2(-0.576f, -0.432f);
-			Vector2 searchBoxOffSet = new Vector2(-0.576f, -0.471f);
-			Vector2 visibilityButtonOffSet = new Vector2(-0.2525f, -0.471f);			
+			float xOffset = -0.2f;
+			Vector2 tableOffSet = new Vector2(xOffset, -0.432f);
+			Vector2 searchBoxOffSet = new Vector2(xOffset - 0.032f, -0.471f);
+			Vector2 visibilityButtonOffSet = new Vector2(xOffset, -0.471f);			
 			Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
 
 			origin.Y += title.GetTextSize().Y / 2 + space;
@@ -120,13 +122,13 @@ namespace avaness.PluginLoader.GUI
 
 			float totalTableWidth = size.X * tableWidth;
 
-			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(searchBoxOffSet + new Vector2(minSizeGui.X, 0.08f), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(searchBoxOffSet + new Vector2(minSizeGui.X, 0.08f), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP);
 			float extraSpaceWidth = searchBox.Size.Y;
 			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
             searchBox.OnTextChanged += SearchBox_TextChanged;
 			Controls.Add(searchBox);
 
-			MyGuiControlButton btnVisibility = new MyGuiControlButton(visibilityButtonOffSet + new Vector2(minSizeGui.X, 0.08f), MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Toggle hidden plugins.", buttonScale: 0.5f);
+			MyGuiControlButton btnVisibility = new MyGuiControlButton(visibilityButtonOffSet + new Vector2(minSizeGui.X, 0.08f), MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, toolTip: "Toggle hidden plugins.", buttonScale: 0.5f);
 
 			if (allItemsVisible || config.Count == 0)
             {
@@ -146,23 +148,24 @@ namespace avaness.PluginLoader.GUI
 			{
 				Position = tableOffSet + new Vector2(minSizeGui.X, 0.08f),
 				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
-				ColumnsCount = 2,
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP,
+				ColumnsCount = 3,
 				VisibleRowsCount = 21
 			};
 			modTable.SetCustomColumnWidths(new float[]
 			{
-				0.267f,
-				0.77f,
+				0.22f,
+				0.6f,
+				0.22f
 			});     
-			modTable.SetColumnName(0, new StringBuilder("Source"));
+			modTable.SetColumnName(0, new StringBuilder("Source:"));
 			modTable.SetColumnComparison(0, CellTextOrDataComparison);
-			modTable.SetColumnName(1, new StringBuilder("Name"));
+			modTable.SetColumnName(1, new StringBuilder("Name:"));
 			modTable.SetColumnComparison(1, CellTextComparison);
+			modTable.SetColumnName(2, new StringBuilder("Enabled:"));
 
 			modTable.SortByColumn(1);
 
-			modTable.ItemDoubleClicked += RowDoubleClicked;
 			modTable.ItemSelected += OnItemSelected;
 			Controls.Add(modTable);
 
@@ -182,13 +185,10 @@ namespace avaness.PluginLoader.GUI
 			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
 			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
-			
-			MyGuiControlButton btnShow = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Open the source of the selected plugin.", new StringBuilder("Info"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnInfoButtonClick);
 
-			AlignRow(origin, btnSpace, btnRestart, btnClose, btnShow);
+			AlignRow(origin, btnSpace, btnRestart, btnClose);
 			Controls.Add(btnRestart);
 			Controls.Add(btnClose);
-			Controls.Add(btnShow);
 
 			CloseButtonEnabled = true;
 		}
@@ -277,78 +277,76 @@ namespace avaness.PluginLoader.GUI
 				toggleButton.Visible = false;
 			}
 
-
-			Vector2 layoutTableOffset = new Vector2(-0.2f, -0.471f);
+			Vector2 layoutTableOffset = new Vector2(-0.15f, -0.471f);
 			Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
 			layoutTable = new MyLayoutTable(this, layoutTableOffset + new Vector2(minSizeGui.X, 0.067f), new Vector2(1f, 1f));
 			layoutTable.SetColumnWidths(345f, 345f);
-			layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
+			layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
 			
-
 			pluginNameLabel = new MyGuiControlLabel
 			{
 				Text = "Plugin Name:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			pluginNameText = new MyGuiControlLabel
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			authorLabel = new MyGuiControlLabel
 			{
 				Text = "Author:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			authorText = new MyGuiControlLabel
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			versionLabel = new MyGuiControlLabel
 			{
 				Text = "Version:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			versionText = new MyGuiControlLabel
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			statusLabel = new MyGuiControlLabel
 			{
 				Text = "Status:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			statusText = new MyGuiControlLabel
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			usageLabel = new MyGuiControlLabel
 			{
 				Text = "Usage:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			usageText = new MyGuiControlLabel
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			ratingLabel = new MyGuiControlLabel
 			{
 				Text = "Rating:",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			ratingDisplay = new RatingControl(10)
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			buttonRateUp = CreateRateButton(positive: true);
@@ -360,7 +358,7 @@ namespace avaness.PluginLoader.GUI
 			descriptionText = new MyGuiControlMultilineText(null, null, null, "Blue", 0.8f, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, null, drawScrollbarV: true, drawScrollbarH: true, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, null, selectable: false, showTextShadow: false, null, null)
 			{
 				Name = "DescriptionText",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
 				TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
 				TextBoxAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP
 			};
@@ -373,13 +371,19 @@ namespace avaness.PluginLoader.GUI
 			toggleButtonLabel = new MyGuiControlLabel
 			{
 				Text = "On/Off",
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
 			};
 
 			toggleButton = new MyGuiControlCheckbox(toolTip: "Enables or disables the plugin.")
 			{
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
 				Enabled = false
+			};
+
+			infoButton = new MyGuiControlButton(onButtonClick: OnInfoButtonClick)
+			{
+				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
+				Text = "Plugin Info"
 			};
 
 			// Left side of table.
@@ -410,6 +414,8 @@ namespace avaness.PluginLoader.GUI
 			layoutTable.AddWithSize(descriptionText, MyAlignH.Left, MyAlignV.Bottom, rowLeft, 0, 3, 2);
 			rowLeft += 3;
 			layoutTable.Add(toggleButtonLabel, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
+			++rowLeft;
+			layoutTable.Add(infoButton, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
 
 
 			// Right side of table.
@@ -459,17 +465,6 @@ namespace avaness.PluginLoader.GUI
 			ResetTable(tableFilter);
         }
 
-        private int CellCheckedOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
-        {
-			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
-            {
-				int result = yBox.IsChecked.CompareTo(xBox.IsChecked);
-				if (result != 0)
-					return result;
-			} 
-			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
-        }
-
 		private int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
 			int result = TextComparison(x.Text, y.Text);
@@ -517,26 +512,26 @@ namespace avaness.PluginLoader.GUI
 				{
 					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
 					modTable.Add(row);
+
 					StringBuilder name = new StringBuilder(data.FriendlyName);
 
-                    row.AddCell(new MyGuiControlTable.Cell(data.Source, name));
+					row.AddCell(new MyGuiControlTable.Cell(data.Source, name));
 
 					string tip = data.FriendlyName;
 					if (!string.IsNullOrWhiteSpace(data.Tooltip))
 						tip += "\n" +  data.Tooltip;
                     row.AddCell(new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip));
 
-					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: name);
-					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
-					{
-						UserData = data,
-						Visible = true
-					};
-					
-					enabledCell.Control = enabledBox;
-					modTable.Controls.Add(enabledBox);
-					dataCheckboxes.Add(data.Id, enabledBox);
-					row.AddCell(enabledCell);
+					string enabledText;
+					if (enabled)
+                    {
+						enabledText = "Enabled";
+                    }
+                    else
+                    {
+						enabledText = "Disabled";
+					}
+					row.AddCell(new MyGuiControlTable.Cell(enabledText));
 				}
 			}
 			countLabel.Text = modTable.RowsCount + "/" + list.Count;
@@ -597,20 +592,10 @@ namespace avaness.PluginLoader.GUI
 					{
 						versionText.Text = data.Version.ToString();
 					}
-					else
-					{
-						//TODO: hide the whole thing.
-						versionText.Text = "";
-					}
 
 					if (data.Status != PluginStatus.None)
 					{
 						statusText.Text = data.StatusString;
-					}
-					else
-					{
-						//TODO: hide the whole thing.
-						statusText.Text = "";
 					}
 
 					if (data.Tooltip != null)
@@ -686,7 +671,8 @@ namespace avaness.PluginLoader.GUI
 					}
 				}
 			}
-        }
+			ResetTable();
+		}
 
         private bool SetEnabled(PluginData original, bool enabled)
         {
