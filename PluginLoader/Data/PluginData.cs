@@ -65,10 +65,48 @@ namespace avaness.PluginLoader.Data
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
+        [XmlIgnore]
+        //Max rating is 5
+        public int Rating { get; set; }
+
         protected PluginData()
         {
 
         }
+
+        #region IMPORTANT
+        //Code setup for code intergration with stats system.
+        //It is highly recommended to check the rating status locally as GetRateStatus would not sync instantly with the server.
+
+        //Please set up a way to check with the server if the user rated.
+        public virtual RateStatus GetRateStatus()
+        {
+            return RateStatus.None;
+        }
+
+        public enum RateStatus
+        {
+            RatedUp = 0,
+            RatedDown = 1,
+            None = -1
+        }
+
+        //Please setup how you want this to work
+        //Event that occurs when user rates plugin. 
+        public virtual void Rate(RateStatus ratetype)
+        {
+            //If the user rated up.
+            if (ratetype == RateStatus.RatedUp)
+            {
+
+            }
+            //If the user rated down.
+            else if (ratetype == RateStatus.RatedDown)
+            {
+
+            }
+        }
+        #endregion
 
         public abstract Assembly GetAssembly();
 
@@ -85,7 +123,9 @@ namespace avaness.PluginLoader.Data
                 // Get the file path
                 a = GetAssembly();
                 if (Status == PluginStatus.Blocked)
+                {
                     return false;
+                }
 
                 if (a == null)
                 {
@@ -104,7 +144,10 @@ namespace avaness.PluginLoader.Data
                 string name = ToString();
                 LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
                 if (e is MissingMemberException)
+                {
                     LogFile.WriteLine($"Is {name} up to date?");
+                }
+
                 LogFile.Flush();
                 Error();
                 a = null;
