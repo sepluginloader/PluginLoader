@@ -27,7 +27,7 @@ namespace avaness.PluginLoader.GUI
         private const float barWidth = 0.85f;
         private const float Spacing = 0.0175f;
         //Amount of stars
-        private const int MaxRating = 5;
+        private const int MaxRating = 9;
 
         private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
         private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
@@ -637,6 +637,10 @@ namespace avaness.PluginLoader.GUI
             pluginTable.Sort(false);
             pluginTable.SelectedRowIndex = null;
             tableFilter = filter;
+            pluginTable.SelectedRowIndex = 0;
+            MyGuiControlTable.EventArgs args = new MyGuiControlTable.EventArgs();
+            args.RowIndex = 0;
+            OnItemSelected(pluginTable, args);
         }
 
         /// <summary>

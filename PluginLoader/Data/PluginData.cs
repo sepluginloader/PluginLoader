@@ -66,7 +66,7 @@ namespace avaness.PluginLoader.Data
         public List<PluginData> Group { get; } = new List<PluginData>();
 
         [XmlIgnore]
-        //Max rating is 5
+        //Max rating is 10 half stars. Starts at 0.
         public int Rating { get; set; }
 
         protected PluginData()
