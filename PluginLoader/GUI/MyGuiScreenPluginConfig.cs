@@ -24,16 +24,19 @@ namespace avaness.PluginLoader.GUI
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
         private Vector2 rightSideOrigin;
-        private const float barWidth = 0.85f;
+        private const float BarWidth = 0.85f;
         private const float Spacing = 0.0175f;
+
         //Amount of stars
         private const int MaxRating = 9;
 
         private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
         private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
+
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
-        private readonly PluginConfig config = Main.Instance.Config;
+
+        private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
         private PluginData selectedPlugin;
 
@@ -117,32 +120,32 @@ namespace avaness.PluginLoader.GUI
 
             MyGuiControlLabel title = AddCaption("Plugins List");
 
-            //Sets the origin relative to the center of the caption on the X axis and to the bottom the caption on the y axis.
+            // Sets the origin relative to the center of the caption on the X axis and to the bottom the caption on the y axis.
             Vector2 origin = title.Position += new Vector2(0f, title.Size.Y / 2);
 
             origin.Y += Spacing;
 
-            //Adds a bar right below the caption.
+            // Adds a bar right below the caption.
             MyGuiControlSeparatorList titleBar = new MyGuiControlSeparatorList();
-            titleBar.AddHorizontal(new Vector2(origin.X - (barWidth / 2), origin.Y), barWidth);
+            titleBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
             Controls.Add(titleBar);
 
             origin.Y += Spacing;
 
-            //Change the position of this to move the entire middle section of the menu, the menu bars, menu title, and bottom buttons won't move
-            //Adds a search bar right below the bar on the left side of the menu.
-            MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(new Vector2(origin.X - (barWidth / 2), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
-            float extraSpaceWidth = searchBox.Size.Y;
-            //Changing the search box X size will change the plugin list length.
+            // Change the position of this to move the entire middle section of the menu, the menu bars, menu title, and bottom buttons won't move
+            // Adds a search bar right below the bar on the left side of the menu.
+            MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(new Vector2(origin.X - (BarWidth / 2), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+
+            // Changing the search box X size will change the plugin list length.
             searchBox.Size = new Vector2(0.4f, searchBox.Size.Y);
             searchBox.OnTextChanged += SearchBox_TextChanged;
             Controls.Add(searchBox);
 
             #region Visibility Button
-            //Adds a button to show only enabled plugins. Located right of the search bar.
-            MyGuiControlButton buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (barWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
+            // Adds a button to show only enabled plugins. Located right of the search bar.
+            MyGuiControlButton buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (BarWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
 
-            if (allItemsVisible || config.Count == 0)
+            if (allItemsVisible || Config.Count == 0)
             {
                 allItemsVisible = true;
                 buttonVisibility.Icon = IconHide;
@@ -159,48 +162,48 @@ namespace avaness.PluginLoader.GUI
             origin.Y += searchBox.Size.Y + Spacing;
 
             #region Plugin List
-            //Adds the plugin list on the right of the menu below the search bar.
+            // Adds the plugin list on the right of the menu below the search bar.
             pluginTable = new MyGuiControlTable
             {
-                Position = new Vector2(origin.X - (barWidth / 2), origin.Y),
+                Position = new Vector2(origin.X - (BarWidth / 2), origin.Y),
                 Size = new Vector2(searchBox.Size.X + buttonVisibility.Size.X + 0.001f, 0.6f), //The y value can be bigger than the visible rows count as the visibleRowsCount controls the height.
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
                 ColumnsCount = 3,
                 VisibleRowsCount = 20
             };
 
-            pluginTable.SetCustomColumnWidths(new float[]
+            pluginTable.SetCustomColumnWidths(new[]
             {
                 0.22f,
                 0.6f,
                 0.22f
             });
 
-            pluginTable.SetColumnName(0, new StringBuilder("Source:"));
+            pluginTable.SetColumnName(0, new StringBuilder("Source"));
             pluginTable.SetColumnComparison(0, CellTextOrDataComparison);
-            pluginTable.SetColumnName(1, new StringBuilder("Name:"));
+            pluginTable.SetColumnName(1, new StringBuilder("Name"));
             pluginTable.SetColumnComparison(1, CellTextComparison);
-            pluginTable.SetColumnName(2, new StringBuilder("Enabled:"));
+            pluginTable.SetColumnName(2, new StringBuilder());
             pluginTable.SetColumnComparison(2, CellTextComparison);
 
-            //Sorts the plugin table by the name of the plugin.
+            // Sorts the plugin table by the name of the plugin.
             pluginTable.SortByColumn(1);
 
-            //Triggers OnItemSelected() when an item in the list is selected.
+            // Selecting list items load their details in OnItemSelected
             pluginTable.ItemSelected += OnItemSelected;
             Controls.Add(pluginTable);
             #endregion
 
             origin.Y += Spacing + pluginTable.Size.Y;
 
-            //Adds the bar at the bottom between just above the buttons.
+            // Adds the bar at the bottom between just above the buttons.
             MyGuiControlSeparatorList bottomBar = new MyGuiControlSeparatorList();
-            bottomBar.AddHorizontal(new Vector2(origin.X - (barWidth / 2), origin.Y), barWidth);
+            bottomBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
             Controls.Add(bottomBar);
 
             origin.Y += Spacing;
 
-            //Adds buttons at bottom of menu
+            // Adds buttons at bottom of menu
             MyGuiControlButton buttonRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
 
             MyGuiControlButton buttonClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
@@ -209,11 +212,11 @@ namespace avaness.PluginLoader.GUI
             Controls.Add(buttonRestart);
             Controls.Add(buttonClose);
 
-            //Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
-            pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (barWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+            // Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
+            pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (BarWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
             Controls.Add(pluginCountLabel);
 
-            //Refreshes the table to show plugins on plugin list
+            // Refreshes the table to show plugins on plugin list
             RefreshTable();
         }
 
@@ -223,7 +226,7 @@ namespace avaness.PluginLoader.GUI
         /// <param name="data">Plugin data to show on right.</param>
         private void RefreshRight(PluginData data)
         {
-            #region Hide existing coontrols
+            #region Hide existing controls
             // Hides existing controls so the old and new won't overlap. There is no way to remove the existing controls. OnRemoving just sets the controls in their default position.
             if (pluginNameLabel != null)
                 pluginNameLabel.Visible = false;
@@ -270,7 +273,6 @@ namespace avaness.PluginLoader.GUI
             #endregion
 
             selectedPlugin = data;
-            Vector2 minSizeGui = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
             layoutTable = new MyLayoutTable(this, rightSideOrigin, new Vector2(1f, 1f));
             layoutTable.SetColumnWidths(318f, 318f);
             layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
@@ -357,7 +359,7 @@ namespace avaness.PluginLoader.GUI
             iconRateDown = CreateRateIcon(buttonRateDown, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
 
             //Description
-            descriptionText = new MyGuiControlMultilineText(null, null, null, "Blue", 0.8f, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, null, drawScrollbarV: true, drawScrollbarH: true, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, null, selectable: false, showTextShadow: false, null, null)
+            descriptionText = new MyGuiControlMultilineText(null)
             {
                 Name = "DescriptionText",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
@@ -548,7 +550,7 @@ namespace avaness.PluginLoader.GUI
             foreach (PluginData data in list)
             {
                 if (!dataChanges.TryGetValue(data.Id, out bool enabled))
-                    enabled = config.IsEnabled(data.Id);
+                    enabled = Config.IsEnabled(data.Id);
 
                 if (noFilter && (data.Hidden || !allItemsVisible) && !enabled)
                     continue;
@@ -602,16 +604,9 @@ namespace avaness.PluginLoader.GUI
             RefreshTable(args);
         }
 
-        private bool FilterName(string name, string[] filter)
+        private static bool FilterName(string name, IEnumerable<string> filter)
         {
-            foreach (string s in filter)
-            {
-                if (!name.Contains(s, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return filter.All(s => name.Contains(s, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -621,55 +616,40 @@ namespace avaness.PluginLoader.GUI
         /// <param name="args">Event arguments.</param>
         private void OnItemSelected(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
-            int i = args.RowIndex;
-            if (i >= 0 && i < table.RowsCount)
-            {
-                MyGuiControlTable.Row row = table.GetRow(i);
-                if (row.UserData is PluginData data)
-                {
-                    RefreshRight(data);
-                    pluginNameText.Text = data.FriendlyName;
+            if (!TryGetRowData(args.RowIndex, out var data))
+                return;
 
-                    if (data.Author != null)
-                    {
-                        authorText.Text = data.Author;
-                    }
-                    else
-                    {
-                        authorText.Text = "Name is not available";
-                    }
+            RefreshRight(data);
 
-                    if (data.Version != null)
-                    {
-                        versionText.Text = data.Version.ToString();
-                    }
+            pluginNameText.Text = data.FriendlyName;
+            authorText.Text = data.Author ?? "Name is not available";
+            versionText.Text = data.Version?.ToString() ?? "";
+            statusText.Text = data.Status == PluginStatus.None ? "" : data.StatusString;
+            descriptionText.Text = new StringBuilder(data.Tooltip ?? "Description is not available");
 
-                    if (data.Status != PluginStatus.None)
-                    {
-                        statusText.Text = data.StatusString;
-                    }
+            toggleButton.UserData = data;
+            toggleButton.IsCheckedChanged += IsCheckedChanged;
 
-                    if (data.Tooltip != null)
-                    {
-                        descriptionText.Text = new StringBuilder(data.Tooltip);
-                    }
-                    else
-                    {
-                        descriptionText.Text = new StringBuilder("Description is not available");
-                    }
+            if (!dataChanges.TryGetValue(data.Id, out bool enabled))
+                enabled = Config.IsEnabled(data.Id);
 
-                    toggleButton.UserData = data;
-                    toggleButton.IsCheckedChanged += IsCheckedChanged;
+            toggleButton.Enabled = true;
+            toggleButton.IsChecked = enabled;
+        }
 
-                    if (!dataChanges.TryGetValue(data.Id, out bool enabled))
-                    {
-                        enabled = config.IsEnabled(data.Id);
-                    }
+        private bool TryGetRowData(int rowIndex, out PluginData pluginData)
+        {
+            pluginData = null;
 
-                    toggleButton.Enabled = true;
-                    toggleButton.IsChecked = enabled;
-                }
-            }
+            if (rowIndex < 0 || rowIndex >= pluginTable.RowsCount)
+                return false;
+
+            var row = pluginTable.GetRow(rowIndex);
+            if (!(row.UserData is PluginData data))
+                return false;
+
+            pluginData = data;
+            return true;
         }
 
         private void AlignRow(Vector2 origin, float spacing, params MyGuiControlBase[] elements)
@@ -716,7 +696,7 @@ namespace avaness.PluginLoader.GUI
 
         private bool SetEnabled(PluginData original, bool enabled)
         {
-            if (config.IsEnabled(original.Id) == enabled)
+            if (Config.IsEnabled(original.Id) == enabled)
             {
                 bool result = dataChanges.Remove(original.Id);
                 ChangePluginEnableStatus(original, enabled);
@@ -738,7 +718,7 @@ namespace avaness.PluginLoader.GUI
 
             MyGuiControlTable.Cell enabledCell = row.GetCell(2);
 
-            if (enabled == true && enabledCell.Text != new StringBuilder("Enabled"))
+            if (enabled && enabledCell.Text != new StringBuilder("Enabled"))
             {
                 enabledCell.Text.Clear().Append("Enabled");
             }
@@ -780,30 +760,29 @@ namespace avaness.PluginLoader.GUI
 
         private void Save()
         {
-            if (dataChanges.Count > 0)
-            {
-                PluginConfig config = Main.Instance.Config;
-                foreach (KeyValuePair<string, bool> kv in dataChanges)
-                {
-                    config.SetEnabled(kv.Key, kv.Value);
-                }
+            if (dataChanges.Count <= 0)
+                return;
 
-                config.Save();
-                dataChanges.Clear();
+            foreach (KeyValuePair<string, bool> kv in dataChanges)
+            {
+                Config.SetEnabled(kv.Key, kv.Value);
             }
+
+            Config.Save();
+            dataChanges.Clear();
         }
 
         #region RateButtons
         // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame
         private MyGuiControlButton CreateRateButton(bool positive)
         {
-            return new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: positive ? new Action<MyGuiControlButton>(OnRateUpClicked) : new Action<MyGuiControlButton>(OnRateDownClicked), size: new Vector2(0.03f));
+            return new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: positive ? OnRateUpClicked : new Action<MyGuiControlButton>(OnRateDownClicked), size: new Vector2(0.03f));
         }
 
         // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGamesp
         private MyGuiControlImage CreateRateIcon(MyGuiControlButton button, string texture)
         {
-            MyGuiControlImage myGuiControlImage = new MyGuiControlImage(null, null, null, null, new string[1] { texture });
+            MyGuiControlImage myGuiControlImage = new MyGuiControlImage(null, null, null, null, new[] { texture });
             AdjustButtonForIcon(button, myGuiControlImage);
             myGuiControlImage.Size = button.Size * 0.6f;
             return myGuiControlImage;
@@ -831,19 +810,23 @@ namespace avaness.PluginLoader.GUI
 
         private void UpdateRateState(RateStatus positive)
         {
-            if (selectedPlugin != null)
+            if (selectedPlugin == null)
+                return;
+
+            selectedPlugin.Rate(positive);
+
+            switch (positive)
             {
-                selectedPlugin.Rate(positive);
-                if (positive == RateStatus.RatedUp)
-                {
+                case RateStatus.RatedUp:
                     buttonRateUp.Checked = true;
-                }
-                else if (positive == RateStatus.RatedUp)
-                {
+                    break;
+
+                case RateStatus.RatedDown:
                     buttonRateDown.Checked = true;
-                }
-                RefreshPluginStats();
+                    break;
             }
+
+            RefreshPluginStats();
         }
         #endregion
 
@@ -908,40 +891,30 @@ namespace avaness.PluginLoader.GUI
                 if (isCampaign)
                 {
                     if (callbackReturn == ResultEnum.YES)
-                    {
                         afterMenu();
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    if (callbackReturn == ResultEnum.YES)
-                    {
-                        MyAsyncSaving.Start(delegate
-                        {
-                            MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreeshotWasTaken;
-                        });
 
-                    }
-                    else if (callbackReturn == ResultEnum.NO)
-                    {
+                    return;
+                }
+
+                switch (callbackReturn)
+                {
+                    case ResultEnum.YES:
+                        MyAsyncSaving.Start(delegate {
+                            MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreenshotWasTaken;
+                        });
+                        break;
+
+                    case ResultEnum.NO:
                         MyAudio.Static.Mute = true;
                         MyAudio.Static.StopMusic();
                         afterMenu();
-                    }
-                    else
-                    {
-                        return;
-                    }
+                        break;
                 }
             }
 
-            void UnloadAndExitAfterScreeshotWasTaken(object sender, EventArgs e)
+            void UnloadAndExitAfterScreenshotWasTaken(object sender, EventArgs e)
             {
-                MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreeshotWasTaken;
+                MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreenshotWasTaken;
                 afterMenu();
             }
         }
