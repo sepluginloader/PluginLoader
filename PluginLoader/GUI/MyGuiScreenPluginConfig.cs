@@ -27,11 +27,11 @@ namespace avaness.PluginLoader.GUI
         private const float BarWidth = 0.85f;
         private const float Spacing = 0.0175f;
 
-        //Amount of stars
+        // Amount of stars
         private const int MaxRating = 9;
 
         private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
-        private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
+        private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
@@ -43,6 +43,7 @@ namespace avaness.PluginLoader.GUI
         private static bool allItemsVisible = true;
 
         #region Right side Controls
+
         private MyGuiControlLabel pluginNameLabel;
         private MyGuiControlLabel pluginNameText;
         private MyGuiControlLabel authorLabel;
@@ -64,9 +65,11 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlLabel toggleButtonLabel;
         private MyGuiControlCheckbox toggleButton;
         private MyGuiControlButton infoButton;
+
         #endregion
 
         #region Icons
+
         // Source: MyTerminalControlPanel
         private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
         {
@@ -84,7 +87,9 @@ namespace avaness.PluginLoader.GUI
             Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
             SizePx = new Vector2(40f, 40f)
         };
+
         private MyLayoutTable layoutTable;
+
         #endregion
 
         /// <summary>
@@ -142,6 +147,7 @@ namespace avaness.PluginLoader.GUI
             Controls.Add(searchBox);
 
             #region Visibility Button
+
             // Adds a button to show only enabled plugins. Located right of the search bar.
             MyGuiControlButton buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (BarWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
 
@@ -157,16 +163,18 @@ namespace avaness.PluginLoader.GUI
 
             Controls.Add(buttonVisibility);
             rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
+
             #endregion
 
             origin.Y += searchBox.Size.Y + Spacing;
 
             #region Plugin List
+
             // Adds the plugin list on the right of the menu below the search bar.
             pluginTable = new MyGuiControlTable
             {
                 Position = new Vector2(origin.X - (BarWidth / 2), origin.Y),
-                Size = new Vector2(searchBox.Size.X + buttonVisibility.Size.X + 0.001f, 0.6f), //The y value can be bigger than the visible rows count as the visibleRowsCount controls the height.
+                Size = new Vector2(searchBox.Size.X + buttonVisibility.Size.X + 0.001f, 0.6f), // The y value can be bigger than the visible rows count as the visibleRowsCount controls the height.
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
                 ColumnsCount = 3,
                 VisibleRowsCount = 20
@@ -192,6 +200,10 @@ namespace avaness.PluginLoader.GUI
             // Selecting list items load their details in OnItemSelected
             pluginTable.ItemSelected += OnItemSelected;
             Controls.Add(pluginTable);
+
+            // Double clicking list items toggles the enable flag
+            pluginTable.ItemDoubleClicked += OnItemDoubleClicked;
+
             #endregion
 
             origin.Y += Spacing + pluginTable.Size.Y;
@@ -223,10 +235,11 @@ namespace avaness.PluginLoader.GUI
         /// <summary>
         /// Refreshes the right side controls. The right side controls always stay next to the plugin list control even if you move the plugin list control.
         /// </summary>
-        /// <param name="data">Plugin data to show on right.</param>
-        private void RefreshRight(PluginData data)
+        /// <param name="plugin">Plugin data to show on right.</param>
+        private void RefreshRight(PluginData plugin)
         {
             #region Hide existing controls
+
             // Hides existing controls so the old and new won't overlap. There is no way to remove the existing controls. OnRemoving just sets the controls in their default position.
             if (pluginNameLabel != null)
                 pluginNameLabel.Visible = false;
@@ -270,15 +283,17 @@ namespace avaness.PluginLoader.GUI
                 toggleButton.Visible = false;
             if (infoButton != null)
                 infoButton.Visible = false;
+
             #endregion
 
-            selectedPlugin = data;
+            selectedPlugin = plugin;
             layoutTable = new MyLayoutTable(this, rightSideOrigin, new Vector2(1f, 1f));
             layoutTable.SetColumnWidths(318f, 318f);
             layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
 
             #region Right side controls
-            //Plugin Name
+
+            // Plugin Name
             pluginNameLabel = new MyGuiControlLabel
             {
                 Text = "Plugin Name:",
@@ -290,7 +305,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Author
+            // Author
             authorLabel = new MyGuiControlLabel
             {
                 Text = "Author:",
@@ -302,7 +317,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Version
+            // Version
             versionLabel = new MyGuiControlLabel
             {
                 Text = "Version:",
@@ -314,7 +329,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Status
+            // Status
             statusLabel = new MyGuiControlLabel
             {
                 Text = "Status:",
@@ -326,7 +341,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Usage
+            // Usage
             usageLabel = new MyGuiControlLabel
             {
                 Text = "Usage:",
@@ -338,7 +353,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Rating
+            // Rating
             ratingLabel = new MyGuiControlLabel
             {
                 Text = "Rating:",
@@ -350,15 +365,15 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            //Rate up
+            // Rate up
             buttonRateUp = CreateRateButton(positive: true);
             iconRateUp = CreateRateIcon(buttonRateUp, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
 
-            //Rate down
+            // Rate down
             buttonRateDown = CreateRateButton(positive: false);
             iconRateDown = CreateRateIcon(buttonRateDown, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
 
-            //Description
+            // Description
             descriptionText = new MyGuiControlMultilineText(null)
             {
                 Name = "DescriptionText",
@@ -372,7 +387,7 @@ namespace avaness.PluginLoader.GUI
                 BackgroundTexture = MyGuiConstants.TEXTURE_RECTANGLE_DARK_BORDER
             };
 
-            //Plugin On/Off
+            // Plugin On/Off
             toggleButtonLabel = new MyGuiControlLabel
             {
                 Text = "On/Off",
@@ -385,28 +400,30 @@ namespace avaness.PluginLoader.GUI
                 Enabled = false
             };
 
-            //Info button
+            // Info button
             infoButton = new MyGuiControlButton(onButtonClick: OnInfoButtonClick)
             {
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
                 Text = "Plugin Info"
             };
+
             #endregion
 
             #region Table left
+
             // Left side of table.
             layoutTable.Add(pluginNameLabel, MyAlignH.Left, MyAlignV.Center, 0, 0);
             layoutTable.Add(authorLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
 
             int rowLeft;
 
-            if (data.Version != null && data.Status != PluginStatus.None)
+            if (plugin.Version != null && plugin.Status != PluginStatus.None)
             {
                 layoutTable.Add(versionLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
                 layoutTable.Add(statusLabel, MyAlignH.Left, MyAlignV.Center, 3, 0);
                 rowLeft = 4;
             }
-            else if (data.Status == PluginStatus.None && data.Version == null)
+            else if (plugin.Status == PluginStatus.None && plugin.Version == null)
             {
                 rowLeft = 2;
             }
@@ -429,22 +446,24 @@ namespace avaness.PluginLoader.GUI
             layoutTable.Add(toggleButtonLabel, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
             ++rowLeft;
             layoutTable.Add(infoButton, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
+
             #endregion
 
             #region Table Right
+
             // Right side of table.
             layoutTable.Add(pluginNameText, MyAlignH.Left, MyAlignV.Center, 0, 1);
             layoutTable.Add(authorText, MyAlignH.Left, MyAlignV.Center, 1, 1);
 
             int rowRight;
 
-            if (data.Version != null && data.Status != PluginStatus.None)
+            if (plugin.Version != null && plugin.Status != PluginStatus.None)
             {
                 layoutTable.Add(versionText, MyAlignH.Left, MyAlignV.Center, 2, 1);
                 layoutTable.Add(statusText, MyAlignH.Left, MyAlignV.Center, 3, 1);
                 rowRight = 4;
             }
-            else if (data.Status == PluginStatus.None && data.Version == null)
+            else if (plugin.Status == PluginStatus.None && plugin.Version == null)
             {
                 rowRight = 2;
             }
@@ -467,6 +486,7 @@ namespace avaness.PluginLoader.GUI
             buttonRateUp.PositionX -= 0.05f;
             iconRateUp.Position = buttonRateUp.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateUp.Size.X / 2f, 0f);
             iconRateDown.Position = buttonRateDown.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateDown.Size.X / 2f, 0f);
+
             #endregion
 
             RefreshPluginStats();
@@ -502,6 +522,7 @@ namespace avaness.PluginLoader.GUI
                 allItemsVisible = true;
                 btn.Icon = IconHide;
             }
+
             RefreshTable(tableFilter);
         }
 
@@ -544,53 +565,52 @@ namespace avaness.PluginLoader.GUI
         {
             pluginTable.Clear();
             pluginTable.Controls.Clear();
-            dataCheckboxes.Clear();
+            pluginCheckboxes.Clear();
             PluginList list = Main.Instance.List;
             bool noFilter = filter == null || filter.Length == 0;
-            foreach (PluginData data in list)
+            foreach (PluginData plugin in list)
             {
-                if (!dataChanges.TryGetValue(data.Id, out bool enabled))
-                    enabled = Config.IsEnabled(data.Id);
+                if (!dataChanges.TryGetValue(plugin.Id, out bool enabled))
+                    enabled = Config.IsEnabled(plugin.Id);
 
-                if (noFilter && (data.Hidden || !allItemsVisible) && !enabled)
+                if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
 
-                if (noFilter || FilterName(data.FriendlyName, filter))
+                if (!noFilter && !FilterName(plugin.FriendlyName, filter))
+                    continue;
+
+                var row = new MyGuiControlTable.Row(plugin);
+                pluginTable.Add(row);
+
+                var name = new StringBuilder(plugin.FriendlyName);
+                row.AddCell(new MyGuiControlTable.Cell(plugin.Source, name));
+
+                var tip = plugin.FriendlyName;
+                if (!string.IsNullOrWhiteSpace(plugin.Tooltip))
+                    tip += "\n" + plugin.Tooltip;
+                row.AddCell(new MyGuiControlTable.Cell(plugin.FriendlyName, toolTip: tip));
+
+                var text = new StringBuilder(enabled ? "1" : "0");
+                var enabledCell = new MyGuiControlTable.Cell(text, name);
+                var enabledCheckbox = new MyGuiControlCheckbox(isChecked: enabled)
                 {
-                    MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
-                    pluginTable.Add(row);
-
-                    StringBuilder name = new StringBuilder(data.FriendlyName);
-
-                    row.AddCell(new MyGuiControlTable.Cell(data.Source, name));
-
-                    string tip = data.FriendlyName;
-                    if (!string.IsNullOrWhiteSpace(data.Tooltip))
-                    {
-                        tip += "\n" + data.Tooltip;
-                    }
-
-                    row.AddCell(new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip));
-
-                    string enabledText;
-                    if (enabled)
-                    {
-                        enabledText = "Enabled";
-                    }
-                    else
-                    {
-                        enabledText = "Disabled";
-                    }
-                    row.AddCell(new MyGuiControlTable.Cell(enabledText));
-                }
+                    UserData = plugin,
+                    Visible = true
+                };
+                enabledCheckbox.IsCheckedChanged += IsCheckedChanged;
+                enabledCell.Control = enabledCheckbox;
+                pluginTable.Controls.Add(enabledCheckbox);
+                pluginCheckboxes.Add(plugin.Id, enabledCheckbox);
+                row.AddCell(enabledCell);
             }
+
             pluginCountLabel.Text = pluginTable.RowsCount + " out of the total " + list.Count + " \nplugins are visible.";
             pluginTable.Sort(false);
             pluginTable.SelectedRowIndex = null;
             tableFilter = filter;
             pluginTable.SelectedRowIndex = 0;
-            MyGuiControlTable.EventArgs args = new MyGuiControlTable.EventArgs();
-            args.RowIndex = 0;
+
+            var args = new MyGuiControlTable.EventArgs { RowIndex = 0 };
             OnItemSelected(pluginTable, args);
         }
 
@@ -616,40 +636,42 @@ namespace avaness.PluginLoader.GUI
         /// <param name="args">Event arguments.</param>
         private void OnItemSelected(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
-            if (!TryGetRowData(args.RowIndex, out var data))
+            if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
                 return;
 
-            RefreshRight(data);
+            RefreshRight(plugin);
 
-            pluginNameText.Text = data.FriendlyName;
-            authorText.Text = data.Author ?? "Name is not available";
-            versionText.Text = data.Version?.ToString() ?? "";
-            statusText.Text = data.Status == PluginStatus.None ? "" : data.StatusString;
-            descriptionText.Text = new StringBuilder(data.Tooltip ?? "Description is not available");
+            pluginNameText.Text = plugin.FriendlyName;
+            authorText.Text = plugin.Author ?? "Name is not available";
+            versionText.Text = plugin.Version?.ToString() ?? "";
+            statusText.Text = plugin.Status == PluginStatus.None ? "" : plugin.StatusString;
+            descriptionText.Text = new StringBuilder(plugin.Tooltip ?? "Description is not available");
 
-            toggleButton.UserData = data;
-            toggleButton.IsCheckedChanged += IsCheckedChanged;
-
-            if (!dataChanges.TryGetValue(data.Id, out bool enabled))
-                enabled = Config.IsEnabled(data.Id);
-
+            toggleButton.UserData = plugin;
             toggleButton.Enabled = true;
-            toggleButton.IsChecked = enabled;
+            toggleButton.IsChecked = Config.IsEnabled(plugin.Id);
+            toggleButton.IsCheckedChanged += IsCheckedChanged;
         }
 
-        private bool TryGetRowData(int rowIndex, out PluginData pluginData)
+        private void OnItemDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
-            pluginData = null;
+            if (!TryGetPluginByRowIndex(args.RowIndex, out var data))
+                return;
 
+            Config.SetEnabled(data.Id, !Config.IsEnabled(data.Id));
+        }
+
+        private bool TryGetPluginByRowIndex(int rowIndex, out PluginData plugin)
+        {
             if (rowIndex < 0 || rowIndex >= pluginTable.RowsCount)
+            {
+                plugin = null;
                 return false;
+            }
 
             var row = pluginTable.GetRow(rowIndex);
-            if (!(row.UserData is PluginData data))
-                return false;
-
-            pluginData = data;
-            return true;
+            plugin = row.UserData as PluginData;
+            return plugin != null;
         }
 
         private void AlignRow(Vector2 origin, float spacing, params MyGuiControlBase[] elements)
@@ -678,66 +700,59 @@ namespace avaness.PluginLoader.GUI
 
         private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
         {
-            PluginData original = (PluginData)checkbox.UserData;
-            SetEnabled(original, checkbox.IsChecked);
-            if (original.Group.Count > 0 && checkbox.IsChecked)
+            var plugin = (PluginData)checkbox.UserData;
+            SetEnabled(plugin, checkbox.IsChecked);
+            if (plugin.Group.Count <= 0 || !checkbox.IsChecked)
+                return;
+
+            foreach (var alt in plugin.Group)
             {
-                foreach (PluginData alt in original.Group)
+                if (SetEnabled(alt, false) && pluginCheckboxes.TryGetValue(alt.Id, out var altBox))
                 {
-                    if (SetEnabled(alt, false) && dataCheckboxes.TryGetValue(alt.Id, out MyGuiControlCheckbox altBox))
-                    {
-                        altBox.IsCheckedChanged -= IsCheckedChanged;
-                        altBox.IsChecked = false;
-                        altBox.IsCheckedChanged += IsCheckedChanged;
-                    }
+                    altBox.IsCheckedChanged -= IsCheckedChanged;
+                    altBox.IsChecked = false;
+                    altBox.IsCheckedChanged += IsCheckedChanged;
                 }
             }
+
+            RefreshRight(plugin);
         }
 
-        private bool SetEnabled(PluginData original, bool enabled)
+        private bool SetEnabled(PluginData data, bool enabled)
         {
-            if (Config.IsEnabled(original.Id) == enabled)
+            if (Config.IsEnabled(data.Id) == enabled)
             {
-                bool result = dataChanges.Remove(original.Id);
-                ChangePluginEnableStatus(original, enabled);
+                var result = dataChanges.Remove(data.Id);
+                EnablePlugin(data, enabled);
                 return result;
             }
-            else
-            {
-                dataChanges[original.Id] = enabled;
-                ChangePluginEnableStatus(original, enabled);
-                return true;
-            }
+
+            dataChanges[data.Id] = enabled;
+            EnablePlugin(data, enabled);
+            return true;
         }
 
-        private void ChangePluginEnableStatus(PluginData plugin, bool enabled)
+        private void EnablePlugin(PluginData plugin, bool enable)
         {
-            MyGuiControlTable.Row row = pluginTable.Find(x => ReferenceEquals(x.UserData, plugin));
+            var row = pluginTable.Find(x => ReferenceEquals(x.UserData, plugin));
             if (row == null)
                 return;
 
-            MyGuiControlTable.Cell enabledCell = row.GetCell(2);
+            var checkbox = pluginCheckboxes[plugin.Id];
+            if (checkbox.IsChecked == enable)
+                return;
 
-            if (enabled && enabledCell.Text != new StringBuilder("Enabled"))
-            {
-                enabledCell.Text.Clear().Append("Enabled");
-            }
-            else if (enabledCell.Text != new StringBuilder("Disabled"))
-            {
-                enabledCell.Text.Clear().Append("Disabled");
-            }
+            checkbox.IsChecked = enable;
+            row.GetCell(2).Text.Clear().Append(enable ? "1" : "0");
         }
 
         private void OnInfoButtonClick(MyGuiControlButton btn)
         {
-            if (pluginTable.SelectedRowIndex.HasValue)
-            {
-                PluginData data = pluginTable.SelectedRow.UserData as PluginData;
-                if (data != null)
-                {
-                    data.Show();
-                }
-            }
+            if (!pluginTable.SelectedRowIndex.HasValue)
+                return;
+
+            if (pluginTable.SelectedRow.UserData is PluginData plugin)
+                plugin.Show();
         }
 
         private void OnCloseButtonClick(MyGuiControlButton btn)
@@ -773,6 +788,7 @@ namespace avaness.PluginLoader.GUI
         }
 
         #region RateButtons
+
         // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame
         private MyGuiControlButton CreateRateButton(bool positive)
         {
@@ -792,10 +808,7 @@ namespace avaness.PluginLoader.GUI
         private void AdjustButtonForIcon(MyGuiControlButton button, MyGuiControlImage icon)
         {
             button.Size = new Vector2(button.Size.X, button.Size.X * 4f / 3f);
-            button.HighlightChanged += delegate (MyGuiControlBase x)
-            {
-                icon.ColorMask = (x.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One);
-            };
+            button.HighlightChanged += delegate(MyGuiControlBase x) { icon.ColorMask = (x.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One); };
         }
 
         private void OnRateUpClicked(MyGuiControlButton button)
@@ -828,9 +841,11 @@ namespace avaness.PluginLoader.GUI
 
             RefreshPluginStats();
         }
+
         #endregion
 
         #region Restart
+
         private void AskRestartResult(ResultEnum result)
         {
             if (result == ResultEnum.YES)
@@ -838,12 +853,10 @@ namespace avaness.PluginLoader.GUI
                 Save();
                 if (MyGuiScreenGamePlay.Static != null)
                 {
-                    ShowSaveMenu(delegate
-                    {
-                        UnloadAndRestartGame();
-                    });
+                    ShowSaveMenu(delegate { UnloadAndRestartGame(); });
                     return;
                 }
+
                 UnloadAndRestartGame();
             }
             else if (result == ResultEnum.NO)
@@ -859,7 +872,7 @@ namespace avaness.PluginLoader.GUI
         /// <param name="afterMenu">Action after code is executed.</param>
         private static void ShowSaveMenu(Action afterMenu)
         {
-            //Sync.IsServer is backwards
+            // Sync.IsServer is backwards
             if (!Sync.IsServer)
             {
                 afterMenu();
@@ -870,7 +883,7 @@ namespace avaness.PluginLoader.GUI
             bool isCampaign = false;
             MyMessageBoxButtonsType buttonsType = MyMessageBoxButtonsType.YES_NO_CANCEL;
 
-            //Sync.IsServer is backwards
+            // Sync.IsServer is backwards
             if (Sync.IsServer && !MySession.Static.Settings.EnableSaving)
             {
                 message += "Are you sure that you want to restart the game? All progress from the last checkpoint will be lost.";
@@ -899,9 +912,7 @@ namespace avaness.PluginLoader.GUI
                 switch (callbackReturn)
                 {
                     case ResultEnum.YES:
-                        MyAsyncSaving.Start(delegate {
-                            MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreenshotWasTaken;
-                        });
+                        MyAsyncSaving.Start(delegate { MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreenshotWasTaken; });
                         break;
 
                     case ResultEnum.NO:
@@ -927,6 +938,7 @@ namespace avaness.PluginLoader.GUI
             MyScreenManager.CloseAllScreensNowExcept(null);
             LoaderTools.Restart();
         }
+
         #endregion
     }
 }
