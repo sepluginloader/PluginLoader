@@ -285,6 +285,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             layoutTable.Add(downvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
             layoutTable.Add(downVoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
             upvoteButton.PositionX -= 0.07f;
+            downvoteButton.PositionX -= 0.02f;
             upVoteIcon.Position = upvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(upvoteButton.Size.X / 2f, 0f);
             downVoteIcon.Position = downvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(downvoteButton.Size.X / 2f, 0f);
             row++;
