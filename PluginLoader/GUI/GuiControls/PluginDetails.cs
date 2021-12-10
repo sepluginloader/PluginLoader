@@ -295,10 +295,10 @@ namespace avaness.PluginLoader.GUI.GuiControls
             row += 4;
 
             layoutTable.Add(enableLabel, MyAlignH.Left, MyAlignV.Center, row, 0);
-            layoutTable.Add(enableCheckbox, MyAlignH.Right, MyAlignV.Center, row, 1);
+            layoutTable.Add(enableCheckbox, MyAlignH.Left, MyAlignV.Center, row, 1);
             row++;
 
-            layoutTable.AddWithSize(infoButton, MyAlignH.Center, MyAlignV.Center, row, 0, 1, colSpan:2);
+            layoutTable.AddWithSize(infoButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan:2);
             // row++;
 
             DisableControls();
