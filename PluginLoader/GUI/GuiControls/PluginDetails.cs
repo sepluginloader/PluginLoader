@@ -89,7 +89,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             enableCheckbox.IsChecked = false;
         }
 
-        private void LoadPluginData()
+        public void LoadPluginData()
         {
             pluginNameText.Text = Plugin.FriendlyName ?? "N/A";
             authorText.Text = Plugin.Author ?? "N/A";
@@ -103,15 +103,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             enableCheckbox.IsChecked = Plugin.Enabled;
         }
 
-        public void Update()
-        {
-            if (plugin == null)
-                return;
-
-            LoadPluginData();
-        }
-
-        public virtual void CreateControls()
+        public virtual void CreateControls(Vector2 rightSideOrigin)
         {
             // Plugin name
             pluginNameLabel = new MyGuiControlLabel
@@ -218,39 +210,10 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 Text = "Plugin Info"
             };
 
-            // All controls
-            // Controls.Add(pluginNameLabel);
-            // Controls.Add(pluginNameText);
-            // Controls.Add(authorLabel);
-            // Controls.Add(authorText);
-            // Controls.Add(versionLabel);
-            // Controls.Add(versionText);
-            // Controls.Add(statusLabel);
-            // Controls.Add(statusText);
-            // Controls.Add(usageLabel);
-            // Controls.Add(usageText);
-            // Controls.Add(ratingLabel);
-            // Controls.Add(ratingControl);
-            // Controls.Add(upvoteButton);
-            // Controls.Add(upVoteIcon);
-            // Controls.Add(downvoteButton);
-            // Controls.Add(downVoteIcon);
-            // Controls.Add(descriptionText);
-            // Controls.Add(descriptionPanel);
-            // Controls.Add(enableLabel);
-            // Controls.Add(enableCheckbox);
-            // Controls.Add(infoButton);
+            LayoutControls(rightSideOrigin);
         }
 
-        private void TogglePlugin(MyGuiControlCheckbox obj)
-        {
-            if (plugin == null)
-                return;
-
-            Main.Instance.Config.SetEnabled(plugin.Id, !plugin.Enabled);
-        }
-
-        public void LayoutControls(Vector2 rightSideOrigin)
+        private void LayoutControls(Vector2 rightSideOrigin)
         {
             layoutTable = new MyLayoutTable(this, rightSideOrigin, new Vector2(1f, 1f));
             layoutTable.SetColumnWidths(218f, 418f);
@@ -303,6 +266,14 @@ namespace avaness.PluginLoader.GUI.GuiControls
             // row++;
 
             DisableControls();
+        }
+
+        private void TogglePlugin(MyGuiControlCheckbox obj)
+        {
+            if (plugin == null)
+                return;
+
+            Main.Instance.Config.SetEnabled(plugin.Id, !plugin.Enabled);
         }
 
         // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame

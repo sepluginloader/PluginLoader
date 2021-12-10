@@ -16,7 +16,6 @@ using VRage.Game;
 using VRage.Input;
 using VRage.Utils;
 using VRageMath;
-using static avaness.PluginLoader.Data.PluginData;
 using static Sandbox.Graphics.GUI.MyGuiScreenMessageBox;
 
 namespace avaness.PluginLoader.GUI
@@ -28,10 +27,10 @@ namespace avaness.PluginLoader.GUI
 
         private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
         private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
+        private readonly PluginDetailsPanel pluginDetailsPanel = new PluginDetailsPanel();
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
-        private PluginDetailsPanel pluginDetailsPanel = new PluginDetailsPanel();
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
@@ -47,7 +46,7 @@ namespace avaness.PluginLoader.GUI
         #region Icons
 
         // Source: MyTerminalControlPanel
-        private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
+        private static readonly MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
         {
             Normal = "Textures\\GUI\\Controls\\button_hide.dds",
             Highlight = "Textures\\GUI\\Controls\\button_hide.dds",
@@ -56,7 +55,7 @@ namespace avaness.PluginLoader.GUI
         };
 
         // Source: MyTerminalControlPanel
-        private static MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
+        private static readonly MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
         {
             Normal = "Textures\\GUI\\Controls\\button_unhide.dds",
             Highlight = "Textures\\GUI\\Controls\\button_unhide.dds",
@@ -87,7 +86,6 @@ namespace avaness.PluginLoader.GUI
         public override void LoadContent()
         {
             base.LoadContent();
-            pluginDetailsPanel.CreateControls();
             RecreateControls(true);
         }
 
@@ -204,7 +202,7 @@ namespace avaness.PluginLoader.GUI
 
             // Right side panel showing the details of the selected plugin
             var rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
-            pluginDetailsPanel.LayoutControls(rightSideOrigin);
+            pluginDetailsPanel.CreateControls(rightSideOrigin);
             Controls.Add(pluginDetailsPanel);
 
             // Refreshes the table to show plugins on plugin list
@@ -231,7 +229,7 @@ namespace avaness.PluginLoader.GUI
             RefreshTable(tableFilter);
         }
 
-        private int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        private static int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
             int result = TextComparison(x.Text, y.Text);
             if (result != 0)
@@ -242,12 +240,12 @@ namespace avaness.PluginLoader.GUI
             return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
         }
 
-        private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        private static int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
             return TextComparison(x.Text, y.Text);
         }
 
-        private int TextComparison(StringBuilder x, StringBuilder y)
+        private static int TextComparison(StringBuilder x, StringBuilder y)
         {
             if (x == null)
             {
@@ -271,8 +269,8 @@ namespace avaness.PluginLoader.GUI
             pluginTable.Clear();
             pluginTable.Controls.Clear();
             pluginCheckboxes.Clear();
-            PluginList list = Main.Instance.List;
-            bool noFilter = filter == null || filter.Length == 0;
+            var list = Main.Instance.List;
+            var noFilter = filter == null || filter.Length == 0;
             foreach (PluginData plugin in list)
             {
                 if (!dataChanges.TryGetValue(plugin.Id, out bool enabled))
@@ -425,7 +423,7 @@ namespace avaness.PluginLoader.GUI
             EnablePlugin(plugin, enabled);
 
             if (ReferenceEquals(pluginDetailsPanel.Plugin, plugin))
-                pluginDetailsPanel.Update();
+                pluginDetailsPanel.LoadPluginData();
 
             return true;
         }
