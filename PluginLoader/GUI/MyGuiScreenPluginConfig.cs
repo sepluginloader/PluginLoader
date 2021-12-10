@@ -23,50 +23,26 @@ namespace avaness.PluginLoader.GUI
 {
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
-        private Vector2 rightSideOrigin;
         private const float BarWidth = 0.85f;
         private const float Spacing = 0.0175f;
-
-        // Amount of stars
-        private const int MaxRating = 9;
 
         private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
         private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
+        private PluginDetailsPanel pluginDetailsPanel = new PluginDetailsPanel();
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
-        private PluginData selectedPlugin;
+
+        private PluginData SelectedPlugin
+        {
+            get => pluginDetailsPanel.Plugin;
+            set => pluginDetailsPanel.Plugin = value;
+        }
 
         private static bool allItemsVisible = true;
-
-        #region Right side Controls
-
-        private MyGuiControlLabel pluginNameLabel;
-        private MyGuiControlLabel pluginNameText;
-        private MyGuiControlLabel authorLabel;
-        private MyGuiControlLabel authorText;
-        private MyGuiControlLabel versionLabel;
-        private MyGuiControlLabel versionText;
-        private MyGuiControlLabel statusLabel;
-        private MyGuiControlLabel statusText;
-        private MyGuiControlLabel usageLabel;
-        private MyGuiControlLabel usageText;
-        private MyGuiControlLabel ratingLabel;
-        private RatingControl ratingDisplay;
-        private MyGuiControlButton buttonRateUp;
-        private MyGuiControlImage iconRateUp;
-        private MyGuiControlButton buttonRateDown;
-        private MyGuiControlImage iconRateDown;
-        private MyGuiControlMultilineText descriptionText;
-        private MyGuiControlCompositePanel descriptionPanel;
-        private MyGuiControlLabel toggleButtonLabel;
-        private MyGuiControlCheckbox toggleButton;
-        private MyGuiControlButton infoButton;
-
-        #endregion
 
         #region Icons
 
@@ -87,8 +63,6 @@ namespace avaness.PluginLoader.GUI
             Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
             SizePx = new Vector2(40f, 40f)
         };
-
-        private MyLayoutTable layoutTable;
 
         #endregion
 
@@ -113,6 +87,7 @@ namespace avaness.PluginLoader.GUI
         public override void LoadContent()
         {
             base.LoadContent();
+            pluginDetailsPanel.CreateControls();
             RecreateControls(true);
         }
 
@@ -162,7 +137,6 @@ namespace avaness.PluginLoader.GUI
             }
 
             Controls.Add(buttonVisibility);
-            rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
 
             #endregion
 
@@ -228,282 +202,13 @@ namespace avaness.PluginLoader.GUI
             pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (BarWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
             Controls.Add(pluginCountLabel);
 
+            // Right side panel showing the details of the selected plugin
+            var rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
+            pluginDetailsPanel.LayoutControls(rightSideOrigin);
+            Controls.Add(pluginDetailsPanel);
+
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
-        }
-
-        /// <summary>
-        /// Refreshes the right side controls. The right side controls always stay next to the plugin list control even if you move the plugin list control.
-        /// </summary>
-        /// <param name="plugin">Plugin data to show on right.</param>
-        private void RefreshRight(PluginData plugin)
-        {
-            #region Hide existing controls
-
-            // Hides existing controls so the old and new won't overlap. There is no way to remove the existing controls. OnRemoving just sets the controls in their default position.
-            if (pluginNameLabel != null)
-                pluginNameLabel.Visible = false;
-            if (pluginNameText != null)
-                pluginNameText.Visible = false;
-            if (authorLabel != null)
-                authorLabel.Visible = false;
-            if (authorText != null)
-                authorText.Visible = false;
-            if (versionLabel != null)
-                versionLabel.Visible = false;
-            if (versionText != null)
-                versionText.Visible = false;
-            if (statusLabel != null)
-                statusLabel.Visible = false;
-            if (statusText != null)
-                statusText.Visible = false;
-            if (usageLabel != null)
-                usageLabel.Visible = false;
-            if (usageText != null)
-                usageText.Visible = false;
-            if (ratingLabel != null)
-                ratingLabel.Visible = false;
-            if (ratingDisplay != null)
-                ratingDisplay.Visible = false;
-            if (buttonRateUp != null)
-                buttonRateUp.Visible = false;
-            if (iconRateUp != null)
-                iconRateUp.Visible = false;
-            if (buttonRateDown != null)
-                buttonRateDown.Visible = false;
-            if (iconRateDown != null)
-                iconRateDown.Visible = false;
-            if (descriptionText != null)
-                descriptionText.Visible = false;
-            if (descriptionPanel != null)
-                descriptionPanel.Visible = false;
-            if (toggleButtonLabel != null)
-                toggleButtonLabel.Visible = false;
-            if (toggleButton != null)
-                toggleButton.Visible = false;
-            if (infoButton != null)
-                infoButton.Visible = false;
-
-            #endregion
-
-            selectedPlugin = plugin;
-            layoutTable = new MyLayoutTable(this, rightSideOrigin, new Vector2(1f, 1f));
-            layoutTable.SetColumnWidths(318f, 318f);
-            layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
-
-            #region Right side controls
-
-            // Plugin Name
-            pluginNameLabel = new MyGuiControlLabel
-            {
-                Text = "Plugin Name:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            pluginNameText = new MyGuiControlLabel
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Author
-            authorLabel = new MyGuiControlLabel
-            {
-                Text = "Author:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            authorText = new MyGuiControlLabel
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Version
-            versionLabel = new MyGuiControlLabel
-            {
-                Text = "Version:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            versionText = new MyGuiControlLabel
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Status
-            statusLabel = new MyGuiControlLabel
-            {
-                Text = "Status:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            statusText = new MyGuiControlLabel
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Usage
-            usageLabel = new MyGuiControlLabel
-            {
-                Text = "Usage:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            usageText = new MyGuiControlLabel
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Rating
-            ratingLabel = new MyGuiControlLabel
-            {
-                Text = "Rating:",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            ratingDisplay = new RatingControl(10)
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            // Rate up
-            buttonRateUp = CreateRateButton(positive: true);
-            iconRateUp = CreateRateIcon(buttonRateUp, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
-
-            // Rate down
-            buttonRateDown = CreateRateButton(positive: false);
-            iconRateDown = CreateRateIcon(buttonRateDown, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
-
-            // Description
-            descriptionText = new MyGuiControlMultilineText(null)
-            {
-                Name = "DescriptionText",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-                TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
-                TextBoxAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP
-            };
-
-            descriptionPanel = new MyGuiControlCompositePanel
-            {
-                BackgroundTexture = MyGuiConstants.TEXTURE_RECTANGLE_DARK_BORDER
-            };
-
-            // Plugin On/Off
-            toggleButtonLabel = new MyGuiControlLabel
-            {
-                Text = "On/Off",
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
-            };
-
-            toggleButton = new MyGuiControlCheckbox(toolTip: "Enables or disables the plugin.")
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-                Enabled = false
-            };
-
-            // Info button
-            infoButton = new MyGuiControlButton(onButtonClick: OnInfoButtonClick)
-            {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-                Text = "Plugin Info"
-            };
-
-            #endregion
-
-            #region Table left
-
-            // Left side of table.
-            layoutTable.Add(pluginNameLabel, MyAlignH.Left, MyAlignV.Center, 0, 0);
-            layoutTable.Add(authorLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
-
-            int rowLeft;
-
-            if (plugin.Version != null && plugin.Status != PluginStatus.None)
-            {
-                layoutTable.Add(versionLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
-                layoutTable.Add(statusLabel, MyAlignH.Left, MyAlignV.Center, 3, 0);
-                rowLeft = 4;
-            }
-            else if (plugin.Status == PluginStatus.None && plugin.Version == null)
-            {
-                rowLeft = 2;
-            }
-            else
-            {
-                layoutTable.Add(versionLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
-                rowLeft = 3;
-            }
-
-            layoutTable.Add(usageLabel, MyAlignH.Left, MyAlignV.Center, rowLeft, 0);
-            ++rowLeft;
-            layoutTable.Add(ratingLabel, MyAlignH.Left, MyAlignV.Center, rowLeft, 0);
-            ++rowLeft;
-            layoutTable.AddWithSize(descriptionPanel, MyAlignH.Center, MyAlignV.Top, rowLeft, 0, 3, 2);
-
-            descriptionPanel.Size += new Vector2(0.01f, 0f);
-
-            layoutTable.AddWithSize(descriptionText, MyAlignH.Left, MyAlignV.Bottom, rowLeft, 0, 3, 2);
-            rowLeft += 3;
-            layoutTable.Add(toggleButtonLabel, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
-            ++rowLeft;
-            layoutTable.Add(infoButton, MyAlignH.Left, MyAlignV.Top, rowLeft, 0);
-
-            #endregion
-
-            #region Table Right
-
-            // Right side of table.
-            layoutTable.Add(pluginNameText, MyAlignH.Left, MyAlignV.Center, 0, 1);
-            layoutTable.Add(authorText, MyAlignH.Left, MyAlignV.Center, 1, 1);
-
-            int rowRight;
-
-            if (plugin.Version != null && plugin.Status != PluginStatus.None)
-            {
-                layoutTable.Add(versionText, MyAlignH.Left, MyAlignV.Center, 2, 1);
-                layoutTable.Add(statusText, MyAlignH.Left, MyAlignV.Center, 3, 1);
-                rowRight = 4;
-            }
-            else if (plugin.Status == PluginStatus.None && plugin.Version == null)
-            {
-                rowRight = 2;
-            }
-            else
-            {
-                layoutTable.Add(versionText, MyAlignH.Left, MyAlignV.Center, 2, 1);
-                rowRight = 3;
-            }
-
-            layoutTable.Add(usageText, MyAlignH.Left, MyAlignV.Center, rowRight, 1);
-            ++rowRight;
-            layoutTable.Add(ratingDisplay, MyAlignH.Left, MyAlignV.Center, rowRight, 1);
-            ratingDisplay.MaxValue = MaxRating;
-            layoutTable.Add(buttonRateUp, MyAlignH.Right, MyAlignV.Center, rowRight, 1);
-            layoutTable.Add(iconRateUp, MyAlignH.Center, MyAlignV.Center, rowRight, 1);
-            layoutTable.Add(buttonRateDown, MyAlignH.Right, MyAlignV.Center, rowRight, 1);
-            layoutTable.Add(iconRateDown, MyAlignH.Center, MyAlignV.Center, rowRight, 1);
-            rowRight += 4;
-            layoutTable.Add(toggleButton, MyAlignH.Left, MyAlignV.Top, rowRight, 1);
-            buttonRateUp.PositionX -= 0.05f;
-            iconRateUp.Position = buttonRateUp.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateUp.Size.X / 2f, 0f);
-            iconRateDown.Position = buttonRateDown.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(buttonRateDown.Size.X / 2f, 0f);
-
-            #endregion
-
-            RefreshPluginStats();
-        }
-
-        private void RefreshPluginStats()
-        {
-            ratingDisplay.Value = selectedPlugin.Rating;
-            RateStatus rateStatus = selectedPlugin.GetRateStatus();
-            if (rateStatus == RateStatus.RatedUp)
-            {
-                buttonRateUp.Checked = true;
-            }
-            else if (rateStatus == RateStatus.RatedDown)
-            {
-                buttonRateDown.Checked = true;
-            }
         }
 
         /// <summary>
@@ -639,18 +344,7 @@ namespace avaness.PluginLoader.GUI
             if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
                 return;
 
-            RefreshRight(plugin);
-
-            pluginNameText.Text = plugin.FriendlyName;
-            authorText.Text = plugin.Author ?? "Name is not available";
-            versionText.Text = plugin.Version?.ToString() ?? "";
-            statusText.Text = plugin.Status == PluginStatus.None ? "" : plugin.StatusString;
-            descriptionText.Text = new StringBuilder(plugin.Tooltip ?? "Description is not available");
-
-            toggleButton.UserData = plugin;
-            toggleButton.Enabled = true;
-            toggleButton.IsChecked = Config.IsEnabled(plugin.Id);
-            toggleButton.IsCheckedChanged += IsCheckedChanged;
+            SelectedPlugin = plugin;
         }
 
         private void OnItemDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
@@ -715,20 +409,24 @@ namespace avaness.PluginLoader.GUI
                 }
             }
 
-            RefreshRight(plugin);
+            SelectedPlugin = plugin;
         }
 
-        private bool SetEnabled(PluginData data, bool enabled)
+        private bool SetEnabled(PluginData plugin, bool enabled)
         {
-            if (Config.IsEnabled(data.Id) == enabled)
+            if (Config.IsEnabled(plugin.Id) == enabled)
             {
-                var result = dataChanges.Remove(data.Id);
-                EnablePlugin(data, enabled);
+                var result = dataChanges.Remove(plugin.Id);
+                EnablePlugin(plugin, enabled);
                 return result;
             }
 
-            dataChanges[data.Id] = enabled;
-            EnablePlugin(data, enabled);
+            dataChanges[plugin.Id] = enabled;
+            EnablePlugin(plugin, enabled);
+
+            if (ReferenceEquals(pluginDetailsPanel.Plugin, plugin))
+                pluginDetailsPanel.Update();
+
             return true;
         }
 
@@ -744,15 +442,6 @@ namespace avaness.PluginLoader.GUI
 
             checkbox.IsChecked = enable;
             row.GetCell(2).Text.Clear().Append(enable ? "1" : "0");
-        }
-
-        private void OnInfoButtonClick(MyGuiControlButton btn)
-        {
-            if (!pluginTable.SelectedRowIndex.HasValue)
-                return;
-
-            if (pluginTable.SelectedRow.UserData is PluginData plugin)
-                plugin.Show();
         }
 
         private void OnCloseButtonClick(MyGuiControlButton btn)
@@ -786,63 +475,6 @@ namespace avaness.PluginLoader.GUI
             Config.Save();
             dataChanges.Clear();
         }
-
-        #region RateButtons
-
-        // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame
-        private MyGuiControlButton CreateRateButton(bool positive)
-        {
-            return new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: positive ? OnRateUpClicked : new Action<MyGuiControlButton>(OnRateDownClicked), size: new Vector2(0.03f));
-        }
-
-        // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGamesp
-        private MyGuiControlImage CreateRateIcon(MyGuiControlButton button, string texture)
-        {
-            MyGuiControlImage myGuiControlImage = new MyGuiControlImage(null, null, null, null, new[] { texture });
-            AdjustButtonForIcon(button, myGuiControlImage);
-            myGuiControlImage.Size = button.Size * 0.6f;
-            return myGuiControlImage;
-        }
-
-        // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame
-        private void AdjustButtonForIcon(MyGuiControlButton button, MyGuiControlImage icon)
-        {
-            button.Size = new Vector2(button.Size.X, button.Size.X * 4f / 3f);
-            button.HighlightChanged += delegate(MyGuiControlBase x) { icon.ColorMask = (x.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One); };
-        }
-
-        private void OnRateUpClicked(MyGuiControlButton button)
-        {
-            UpdateRateState(positive: RateStatus.RatedDown);
-        }
-
-        private void OnRateDownClicked(MyGuiControlButton button)
-        {
-            UpdateRateState(positive: RateStatus.RatedDown);
-        }
-
-        private void UpdateRateState(RateStatus positive)
-        {
-            if (selectedPlugin == null)
-                return;
-
-            selectedPlugin.Rate(positive);
-
-            switch (positive)
-            {
-                case RateStatus.RatedUp:
-                    buttonRateUp.Checked = true;
-                    break;
-
-                case RateStatus.RatedDown:
-                    buttonRateDown.Checked = true;
-                    break;
-            }
-
-            RefreshPluginStats();
-        }
-
-        #endregion
 
         #region Restart
 

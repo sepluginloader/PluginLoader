@@ -69,6 +69,8 @@ namespace avaness.PluginLoader.Data
         //Max rating is 10 half stars. Starts at 0.
         public int Rating { get; set; }
 
+        public bool Enabled => Main.Instance.Config.IsEnabled(Id);
+
         protected PluginData()
         {
 
