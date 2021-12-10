@@ -226,89 +226,47 @@ namespace avaness.PluginLoader.GUI
             #region Hide existing coontrols
             // Hides existing controls so the old and new won't overlap. There is no way to remove the existing controls. OnRemoving just sets the controls in their default position.
             if (pluginNameLabel != null)
-            {
                 pluginNameLabel.Visible = false;
-            }
             if (pluginNameText != null)
-            {
                 pluginNameText.Visible = false;
-            }
             if (authorLabel != null)
-            {
                 authorLabel.Visible = false;
-            }
             if (authorText != null)
-            {
                 authorText.Visible = false;
-            }
             if (versionLabel != null)
-            {
                 versionLabel.Visible = false;
-            }
             if (versionText != null)
-            {
                 versionText.Visible = false;
-            }
             if (statusLabel != null)
-            {
                 statusLabel.Visible = false;
-            }
             if (statusText != null)
-            {
                 statusText.Visible = false;
-            }
             if (usageLabel != null)
-            {
                 usageLabel.Visible = false;
-            }
             if (usageText != null)
-            {
                 usageText.Visible = false;
-            }
             if (ratingLabel != null)
-            {
                 ratingLabel.Visible = false;
-            }
             if (ratingDisplay != null)
-            {
                 ratingDisplay.Visible = false;
-            }
             if (buttonRateUp != null)
-            {
                 buttonRateUp.Visible = false;
-            }
             if (iconRateUp != null)
-            {
                 iconRateUp.Visible = false;
-            }
             if (buttonRateDown != null)
-            {
                 buttonRateDown.Visible = false;
-            }
             if (iconRateDown != null)
-            {
                 iconRateDown.Visible = false;
-            }
             if (descriptionText != null)
-            {
                 descriptionText.Visible = false;
-            }
             if (descriptionPanel != null)
-            {
                 descriptionPanel.Visible = false;
-            }
             if (toggleButtonLabel != null)
-            {
                 toggleButtonLabel.Visible = false;
-            }
             if (toggleButton != null)
-            {
                 toggleButton.Visible = false;
-            }
             if (infoButton != null)
-            {
                 infoButton.Visible = false;
-            }
             #endregion
 
             selectedPlugin = data;
@@ -566,17 +524,12 @@ namespace avaness.PluginLoader.GUI
             if (x == null)
             {
                 if (y == null)
-                {
                     return 0;
-                }
-
                 return 1;
             }
 
             if (y == null)
-            {
                 return -1;
-            }
 
             return x.CompareTo(y);
         }
@@ -595,14 +548,10 @@ namespace avaness.PluginLoader.GUI
             foreach (PluginData data in list)
             {
                 if (!dataChanges.TryGetValue(data.Id, out bool enabled))
-                {
                     enabled = config.IsEnabled(data.Id);
-                }
 
                 if (noFilter && (data.Hidden || !allItemsVisible) && !enabled)
-                {
                     continue;
-                }
 
                 if (noFilter || FilterName(data.FriendlyName, filter))
                 {
@@ -718,15 +667,7 @@ namespace avaness.PluginLoader.GUI
                     }
 
                     toggleButton.Enabled = true;
-
-                    if (enabled)
-                    {
-                        toggleButton.IsChecked = true;
-                    }
-                    else
-                    {
-                        toggleButton.IsChecked = false;
-                    }
+                    toggleButton.IsChecked = enabled;
                 }
             }
         }
@@ -734,9 +675,7 @@ namespace avaness.PluginLoader.GUI
         private void AlignRow(Vector2 origin, float spacing, params MyGuiControlBase[] elements)
         {
             if (elements.Length == 0)
-            {
                 return;
-            }
 
             float totalWidth = 0;
             for (int i = 0; i < elements.Length; i++)
@@ -744,9 +683,7 @@ namespace avaness.PluginLoader.GUI
                 MyGuiControlBase btn = elements[i];
                 totalWidth += btn.Size.X;
                 if (i < elements.Length - 1)
-                {
                     totalWidth += spacing;
-                }
             }
 
             float originX = origin.X - (totalWidth / 2);
@@ -793,21 +730,21 @@ namespace avaness.PluginLoader.GUI
             }
         }
 
-        // Reflection was needed here as the cell text is readonly for some reason
         private void ChangePluginEnableStatus(PluginData plugin, bool enabled)
         {
-            object data = plugin;
-            int rowNumber = pluginTable.FindIndexByUserData(ref data, null);
-            MyGuiControlTable.Row row = pluginTable.GetRow(rowNumber);
+            MyGuiControlTable.Row row = pluginTable.Find(x => ReferenceEquals(x.UserData, plugin));
+            if (row == null)
+                return;
+
             MyGuiControlTable.Cell enabledCell = row.GetCell(2);
 
             if (enabled == true && enabledCell.Text != new StringBuilder("Enabled"))
             {
-                enabledCell.GetType().GetField("Text").SetValue(enabledCell, new StringBuilder("Enabled"));
+                enabledCell.Text.Clear().Append("Enabled");
             }
             else if (enabledCell.Text != new StringBuilder("Disabled"))
             {
-                enabledCell.GetType().GetField("Text").SetValue(enabledCell, new StringBuilder("Disabled"));
+                enabledCell.Text.Clear().Append("Disabled");
             }
         }
 
