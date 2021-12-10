@@ -25,9 +25,8 @@ namespace avaness.PluginLoader.GUI
         private const float BarWidth = 0.85f;
         private const float Spacing = 0.0175f;
 
-        private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
         private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
-        private readonly PluginDetailsPanel pluginDetailsPanel = new PluginDetailsPanel();
+        private readonly PluginDetailsPanel pluginDetails = new PluginDetailsPanel();
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
@@ -37,8 +36,8 @@ namespace avaness.PluginLoader.GUI
 
         private PluginData SelectedPlugin
         {
-            get => pluginDetailsPanel.Plugin;
-            set => pluginDetailsPanel.Plugin = value;
+            get => pluginDetails.Plugin;
+            set => pluginDetails.Plugin = value;
         }
 
         private static bool allItemsVisible = true;
@@ -87,6 +86,12 @@ namespace avaness.PluginLoader.GUI
         {
             base.LoadContent();
             RecreateControls(true);
+        }
+
+        public override void UnloadContent()
+        {
+            pluginDetails.OnPluginToggled -= EnablePlugin;
+            base.UnloadContent();
         }
 
         /// <summary>
@@ -202,12 +207,14 @@ namespace avaness.PluginLoader.GUI
 
             // Right side panel showing the details of the selected plugin
             var rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
-            pluginDetailsPanel.CreateControls(rightSideOrigin);
-            Controls.Add(pluginDetailsPanel);
+            pluginDetails.CreateControls(rightSideOrigin);
+            Controls.Add(pluginDetails);
+            pluginDetails.OnPluginToggled += EnablePlugin;
 
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
         }
+
 
         /// <summary>
         /// Event that triggers when the visibility button is clicked. This method shows all plugins or only enabled plugins.
@@ -261,7 +268,7 @@ namespace avaness.PluginLoader.GUI
         }
 
         /// <summary>
-        /// Clears the table and adds the list of plugins and their infomation.
+        /// Clears the table and adds the list of plugins and their information.
         /// </summary>
         /// <param name="filter">Text filter</param>
         private void RefreshTable(string[] filter = null)
@@ -271,10 +278,9 @@ namespace avaness.PluginLoader.GUI
             pluginCheckboxes.Clear();
             var list = Main.Instance.List;
             var noFilter = filter == null || filter.Length == 0;
-            foreach (PluginData plugin in list)
+            foreach (var plugin in list)
             {
-                if (!dataChanges.TryGetValue(plugin.Id, out bool enabled))
-                    enabled = Config.IsEnabled(plugin.Id);
+                var enabled = plugin.EnableAfterRestart;
 
                 if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
@@ -300,7 +306,7 @@ namespace avaness.PluginLoader.GUI
                     UserData = plugin,
                     Visible = true
                 };
-                enabledCheckbox.IsCheckedChanged += IsCheckedChanged;
+                enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
                 enabledCell.Control = enabledCheckbox;
                 pluginTable.Controls.Add(enabledCheckbox);
                 pluginCheckboxes.Add(plugin.Id, enabledCheckbox);
@@ -390,88 +396,69 @@ namespace avaness.PluginLoader.GUI
             }
         }
 
-        private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
+        private void OnPluginCheckboxChanged(MyGuiControlCheckbox checkbox)
         {
             var plugin = (PluginData)checkbox.UserData;
-            SetEnabled(plugin, checkbox.IsChecked);
-            if (plugin.Group.Count <= 0 || !checkbox.IsChecked)
-                return;
+            EnablePlugin(plugin, checkbox.IsChecked);
 
-            foreach (var alt in plugin.Group)
-            {
-                if (SetEnabled(alt, false) && pluginCheckboxes.TryGetValue(alt.Id, out var altBox))
-                {
-                    altBox.IsCheckedChanged -= IsCheckedChanged;
-                    altBox.IsChecked = false;
-                    altBox.IsCheckedChanged += IsCheckedChanged;
-                }
-            }
-
-            SelectedPlugin = plugin;
-        }
-
-        private bool SetEnabled(PluginData plugin, bool enabled)
-        {
-            if (Config.IsEnabled(plugin.Id) == enabled)
-            {
-                var result = dataChanges.Remove(plugin.Id);
-                EnablePlugin(plugin, enabled);
-                return result;
-            }
-
-            dataChanges[plugin.Id] = enabled;
-            EnablePlugin(plugin, enabled);
-
-            if (ReferenceEquals(pluginDetailsPanel.Plugin, plugin))
-                pluginDetailsPanel.LoadPluginData();
-
-            return true;
+            if (ReferenceEquals(plugin, SelectedPlugin))
+                pluginDetails.LoadPluginData();
         }
 
         private void EnablePlugin(PluginData plugin, bool enable)
         {
-            var row = pluginTable.Find(x => ReferenceEquals(x.UserData, plugin));
-            if (row == null)
+            if (enable == plugin.EnableAfterRestart)
                 return;
 
+            plugin.EnableAfterRestart = enable;
+
+            SetPluginCheckbox(plugin, enable);
+
+            if (plugin.EnableAfterRestart)
+                DisableOtherPluginsInSameGroup(plugin);
+        }
+
+        private void SetPluginCheckbox(PluginData plugin, bool enable)
+        {
             var checkbox = pluginCheckboxes[plugin.Id];
-            if (checkbox.IsChecked == enable)
-                return;
-
             checkbox.IsChecked = enable;
-            row.GetCell(2).Text.Clear().Append(enable ? "1" : "0");
+
+            var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
+            row?.GetCell(2).Text.Clear().Append(enable ? "1" : "0");
+        }
+
+        private void DisableOtherPluginsInSameGroup(PluginData plugin)
+        {
+            foreach (var other in plugin.Group)
+                if (!ReferenceEquals(other, plugin))
+                    EnablePlugin(other, false);
         }
 
         private void OnCloseButtonClick(MyGuiControlButton btn)
         {
-            dataChanges.Clear();
             CloseScreen();
         }
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
         {
-            if (dataChanges.Count == 0)
+            if (Main.Instance.List.ModifiedCount == 0)
             {
                 CloseScreen();
+                return;
             }
-            else
-            {
-                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes?"), callback: AskRestartResult));
-            }
+
+            MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes?"), callback: AskRestartResult));
         }
 
         private void Save()
         {
-            if (dataChanges.Count <= 0)
+            if (Main.Instance.List.ModifiedCount == 0)
                 return;
 
-            foreach (KeyValuePair<string, bool> kv in dataChanges)
-            {
-                Config.SetEnabled(kv.Key, kv.Value);
-            }
+            foreach (var plugin in Main.Instance.List)
+                Config.SetEnabled(plugin.Id, plugin.EnableAfterRestart);
 
             Config.Save();
-            dataChanges.Clear();
         }
 
         #region Restart

@@ -9,6 +9,8 @@ namespace avaness.PluginLoader.GUI.GuiControls
 {
     public class PluginDetailsPanel : MyGuiControlParent
     {
+        public event Action<PluginData, bool> OnPluginToggled;
+
         // Amount of stars
         private const int MaxRating = 9;
 
@@ -93,14 +95,14 @@ namespace avaness.PluginLoader.GUI.GuiControls
         {
             pluginNameText.Text = Plugin.FriendlyName ?? "N/A";
             authorText.Text = Plugin.Author ?? "N/A";
-            versionText.Text = Plugin.Version?.ToString() ?? "";
-            statusText.Text = Plugin.Status == PluginStatus.None ? "N/A" : Plugin.StatusString;
+            versionText.Text = Plugin.Version?.ToString() ?? "N/A";
+            statusText.Text = Plugin.Status == PluginStatus.None ? "Up to date" : Plugin.StatusString;
             usageText.Text = "N/A"; // TODO: Get from plugin stats
             ratingControl.Value = 5; // TODO: Get from plugin stats
             upvoteButton.Checked = false; // TODO: Get from plugin stats
             downvoteButton.Checked = false; // TODO: Get from plugin stats
             descriptionText.Text.Clear().Append(Plugin.Tooltip ?? "N/A"); // TODO: Extend the XML with description
-            enableCheckbox.IsChecked = Plugin.Enabled;
+            enableCheckbox.IsChecked = Plugin.EnableAfterRestart;
         }
 
         public virtual void CreateControls(Vector2 rightSideOrigin)
@@ -273,7 +275,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             if (plugin == null)
                 return;
 
-            Main.Instance.Config.SetEnabled(plugin.Id, !plugin.Enabled);
+            OnPluginToggled?.Invoke(plugin, enableCheckbox.IsChecked);
         }
 
         // From Sandbox.Game.Screens.MyGuiScreenNewWorkshopGame
