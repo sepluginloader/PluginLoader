@@ -12,7 +12,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
         public event Action<PluginData, bool> OnPluginToggled;
 
         // Amount of stars
-        private const int MaxRating = 9;
+        private const int MaxRating = 10;
 
         // Panel controls
         private MyGuiControlLabel pluginNameLabel;
