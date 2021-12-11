@@ -43,14 +43,11 @@ namespace avaness.PluginLoader
 
             foreach (string id in enabledPlugins)
             {
-                if (!plugins.TryGetPlugin(id, out var plugin))
-                {
-                    LogFile.WriteLine($"{id} is no longer available");
-                    toRemove.Add(id);
+                if (plugins.TryGetPlugin(id, out var plugin))
                     continue;
-                }
 
-                plugin.EnableAfterRestart = true;
+                LogFile.WriteLine($"{id} is no longer available");
+                toRemove.Add(id);
             }
 
             foreach (string id in toRemove)

@@ -90,16 +90,16 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
         public void LoadPluginData()
         {
-            pluginNameText.Text = Plugin.FriendlyName ?? "N/A";
-            authorText.Text = Plugin.Author ?? "N/A";
-            versionText.Text = Plugin.Version?.ToString() ?? "N/A";
-            statusText.Text = Plugin.Status == PluginStatus.None ? "Up to date" : Plugin.StatusString;
+            pluginNameText.Text = plugin.FriendlyName ?? "N/A";
+            authorText.Text = plugin.Author ?? "N/A";
+            versionText.Text = plugin.Version?.ToString() ?? "N/A";
+            statusText.Text = plugin.Status == PluginStatus.None ? (plugin.Enabled ? "Up to date" : "N/A") : plugin.StatusString;
             usageText.Text = "N/A"; // TODO: Get from plugin stats
             ratingControl.Value = 5; // TODO: Get from plugin stats
             upvoteButton.Checked = false; // TODO: Get from plugin stats
             downvoteButton.Checked = false; // TODO: Get from plugin stats
-            descriptionText.Text.Clear().Append(Plugin.Tooltip ?? "N/A"); // TODO: Extend the XML with description
-            enableCheckbox.IsChecked = Plugin.EnableAfterRestart;
+            descriptionText.Text.Clear().Append(plugin.Tooltip ?? "N/A"); // TODO: Extend the XML with description
+            enableCheckbox.IsChecked = plugin.EnableAfterRestart;
         }
 
         public virtual void CreateControls(Vector2 rightSideOrigin)

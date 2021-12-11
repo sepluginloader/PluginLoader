@@ -78,6 +78,9 @@ namespace avaness.PluginLoader.Data
         [XmlIgnore]
         public bool Modified => Enabled != EnableAfterRestart;
 
+        [XmlIgnore]
+        public string Key => $"{Source}|{Id}";
+
         protected PluginData()
         {
         }

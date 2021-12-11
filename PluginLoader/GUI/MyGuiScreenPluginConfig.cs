@@ -8,6 +8,7 @@ using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using VRage;
@@ -100,6 +101,10 @@ namespace avaness.PluginLoader.GUI
         public override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
+
+            // Load enabled state from the current config
+            foreach (var plugin in Main.Instance.List)
+                plugin.EnableAfterRestart = plugin.Enabled;
 
             MyGuiControlLabel title = AddCaption("Plugins List");
 
@@ -309,7 +314,7 @@ namespace avaness.PluginLoader.GUI
                 enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
                 enabledCell.Control = enabledCheckbox;
                 pluginTable.Controls.Add(enabledCheckbox);
-                pluginCheckboxes.Add(plugin.Id, enabledCheckbox);
+                pluginCheckboxes[plugin.Key] = enabledCheckbox;
                 row.AddCell(enabledCell);
             }
 
@@ -420,7 +425,7 @@ namespace avaness.PluginLoader.GUI
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
         {
-            var checkbox = pluginCheckboxes[plugin.Id];
+            var checkbox = pluginCheckboxes[plugin.Key];
             checkbox.IsChecked = enable;
 
             var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
