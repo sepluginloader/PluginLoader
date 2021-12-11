@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace avaness.PluginLoader
 {
-    public class PluginConfig
+    public partial class PluginConfig
     {
         private const string fileName = "config.xml";
 
@@ -43,14 +43,11 @@ namespace avaness.PluginLoader
 
             foreach (string id in enabledPlugins)
             {
-                if (!plugins.TryGetPlugin(id, out var plugin))
+                if (!plugins.Exists(id))
                 {
                     LogFile.WriteLine($"{id} is no longer available");
                     toRemove.Add(id);
-                    continue;
                 }
-
-                plugin.EnableAfterRestart = true;
             }
 
             foreach (string id in toRemove)
@@ -105,10 +102,10 @@ namespace avaness.PluginLoader
                 }
             }
 
-            return new PluginConfig
-            {
-                filePath = path
-            };
+
+            var temp = new PluginConfig();
+            temp.filePath = path;
+            return temp;
         }
 
         public IEnumerator<string> GetEnumerator()
@@ -123,14 +120,14 @@ namespace avaness.PluginLoader
 
         public void SetEnabled(string id, bool enabled)
         {
-            if (!enabled)
-            {
-                enabledPlugins.Remove(id);
-            }
-            else
+            if (enabled)
             {
                 enabledPlugins.Add(id);
                 Main.Instance.List.SubscribeToItem(id);
+            }
+            else
+            {
+                enabledPlugins.Remove(id);
             }
         }
     }
