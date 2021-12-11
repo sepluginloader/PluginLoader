@@ -43,11 +43,11 @@ namespace avaness.PluginLoader
 
             foreach (string id in enabledPlugins)
             {
-                if (plugins.TryGetPlugin(id, out var plugin))
-                    continue;
-
-                LogFile.WriteLine($"{id} is no longer available");
-                toRemove.Add(id);
+                if (!plugins.Exists(id))
+                {
+                    LogFile.WriteLine($"{id} is no longer available");
+                    toRemove.Add(id);
+                }
             }
 
             foreach (string id in toRemove)
@@ -120,14 +120,14 @@ namespace avaness.PluginLoader
 
         public void SetEnabled(string id, bool enabled)
         {
-            if (!enabled)
-            {
-                enabledPlugins.Remove(id);
-            }
-            else
+            if (enabled)
             {
                 enabledPlugins.Add(id);
                 Main.Instance.List.SubscribeToItem(id);
+            }
+            else
+            {
+                enabledPlugins.Remove(id);
             }
         }
     }

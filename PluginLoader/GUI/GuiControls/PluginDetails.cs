@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using avaness.PluginLoader.Data;
 using Sandbox.Graphics.GUI;
 using VRage.Game;
@@ -39,6 +40,13 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
         // Plugin currently loaded into the panel or null if none are loaded
         private PluginData plugin;
+
+        private readonly Dictionary<string, bool> afterRebootEnableFlags;
+
+        public PluginDetailsPanel(Dictionary<string, bool> afterRebootEnableFlags)
+        {
+            this.afterRebootEnableFlags = afterRebootEnableFlags;
+        }
 
         public PluginData Plugin
         {
@@ -98,8 +106,8 @@ namespace avaness.PluginLoader.GUI.GuiControls
             ratingControl.Value = 5; // TODO: Get from plugin stats
             upvoteButton.Checked = false; // TODO: Get from plugin stats
             downvoteButton.Checked = false; // TODO: Get from plugin stats
-            descriptionText.Text.Clear().Append(plugin.Tooltip ?? "N/A"); // TODO: Extend the XML with description
-            enableCheckbox.IsChecked = plugin.EnableAfterRestart;
+            descriptionText.Text.Clear().Append(plugin.Tooltip ?? "");
+            enableCheckbox.IsChecked = afterRebootEnableFlags[plugin.Key];
         }
 
         public virtual void CreateControls(Vector2 rightSideOrigin)

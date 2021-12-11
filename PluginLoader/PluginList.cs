@@ -17,8 +17,6 @@ namespace avaness.PluginLoader
 
         public int Count => plugins.Count;
 
-        public int ModifiedCount => plugins.Values.Count(plugin => plugin.Modified);
-
         public PluginData this[string key]
         {
             get => plugins[key];
@@ -128,15 +126,6 @@ namespace avaness.PluginLoader
             }
         }
 
-        private static void Save(PluginData data, string path)
-        {
-            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-            using (Stream file = File.Create(path))
-            {
-                xml.Serialize(file, data);
-            }
-        }
-
         private bool ListChanged(string current, out string hash)
         {
             using (Stream hashStream = GitHub.DownloadFile(GitHub.listRepoName, GitHub.listRepoCommit, GitHub.listRepoHash))
@@ -148,7 +137,10 @@ namespace avaness.PluginLoader
             return current == null || current != hash;
         }
 
-        public bool TryGetPlugin(string id, out PluginData data) => plugins.TryGetValue(id, out data);
+        public bool Exists(string id)
+        {
+            return plugins.TryGetValue(id, out PluginData data);
+        }
 
         private void FindLocalPlugins(string mainDirectory)
         {

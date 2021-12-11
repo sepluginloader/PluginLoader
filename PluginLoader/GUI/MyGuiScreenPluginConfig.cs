@@ -8,7 +8,6 @@ using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using VRage;
@@ -27,7 +26,8 @@ namespace avaness.PluginLoader.GUI
         private const float Spacing = 0.0175f;
 
         private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
-        private readonly PluginDetailsPanel pluginDetails = new PluginDetailsPanel();
+        private readonly Dictionary<string, bool> afterRebootEnableFlags = new Dictionary<string, bool>();
+        private readonly PluginDetailsPanel pluginDetails;
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
@@ -66,7 +66,7 @@ namespace avaness.PluginLoader.GUI
         #endregion
 
         /// <summary>
-        /// The plugins screen, the contructor itself sets up the menu properties.
+        /// The plugins screen, the constructor itself sets up the menu properties.
         /// </summary>
         public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(1f, 0.97f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
         {
@@ -76,6 +76,11 @@ namespace avaness.PluginLoader.GUI
             CanHideOthers = true;
             CanBeHidden = true;
             CloseButtonEnabled = true;
+
+            foreach (var plugin in Main.Instance.List)
+                afterRebootEnableFlags[plugin.Key] = plugin.Enabled;
+
+            pluginDetails = new PluginDetailsPanel(afterRebootEnableFlags);
         }
 
         public override string GetFriendlyName()
@@ -101,10 +106,6 @@ namespace avaness.PluginLoader.GUI
         public override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
-
-            // Load enabled state from the current config
-            foreach (var plugin in Main.Instance.List)
-                plugin.EnableAfterRestart = plugin.Enabled;
 
             MyGuiControlLabel title = AddCaption("Plugins List");
 
@@ -173,11 +174,11 @@ namespace avaness.PluginLoader.GUI
             pluginTable.SetColumnComparison(0, CellTextOrDataComparison);
             pluginTable.SetColumnName(1, new StringBuilder("Name"));
             pluginTable.SetColumnComparison(1, CellTextComparison);
-            pluginTable.SetColumnName(2, new StringBuilder());
+            pluginTable.SetColumnName(2, new StringBuilder("Enable"));
             pluginTable.SetColumnComparison(2, CellTextComparison);
 
-            // Sorts the plugin table by the name of the plugin.
-            pluginTable.SortByColumn(1);
+            // Default sorting
+            pluginTable.SortByColumn(2);
 
             // Selecting list items load their details in OnItemSelected
             pluginTable.ItemSelected += OnItemSelected;
@@ -219,7 +220,6 @@ namespace avaness.PluginLoader.GUI
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
         }
-
 
         /// <summary>
         /// Event that triggers when the visibility button is clicked. This method shows all plugins or only enabled plugins.
@@ -285,7 +285,7 @@ namespace avaness.PluginLoader.GUI
             var noFilter = filter == null || filter.Length == 0;
             foreach (var plugin in list)
             {
-                var enabled = plugin.EnableAfterRestart;
+                var enabled = afterRebootEnableFlags[plugin.Key];
 
                 if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
@@ -304,7 +304,7 @@ namespace avaness.PluginLoader.GUI
                     tip += "\n" + plugin.Tooltip;
                 row.AddCell(new MyGuiControlTable.Cell(plugin.FriendlyName, toolTip: tip));
 
-                var text = new StringBuilder(enabled ? "1" : "0");
+                var text = new StringBuilder(FormatCheckboxSortKey(plugin, enabled));
                 var enabledCell = new MyGuiControlTable.Cell(text, name);
                 var enabledCheckbox = new MyGuiControlCheckbox(isChecked: enabled)
                 {
@@ -326,6 +326,12 @@ namespace avaness.PluginLoader.GUI
 
             var args = new MyGuiControlTable.EventArgs { RowIndex = 0 };
             OnItemSelected(pluginTable, args);
+        }
+
+        private static string FormatCheckboxSortKey(PluginData plugin, bool enabled)
+        {
+            // Uses a prefix of + and - to list plugins to enable to the top
+            return enabled ? $"+{plugin.FriendlyName}|{plugin.Source}" : $"-{plugin.FriendlyName}|{plugin.Source}";
         }
 
         /// <summary>
@@ -412,14 +418,14 @@ namespace avaness.PluginLoader.GUI
 
         private void EnablePlugin(PluginData plugin, bool enable)
         {
-            if (enable == plugin.EnableAfterRestart)
+            if (enable == afterRebootEnableFlags[plugin.Key])
                 return;
 
-            plugin.EnableAfterRestart = enable;
+            afterRebootEnableFlags[plugin.Key] = enable;
 
             SetPluginCheckbox(plugin, enable);
 
-            if (plugin.EnableAfterRestart)
+            if (enable)
                 DisableOtherPluginsInSameGroup(plugin);
         }
 
@@ -429,7 +435,7 @@ namespace avaness.PluginLoader.GUI
             checkbox.IsChecked = enable;
 
             var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
-            row?.GetCell(2).Text.Clear().Append(enable ? "1" : "0");
+            row?.GetCell(2).Text.Clear().Append(FormatCheckboxSortKey(plugin, enable));
         }
 
         private void DisableOtherPluginsInSameGroup(PluginData plugin)
@@ -444,9 +450,11 @@ namespace avaness.PluginLoader.GUI
             CloseScreen();
         }
 
+        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != afterRebootEnableFlags[plugin.Key]);
+
         private void OnRestartButtonClick(MyGuiControlButton btn)
         {
-            if (Main.Instance.List.ModifiedCount == 0)
+            if (ModifiedCount == 0)
             {
                 CloseScreen();
                 return;
@@ -457,11 +465,11 @@ namespace avaness.PluginLoader.GUI
 
         private void Save()
         {
-            if (Main.Instance.List.ModifiedCount == 0)
+            if (ModifiedCount == 0)
                 return;
 
             foreach (var plugin in Main.Instance.List)
-                Config.SetEnabled(plugin.Id, plugin.EnableAfterRestart);
+                Config.SetEnabled(plugin.Id, afterRebootEnableFlags[plugin.Key]);
 
             Config.Save();
         }

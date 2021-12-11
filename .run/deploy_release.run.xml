@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="deploy_release" type="BatchConfigurationType" factoryName="Batch">
+    <module name="rider.module" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/PluginLoader" />
+    <option name="PARENT_ENVS" value="true" />
+    <option name="SCRIPT_NAME" value="deploy_release.bat" />
+    <option name="PARAMETERS" value="" />
+    <method v="2">
+      <option name="Build" default="false" projectName="PluginLoader" projectPath="file://$PROJECT_DIR$/PluginLoader/PluginLoader.csproj" />
+    </method>
+  </configuration>
+</component>
