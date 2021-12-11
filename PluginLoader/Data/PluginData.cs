@@ -66,9 +66,6 @@ namespace avaness.PluginLoader.Data
         public List<PluginData> Group { get; } = new List<PluginData>();
 
         [XmlIgnore]
-        public string Key => $"{Source}|{Id}";
-
-        [XmlIgnore]
         public bool Enabled => Main.Instance.Config.IsEnabled(Id);
 
         protected PluginData()

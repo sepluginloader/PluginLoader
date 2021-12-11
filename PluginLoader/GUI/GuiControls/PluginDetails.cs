@@ -107,7 +107,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             upvoteButton.Checked = false; // TODO: Get from plugin stats
             downvoteButton.Checked = false; // TODO: Get from plugin stats
             descriptionText.Text.Clear().Append(plugin.Tooltip ?? "");
-            enableCheckbox.IsChecked = afterRebootEnableFlags[plugin.Key];
+            enableCheckbox.IsChecked = afterRebootEnableFlags[plugin.Id];
         }
 
         public virtual void CreateControls(Vector2 rightSideOrigin)

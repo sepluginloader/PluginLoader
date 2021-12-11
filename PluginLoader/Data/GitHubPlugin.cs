@@ -9,7 +9,6 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {

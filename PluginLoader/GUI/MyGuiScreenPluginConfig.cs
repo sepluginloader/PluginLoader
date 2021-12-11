@@ -78,7 +78,7 @@ namespace avaness.PluginLoader.GUI
             CloseButtonEnabled = true;
 
             foreach (var plugin in Main.Instance.List)
-                afterRebootEnableFlags[plugin.Key] = plugin.Enabled;
+                afterRebootEnableFlags[plugin.Id] = plugin.Enabled;
 
             pluginDetails = new PluginDetailsPanel(afterRebootEnableFlags);
         }
@@ -285,7 +285,7 @@ namespace avaness.PluginLoader.GUI
             var noFilter = filter == null || filter.Length == 0;
             foreach (var plugin in list)
             {
-                var enabled = afterRebootEnableFlags[plugin.Key];
+                var enabled = afterRebootEnableFlags[plugin.Id];
 
                 if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
@@ -314,7 +314,7 @@ namespace avaness.PluginLoader.GUI
                 enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
                 enabledCell.Control = enabledCheckbox;
                 pluginTable.Controls.Add(enabledCheckbox);
-                pluginCheckboxes[plugin.Key] = enabledCheckbox;
+                pluginCheckboxes[plugin.Id] = enabledCheckbox;
                 row.AddCell(enabledCell);
             }
 
@@ -418,10 +418,10 @@ namespace avaness.PluginLoader.GUI
 
         private void EnablePlugin(PluginData plugin, bool enable)
         {
-            if (enable == afterRebootEnableFlags[plugin.Key])
+            if (enable == afterRebootEnableFlags[plugin.Id])
                 return;
 
-            afterRebootEnableFlags[plugin.Key] = enable;
+            afterRebootEnableFlags[plugin.Id] = enable;
 
             SetPluginCheckbox(plugin, enable);
 
@@ -431,7 +431,7 @@ namespace avaness.PluginLoader.GUI
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
         {
-            var checkbox = pluginCheckboxes[plugin.Key];
+            var checkbox = pluginCheckboxes[plugin.Id];
             checkbox.IsChecked = enable;
 
             var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
@@ -450,7 +450,7 @@ namespace avaness.PluginLoader.GUI
             CloseScreen();
         }
 
-        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != afterRebootEnableFlags[plugin.Key]);
+        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != afterRebootEnableFlags[plugin.Id]);
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
         {
@@ -469,7 +469,7 @@ namespace avaness.PluginLoader.GUI
                 return;
 
             foreach (var plugin in Main.Instance.List)
-                Config.SetEnabled(plugin.Id, afterRebootEnableFlags[plugin.Key]);
+                Config.SetEnabled(plugin.Id, afterRebootEnableFlags[plugin.Id]);
 
             Config.Save();
         }
