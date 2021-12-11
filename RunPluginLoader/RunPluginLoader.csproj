@@ -50,22 +50,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>@echo off
-set target="C:\Program Files (x86)\Steam\steamapps\workshop\content\244850\2407984968\$(TargetName) "
-echo %25target%25
-set counter=1
-:waitfile
-2&gt;nul (
- &gt;&gt;%25target%25 (call )
-) &amp;&amp; (goto copyfile) || (echo File is in use.)
-set /a counter=counter+1
-echo Trying attempt #%25counter%25
-ping -n 6 127.0.0.1 &gt;nul
-goto waitfile
-
-:copyfile
-echo Copying file.
-copy /y "$(TargetPath)" %25target%25
-copy /y "$(TargetPath)" "%25appdata%25\SpaceEngineers\Mods\Plugin Loader\$(TargetName) "</PostBuildEvent>
+    <PostBuildEvent>call "$(ProjectDir)\deploy.bat" "$(TargetPath) "</PostBuildEvent>
   </PropertyGroup>
 </Project>
