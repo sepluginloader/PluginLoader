@@ -17,6 +17,8 @@ namespace avaness.PluginLoader
 
         public int Count => plugins.Count;
 
+        public int ModifiedCount => plugins.Values.Count(plugin => plugin.Modified);
+
         public PluginData this[string key]
         {
             get => plugins[key];
@@ -146,10 +148,7 @@ namespace avaness.PluginLoader
             return current == null || current != hash;
         }
 
-        public bool Exists(string id)
-        {
-            return plugins.TryGetValue(id, out PluginData data);
-        }
+        public bool TryGetPlugin(string id, out PluginData data) => plugins.TryGetValue(id, out data);
 
         private void FindLocalPlugins(string mainDirectory)
         {
