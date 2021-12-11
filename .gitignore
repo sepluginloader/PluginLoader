@@ -351,9 +351,3 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-
-# Linked SE binary folder
-GameBin64/
-
-# JetBrains Rider project files
-.idea/

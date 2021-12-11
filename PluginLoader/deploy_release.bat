@@ -1,1 +1,0 @@
-copy /y bin\x64\Release\PluginLoader.* "C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Plugins\"

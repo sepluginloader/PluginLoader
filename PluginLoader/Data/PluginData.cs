@@ -69,21 +69,13 @@ namespace avaness.PluginLoader.Data
         //Max rating is 10 half stars. Starts at 0.
         public int Rating { get; set; }
 
-        [XmlIgnore]
-        public bool Enabled => Main.Instance.Config.IsEnabled(Id);
-
-        [XmlIgnore]
-        public bool EnableAfterRestart;
-
-        [XmlIgnore]
-        public bool Modified => Enabled != EnableAfterRestart;
-
         protected PluginData()
         {
+
         }
 
         #region IMPORTANT
-        //Code setup for code integration with stats system.
+        //Code setup for code intergration with stats system.
         //It is highly recommended to check the rating status locally as GetRateStatus would not sync instantly with the server.
 
         //Please set up a way to check with the server if the user rated.
@@ -94,9 +86,9 @@ namespace avaness.PluginLoader.Data
 
         public enum RateStatus
         {
-            None = 0,
-            RatedUp = 1,
-            RatedDown = -1
+            RatedUp = 0,
+            RatedDown = 1,
+            None = -1
         }
 
         //Please setup how you want this to work
