@@ -11,9 +11,6 @@ namespace avaness.PluginLoader.GUI.GuiControls
     {
         public event Action<PluginData, bool> OnPluginToggled;
 
-        // Amount of stars
-        private const int MaxRating = 10;
-
         // Panel controls
         private MyGuiControlLabel pluginNameLabel;
         private MyGuiControlLabel pluginNameText;
@@ -168,7 +165,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 Text = "Rating",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
-            ratingControl = new RatingControl(0, MaxRating)
+            ratingControl = new RatingControl()
             {
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
