@@ -221,8 +221,7 @@ namespace avaness.PluginLoader.GUI
             // Adds buttons at bottom of menu
             var buttonRestart = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
             var buttonClose = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Closes the dialog without saving changes to plugin selection", new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCancelButtonClick);
-            var buttonConsent = new MyGuiControlButton(origin, PlayerConsent.ConsentGiven ? MyGuiControlButtonStyleEnum.Tiny : MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Give or withdraw your consent for data handling", new StringBuilder(PlayerConsent.ConsentGiven ? "..." : "Consent"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnConsentButtonClick);
-            buttonConsent.Visible = PlayerConsent.ConsentGiven;
+            var buttonConsent = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Tiny, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Give or withdraw your consent for data handling", new StringBuilder("..."), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnConsentButtonClick);
 
             // FIXME: Use MyLayoutHorizontal instead
             AlignRow(origin + new Vector2(0.1f, 0f), 0.05f, buttonRestart, buttonClose, buttonConsent);
