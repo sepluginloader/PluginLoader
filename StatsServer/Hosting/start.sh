@@ -6,4 +6,4 @@ set -euo pipefail
 TODAY=$(date -I)
 
 cd "$PL_SERVER_DIR"
-dotnet StatsServer.dll >>"${PL_LOG_DIR}/${TODAY}.log" 2>&1 &
+dotnet StatsServer.dll >>"${PL_LOG_DIR}/${TODAY}.jsonl" 2>&1 &

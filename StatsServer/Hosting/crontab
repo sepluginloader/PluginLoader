@@ -13,3 +13,7 @@ PATH="/home/stats/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 # Backup
 # mm hh         dom mon dow command
 02 01            *   *   *  /bin/bash $HOME/bin/backup.sh >>$HOME/log/backup.log 2>&1
+
+# Cleanup
+# mm hh         dom mon dow command
+32 01            *   *   *  /bin/bash $HOME/bin/cleanup.sh >>$HOME/log/cleanup.log 2>&1
