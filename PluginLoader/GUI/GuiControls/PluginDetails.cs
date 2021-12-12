@@ -127,8 +127,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             downvoteButton.Checked = vote < 0;
 
             descriptionText.Clear();
-            if(plugin.Tooltip != null)
-                descriptionText.AppendText(plugin.Tooltip);
+            descriptionText.AppendText(string.IsNullOrEmpty(plugin.Tooltip) ? "No description" : plugin.Tooltip);
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
 
@@ -140,7 +139,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             // Plugin name
             pluginNameLabel = new MyGuiControlLabel
             {
-                Text = "Plugin Name",
+                Text = "Name",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
             pluginNameText = new MyGuiControlLabel
@@ -256,8 +255,8 @@ namespace avaness.PluginLoader.GUI.GuiControls
         private void LayoutControls(Vector2 rightSideOrigin)
         {
             layoutTable = new MyLayoutTable(this, rightSideOrigin, new Vector2(1f, 1f));
-            layoutTable.SetColumnWidths(218f, 418f);
-            layoutTable.SetRowHeights(75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f, 75f);
+            layoutTable.SetColumnWidths(168f, 468f);
+            layoutTable.SetRowHeights(60f, 60f, 60f, 60f, 60f, 60f, 420f, 60f, 60f);
 
             var row = 0;
 
@@ -295,10 +294,9 @@ namespace avaness.PluginLoader.GUI.GuiControls
             downvoteIcon.Position = downvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(downvoteButton.Size.X / 2f, 0f);
             row++;
 
-            descriptionPanel.Size += new Vector2(0.01f, 0f);
-            layoutTable.AddWithSize(descriptionPanel, MyAlignH.Center, MyAlignV.Top, row, 0, 4, 2);
-            layoutTable.AddWithSize(descriptionText, MyAlignH.Left, MyAlignV.Bottom, row, 0, 4, 2);
-            row += 4;
+            layoutTable.AddWithSize(descriptionPanel, MyAlignH.Center, MyAlignV.Top, row, 0, 1, 2);
+            layoutTable.AddWithSize(descriptionText, MyAlignH.Center, MyAlignV.Center, row, 0, 1, 2);
+            row++;
 
             layoutTable.Add(enableLabel, MyAlignH.Left, MyAlignV.Center, row, 0);
             layoutTable.Add(enableCheckbox, MyAlignH.Left, MyAlignV.Center, row, 1);
@@ -306,6 +304,10 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             layoutTable.AddWithSize(infoButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan: 2);
             // row++;
+
+            var border = 0.002f * Vector2.One;
+            descriptionPanel.Position -= border;
+            descriptionPanel.Size += 2 * border;
 
             DisableControls();
         }
