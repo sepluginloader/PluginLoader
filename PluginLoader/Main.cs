@@ -86,7 +86,7 @@ namespace avaness.PluginLoader
 
         private void ReportEnabledPlugins()
         {
-            if (!PlayerConsent.HasConsentGiven)
+            if (!PlayerConsent.ConsentGiven)
                 return;
 
             Splash.SetText("Reporting plugin usage...");
