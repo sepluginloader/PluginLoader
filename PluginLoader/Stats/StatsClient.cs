@@ -8,17 +8,21 @@ namespace avaness.PluginLoader.Stats
     public static class StatsClient
     {
         // API address
-#if DEBUG
-        private const string BaseUri = "http://localhost:5000";
-#else
-        private const string BaseUri = "https://pluginstats.ferenczi.eu";
-#endif
+        private static string baseUri = "https://pluginstats.ferenczi.eu";
+
+        public static void OverrideBaseUrl(string uri)
+        {
+            if (string.IsNullOrEmpty(uri))
+                return;
+
+            baseUri = uri;
+        }
 
         // API endpoints
-        private static readonly string ConsentUri = $"{BaseUri}/Consent";
-        private static readonly string StatsUri = $"{BaseUri}/Stats";
-        private static readonly string TrackUri = $"{BaseUri}/Track";
-        private static readonly string VoteUri = $"{BaseUri}/Vote";
+        private static string ConsentUri => $"{baseUri}/Consent";
+        private static string StatsUri => $"{baseUri}/Stats";
+        private static string TrackUri => $"{baseUri}/Track";
+        private static string VoteUri => $"{baseUri}/Vote";
 
         // Hashed Steam ID of the player
         private static string PlayerHash => playerHash ??= Tools.Tools.Sha1HexDigest($"{Tools.Tools.GetSteamId()}").Substring(0, 20);
@@ -45,7 +49,6 @@ namespace avaness.PluginLoader.Stats
 
         public static PluginStats DownloadStats()
         {
-
             if (!PlayerConsent.ConsentGiven)
             {
                 LogFile.WriteLine($"Downloading plugin statistics anonymously (it does not allow for voting)");
@@ -55,7 +58,7 @@ namespace avaness.PluginLoader.Stats
 
             LogFile.WriteLine($"Downloading plugin statistics, ratings and votes for " + PlayerHash);
 
-            var parameters = new Dictionary<string, string> {["playerHash"] = PlayerHash};
+            var parameters = new Dictionary<string, string> { ["playerHash"] = PlayerHash };
             var pluginStats = SimpleHttpClient.Get<PluginStats>(StatsUri, parameters);
 
             votingToken = pluginStats?.VotingToken;

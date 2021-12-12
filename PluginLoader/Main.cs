@@ -55,6 +55,8 @@ namespace avaness.PluginLoader
 
             Config.Init(List);
 
+            StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
+
             Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());

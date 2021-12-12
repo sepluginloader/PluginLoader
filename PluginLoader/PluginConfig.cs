@@ -31,6 +31,10 @@ namespace avaness.PluginLoader
 
         public string ListHash { get; set; }
 
+        // Base URL for the statistics server, change to http://localhost:5000 in config.xml for local development
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public string StatsServerBaseUrl { get; }
+
         // User consent to use the StatsServer
         public bool DataHandlingConsent { get; set; }
         public string DataHandlingConsentDate { get; set; }
