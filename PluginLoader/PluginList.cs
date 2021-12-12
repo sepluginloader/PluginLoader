@@ -126,15 +126,6 @@ namespace avaness.PluginLoader
             }
         }
 
-        private static void Save(PluginData data, string path)
-        {
-            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-            using (Stream file = File.Create(path))
-            {
-                xml.Serialize(file, data);
-            }
-        }
-
         private bool ListChanged(string current, out string hash)
         {
             using (Stream hashStream = GitHub.DownloadFile(GitHub.listRepoName, GitHub.listRepoCommit, GitHub.listRepoHash))

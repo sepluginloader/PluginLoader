@@ -1,422 +1,574 @@
 ﻿using avaness.PluginLoader.Data;
+using avaness.PluginLoader.GUI.GuiControls;
 using Sandbox;
+using Sandbox.Game.Gui;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage;
 using VRage.Audio;
 using VRage.Game;
+using VRage.Input;
 using VRage.Utils;
 using VRageMath;
+using static Sandbox.Graphics.GUI.MyGuiScreenMessageBox;
 
 namespace avaness.PluginLoader.GUI
 {
     public class MyGuiScreenPluginConfig : MyGuiScreenBase
     {
-		private const float barWidth = 0.75f;
-		private const float space = 0.01f;
-		private const float btnSpace = 0.02f;
-		private const float tableWidth = 0.8f;
-		private const float tableHeight = 0.7f;
-        private const float sizeX = 1;
-        private const float sizeY = 0.76f;
+        private const float BarWidth = 0.85f;
+        private const float Spacing = 0.0175f;
 
-		private readonly Dictionary<string, bool> dataChanges = new Dictionary<string, bool>();
-		private readonly Dictionary<string, MyGuiControlCheckbox> dataCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
-		private MyGuiControlTable modTable;
-		private MyGuiControlLabel countLabel;
-		private PluginConfig config;
-		private string[] tableFilter;
+        private readonly Dictionary<string, MyGuiControlCheckbox> pluginCheckboxes = new Dictionary<string, MyGuiControlCheckbox>();
+        private readonly Dictionary<string, bool> afterRebootEnableFlags = new Dictionary<string, bool>();
+        private readonly PluginDetailsPanel pluginDetails;
 
-		private static bool allItemsVisible = true;
+        private MyGuiControlTable pluginTable;
+        private MyGuiControlLabel pluginCountLabel;
 
-		// Source: MyTerminalControlPanel
-		private static MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
-		{
-			Normal = "Textures\\GUI\\Controls\\button_hide.dds",
-			Highlight = "Textures\\GUI\\Controls\\button_hide.dds",
-			Focus = "Textures\\GUI\\Controls\\button_hide_focus.dds",
-			SizePx = new Vector2(40f, 40f)
-		};
+        private static PluginConfig Config => Main.Instance.Config;
+        private string[] tableFilter;
 
-		// Source: MyTerminalControlPanel
-		private static MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
-		{
-			Normal = "Textures\\GUI\\Controls\\button_unhide.dds",
-			Highlight = "Textures\\GUI\\Controls\\button_unhide.dds",
-			Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
-			SizePx = new Vector2(40f, 40f)
-		};
+        private PluginData SelectedPlugin
+        {
+            get => pluginDetails.Plugin;
+            set => pluginDetails.Plugin = value;
+        }
 
-		public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(sizeX, sizeY), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
-		{
-			EnabledBackgroundFade = true;
-			m_closeOnEsc = true;
-			m_drawEvenWithoutFocus = true;
-			CanHideOthers = true;
-			CanBeHidden = true;
-			config = Main.Instance.Config;
-		}
+        private static bool allItemsVisible = true;
+
+        #region Icons
+
+        // Source: MyTerminalControlPanel
+        private static readonly MyGuiHighlightTexture IconHide = new MyGuiHighlightTexture
+        {
+            Normal = "Textures\\GUI\\Controls\\button_hide.dds",
+            Highlight = "Textures\\GUI\\Controls\\button_hide.dds",
+            Focus = "Textures\\GUI\\Controls\\button_hide_focus.dds",
+            SizePx = new Vector2(40f, 40f)
+        };
+
+        // Source: MyTerminalControlPanel
+        private static readonly MyGuiHighlightTexture IconShow = new MyGuiHighlightTexture
+        {
+            Normal = "Textures\\GUI\\Controls\\button_unhide.dds",
+            Highlight = "Textures\\GUI\\Controls\\button_unhide.dds",
+            Focus = "Textures\\GUI\\Controls\\button_unhide_focus.dds",
+            SizePx = new Vector2(40f, 40f)
+        };
+
+        #endregion
+
+        /// <summary>
+        /// The plugins screen, the constructor itself sets up the menu properties.
+        /// </summary>
+        public MyGuiScreenPluginConfig() : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(1f, 0.97f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
+        {
+            EnabledBackgroundFade = true;
+            m_closeOnEsc = true;
+            m_drawEvenWithoutFocus = true;
+            CanHideOthers = true;
+            CanBeHidden = true;
+            CloseButtonEnabled = true;
+
+            foreach (var plugin in Main.Instance.List)
+                afterRebootEnableFlags[plugin.Id] = plugin.Enabled;
+
+            pluginDetails = new PluginDetailsPanel(afterRebootEnableFlags);
+        }
 
         public override string GetFriendlyName()
         {
             return "MyGuiScreenPluginConfig";
         }
 
-		public override void LoadContent()
-		{
-			base.LoadContent();
-			RecreateControls(true);
-		}
+        public override void LoadContent()
+        {
+            base.LoadContent();
+            RecreateControls(true);
+        }
 
-		public override void RecreateControls(bool constructor)
-		{
-			base.RecreateControls(constructor);
+        public override void UnloadContent()
+        {
+            pluginDetails.OnPluginToggled -= EnablePlugin;
+            base.UnloadContent();
+        }
 
-			config = Main.Instance.Config;
+        /// <summary>
+        /// Initializes the controls of the menu on the left side of the menu.
+        /// </summary>
+        public override void RecreateControls(bool constructor)
+        {
+            base.RecreateControls(constructor);
 
-			var title = AddCaption("Plugin List");
+            MyGuiControlLabel title = AddCaption("Plugins List");
 
-			Vector2 size = m_size.Value;
-			Vector2 origin = title.Position;
+            // Sets the origin relative to the center of the caption on the X axis and to the bottom the caption on the y axis.
+            Vector2 origin = title.Position += new Vector2(0f, title.Size.Y / 2);
 
-			origin.Y += title.GetTextSize().Y / 2 + space;
+            origin.Y += Spacing;
 
-			float barWidth = size.X * MyGuiScreenPluginConfig.barWidth;
-			MyGuiControlSeparatorList titleBar = new MyGuiControlSeparatorList();
-			titleBar.AddHorizontal(new Vector2(origin.X - barWidth / 2, origin.Y), barWidth);
-			Controls.Add(titleBar);
+            // Adds a bar right below the caption.
+            MyGuiControlSeparatorList titleBar = new MyGuiControlSeparatorList();
+            titleBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
+            Controls.Add(titleBar);
 
-			origin.Y += space;
+            origin.Y += Spacing;
 
-			float totalTableWidth = size.X * tableWidth;
+            // Change the position of this to move the entire middle section of the menu, the menu bars, menu title, and bottom buttons won't move
+            // Adds a search bar right below the bar on the left side of the menu.
+            MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(new Vector2(origin.X - (BarWidth / 2), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
 
-			MyGuiControlSearchBox searchBox = new MyGuiControlSearchBox(origin, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
-			float extraSpaceWidth = searchBox.Size.Y;
-			searchBox.Size = new Vector2(totalTableWidth - extraSpaceWidth, searchBox.Size.Y);
-			searchBox.Position = new Vector2(origin.X - (extraSpaceWidth / 2), origin.Y);
+            // Changing the search box X size will change the plugin list length.
+            searchBox.Size = new Vector2(0.4f, searchBox.Size.Y);
             searchBox.OnTextChanged += SearchBox_TextChanged;
-			Controls.Add(searchBox);
+            Controls.Add(searchBox);
 
-			MyGuiControlButton btnVisibility = new MyGuiControlButton(new Vector2(origin.X + (searchBox.Size.X / 2), origin.Y), MyGuiControlButtonStyleEnum.SquareSmall, new Vector2(extraSpaceWidth), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, toolTip: "Toggle visibility", buttonScale: 0.5f);
+            #region Visibility Button
 
-			if (allItemsVisible || config.Count == 0)
+            // Adds a button to show only enabled plugins. Located right of the search bar.
+            MyGuiControlButton buttonVisibility = new MyGuiControlButton(new Vector2(origin.X - (BarWidth / 2) + searchBox.Size.X, origin.Y) + new Vector2(0.003f, 0.002f), MyGuiControlButtonStyleEnum.Rectangular, new Vector2(searchBox.Size.Y * 2.52929769833f), onButtonClick: OnVisibilityClick, originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, toolTip: "Show only enabled plugins.", buttonScale: 0.5f);
+
+            if (allItemsVisible || Config.Count == 0)
             {
-				allItemsVisible = true;
-                btnVisibility.Icon = IconHide;
+                allItemsVisible = true;
+                buttonVisibility.Icon = IconHide;
             }
             else
             {
-                btnVisibility.Icon = IconShow;
+                buttonVisibility.Icon = IconShow;
             }
 
-            Controls.Add(btnVisibility);
+            Controls.Add(buttonVisibility);
 
-			origin.Y += searchBox.Size.Y + MyGuiConstants.TEXTBOX_TEXT_OFFSET.Y;
+            #endregion
 
-			modTable = new MyGuiControlTable
-			{
-				Position = origin,
-				Size = new Vector2(totalTableWidth, size.Y * tableHeight),
-				OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
-				ColumnsCount = 6,
-				VisibleRowsCount = 15
-			};
-			modTable.SetCustomColumnWidths(new float[]
-			{
-				0.13f,
-				0.34f,
-				0.18f,
-				0.1f,
-				0.15f,
-				0.1f,
-			});
-			modTable.SetColumnName(0, new StringBuilder("Source"));
-			modTable.SetColumnComparison(0, CellTextOrDataComparison);
-			modTable.SetColumnName(1, new StringBuilder("Name"));
-			modTable.SetColumnComparison(1, CellTextComparison);
-			modTable.SetColumnName(2, new StringBuilder("Author"));
-			modTable.SetColumnComparison(2, CellTextOrDataComparison);
-			modTable.SetColumnName(3, new StringBuilder("Version"));
-			modTable.SetColumnComparison(3, CellTextOrDataComparison);
-			modTable.SetColumnName(4, new StringBuilder("Status"));
-			modTable.SetColumnComparison(4, CellTextOrDataComparison);
-			modTable.SetColumnName(5, new StringBuilder("Enabled"));
-			modTable.SetColumnComparison(5, CellCheckedOrDataComparison);
-			modTable.SortByColumn(5);
-			modTable.ItemDoubleClicked += RowDoubleClicked;
-			Controls.Add(modTable);
+            origin.Y += searchBox.Size.Y + Spacing;
 
-			origin.Y += modTable.Size.Y + space;
+            #region Plugin List
 
-			countLabel = new MyGuiControlLabel(new Vector2(origin.X - (modTable.Size.X * 0.5f), origin.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
-			Controls.Add(countLabel);
+            // Adds the plugin list on the right of the menu below the search bar.
+            pluginTable = new MyGuiControlTable
+            {
+                Position = new Vector2(origin.X - (BarWidth / 2), origin.Y),
+                Size = new Vector2(searchBox.Size.X + buttonVisibility.Size.X + 0.001f, 0.6f), // The y value can be bigger than the visible rows count as the visibleRowsCount controls the height.
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+                ColumnsCount = 3,
+                VisibleRowsCount = 20
+            };
 
-			ResetTable();
+            pluginTable.SetCustomColumnWidths(new[]
+            {
+                0.22f,
+                0.6f,
+                0.22f
+            });
 
-			MyGuiControlSeparatorList midBar = new MyGuiControlSeparatorList();
-            midBar.AddHorizontal(new Vector2(origin.X - barWidth / 2, origin.Y), barWidth);
-			Controls.Add(midBar);
+            pluginTable.SetColumnName(0, new StringBuilder("Source"));
+            pluginTable.SetColumnComparison(0, CellTextOrDataComparison);
+            pluginTable.SetColumnName(1, new StringBuilder("Name"));
+            pluginTable.SetColumnComparison(1, CellTextComparison);
+            pluginTable.SetColumnName(2, new StringBuilder("Enable"));
+            pluginTable.SetColumnComparison(2, CellTextComparison);
 
-			origin.Y += space;
+            // Default sorting
+            pluginTable.SortByColumn(2);
 
-			MyGuiControlButton btnRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+            // Selecting list items load their details in OnItemSelected
+            pluginTable.ItemSelected += OnItemSelected;
+            Controls.Add(pluginTable);
 
-			MyGuiControlButton btnClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
-			
-			MyGuiControlButton btnShow = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Open the source of the selected plugin.", new StringBuilder("Info"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnInfoButtonClick);
+            // Double clicking list items toggles the enable flag
+            pluginTable.ItemDoubleClicked += OnItemDoubleClicked;
 
-			AlignRow(origin, btnSpace, btnRestart, btnClose, btnShow);
-			Controls.Add(btnRestart);
-			Controls.Add(btnClose);
-			Controls.Add(btnShow);
+            #endregion
 
-			CloseButtonEnabled = true;
+            origin.Y += Spacing + pluginTable.Size.Y;
+
+            // Adds the bar at the bottom between just above the buttons.
+            MyGuiControlSeparatorList bottomBar = new MyGuiControlSeparatorList();
+            bottomBar.AddHorizontal(new Vector2(origin.X - (BarWidth / 2), origin.Y), BarWidth);
+            Controls.Add(bottomBar);
+
+            origin.Y += Spacing;
+
+            // Adds buttons at bottom of menu
+            MyGuiControlButton buttonRestart = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
+
+            MyGuiControlButton buttonClose = new MyGuiControlButton(origin, 0, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, null, new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCloseButtonClick);
+
+            AlignRow(origin, 0.02f, buttonRestart, buttonClose);
+            Controls.Add(buttonRestart);
+            Controls.Add(buttonClose);
+
+            // Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
+            pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (BarWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+            Controls.Add(pluginCountLabel);
+
+            // Right side panel showing the details of the selected plugin
+            var rightSideOrigin = buttonVisibility.Position + new Vector2(Spacing * 1.778f + (buttonVisibility.Size.X / 2), -(buttonVisibility.Size.Y / 2));
+            pluginDetails.CreateControls(rightSideOrigin);
+            Controls.Add(pluginDetails);
+            pluginDetails.OnPluginToggled += EnablePlugin;
+
+            // Refreshes the table to show plugins on plugin list
+            RefreshTable();
         }
 
+        /// <summary>
+        /// Event that triggers when the visibility button is clicked. This method shows all plugins or only enabled plugins.
+        /// </summary>
+        /// <param name="btn">The button to assign this event to.</param>
         private void OnVisibilityClick(MyGuiControlButton btn)
         {
-			if(allItemsVisible)
+            if (allItemsVisible)
             {
-				allItemsVisible = false;
-				btn.Icon = IconShow;
+                allItemsVisible = false;
+                btn.Icon = IconShow;
             }
-			else
+            else
             {
-				allItemsVisible = true;
-				btn.Icon = IconHide;
+                allItemsVisible = true;
+                btn.Icon = IconHide;
             }
-			ResetTable(tableFilter);
+
+            RefreshTable(tableFilter);
         }
 
-        private int CellCheckedOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        private static int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
-			if(x.Control is MyGuiControlCheckbox xBox && y.Control is MyGuiControlCheckbox yBox)
+            int result = TextComparison(x.Text, y.Text);
+            if (result != 0)
             {
-				int result = yBox.IsChecked.CompareTo(xBox.IsChecked);
-				if (result != 0)
-					return result;
-			}
-			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
+                return result;
+            }
+
+            return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
         }
 
-		private int CellTextOrDataComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
+        private static int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
         {
-			int result = TextComparison(x.Text, y.Text);
-			if (result != 0)
-				return result;
-			return TextComparison((StringBuilder)x.UserData, (StringBuilder)y.UserData);
-		}
-
-		private int CellTextComparison(MyGuiControlTable.Cell x, MyGuiControlTable.Cell y)
-        {
-			return TextComparison(x.Text, y.Text);
+            return TextComparison(x.Text, y.Text);
         }
 
-		private int TextComparison(StringBuilder x, StringBuilder y)
+        private static int TextComparison(StringBuilder x, StringBuilder y)
         {
-			if (x == null)
-			{
-				if (y == null)
-					return 0;
-				return 1;
-			}
+            if (x == null)
+            {
+                if (y == null)
+                    return 0;
+                return 1;
+            }
 
-			if (y == null)
-				return -1;
-			return x.CompareTo(y);
-		}
+            if (y == null)
+                return -1;
 
-        private void ResetTable(string[] filter = null)
-		{
-			modTable.Clear();
-			modTable.Controls.Clear();
-			dataCheckboxes.Clear();
-			PluginList list = Main.Instance.List;
-			bool noFilter = filter == null || filter.Length == 0;
-			foreach (PluginData data in list)
-			{
-				bool enabled;
-				if(!dataChanges.TryGetValue(data.Id, out enabled))
-					enabled = config.IsEnabled(data.Id);
+            return x.CompareTo(y);
+        }
 
-                if (noFilter && (data.Hidden || !allItemsVisible) && !enabled)
+        /// <summary>
+        /// Clears the table and adds the list of plugins and their information.
+        /// </summary>
+        /// <param name="filter">Text filter</param>
+        private void RefreshTable(string[] filter = null)
+        {
+            pluginTable.Clear();
+            pluginTable.Controls.Clear();
+            pluginCheckboxes.Clear();
+            var list = Main.Instance.List;
+            var noFilter = filter == null || filter.Length == 0;
+            foreach (var plugin in list)
+            {
+                var enabled = afterRebootEnableFlags[plugin.Id];
+
+                if (noFilter && (plugin.Hidden || !allItemsVisible) && !enabled)
                     continue;
 
-                if (noFilter || FilterName(data.FriendlyName, filter))
-				{
-					MyGuiControlTable.Row row = new MyGuiControlTable.Row(data);
-					modTable.Add(row);
-					StringBuilder name = new StringBuilder(data.FriendlyName);
+                if (!noFilter && !FilterName(plugin.FriendlyName, filter))
+                    continue;
 
-                    row.AddCell(new MyGuiControlTable.Cell(data.Source, name));
+                var row = new MyGuiControlTable.Row(plugin);
+                pluginTable.Add(row);
 
-					string tip = data.FriendlyName;
-					if (!string.IsNullOrWhiteSpace(data.Tooltip))
-						tip += "\n" +  data.Tooltip;
-                    row.AddCell(new MyGuiControlTable.Cell(data.FriendlyName, toolTip: tip));
+                var name = new StringBuilder(plugin.FriendlyName);
+                row.AddCell(new MyGuiControlTable.Cell(plugin.Source, name));
 
-					row.AddCell(new MyGuiControlTable.Cell(data.Author, name, toolTip: data.Author));
+                var tip = plugin.FriendlyName;
+                if (!string.IsNullOrWhiteSpace(plugin.Tooltip))
+                    tip += "\n" + plugin.Tooltip;
+                row.AddCell(new MyGuiControlTable.Cell(plugin.FriendlyName, toolTip: tip));
 
-					row.AddCell(new MyGuiControlTable.Cell(data.Version?.ToString(), name));
-
-                    row.AddCell(new MyGuiControlTable.Cell(data.StatusString, name));
-
-					MyGuiControlTable.Cell enabledCell = new MyGuiControlTable.Cell(userData: name);
-					MyGuiControlCheckbox enabledBox = new MyGuiControlCheckbox(isChecked: enabled)
-					{
-						UserData = data,
-						Visible = true
-					};
-					enabledBox.IsCheckedChanged += IsCheckedChanged;
-					enabledCell.Control = enabledBox;
-					modTable.Controls.Add(enabledBox);
-					dataCheckboxes.Add(data.Id, enabledBox);
-					row.AddCell(enabledCell);
-				}
-			}
-			countLabel.Text = modTable.RowsCount + "/" + list.Count;
-			modTable.Sort(false);
-			modTable.SelectedRowIndex = null;
-			tableFilter = filter;
-		}
-
-		private void SearchBox_TextChanged(string txt)
-        {
-			string[] args = txt.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-			ResetTable(args);
-        }
-
-		private bool FilterName(string name, string[] filter)
-        {
-			foreach(string s in filter)
-            {
-				if (!name.Contains(s, StringComparison.OrdinalIgnoreCase))
-					return false;
+                var text = new StringBuilder(FormatCheckboxSortKey(plugin, enabled));
+                var enabledCell = new MyGuiControlTable.Cell(text, name);
+                var enabledCheckbox = new MyGuiControlCheckbox(isChecked: enabled)
+                {
+                    UserData = plugin,
+                    Visible = true
+                };
+                enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
+                enabledCell.Control = enabledCheckbox;
+                pluginTable.Controls.Add(enabledCheckbox);
+                pluginCheckboxes[plugin.Id] = enabledCheckbox;
+                row.AddCell(enabledCell);
             }
-			return true;
+
+            pluginCountLabel.Text = pluginTable.RowsCount + " out of the total " + list.Count + " \nplugins are visible.";
+            pluginTable.Sort(false);
+            pluginTable.SelectedRowIndex = null;
+            tableFilter = filter;
+            pluginTable.SelectedRowIndex = 0;
+
+            var args = new MyGuiControlTable.EventArgs { RowIndex = 0 };
+            OnItemSelected(pluginTable, args);
         }
 
-		private void RowDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
+        private static string FormatCheckboxSortKey(PluginData plugin, bool enabled)
         {
-			int i = args.RowIndex;
-			if (i >= 0 && i < table.RowsCount)
+            // Uses a prefix of + and - to list plugins to enable to the top
+            return enabled ? $"+{plugin.FriendlyName}|{plugin.Source}" : $"-{plugin.FriendlyName}|{plugin.Source}";
+        }
+
+        /// <summary>
+        /// Event that triggers when the text in the searchbox is changed.
+        /// </summary>
+        /// <param name="txt">The text that was entered into the searchbox.</param>
+        private void SearchBox_TextChanged(string txt)
+        {
+            string[] args = txt.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            RefreshTable(args);
+        }
+
+        private static bool FilterName(string name, IEnumerable<string> filter)
+        {
+            return filter.All(s => name.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Sets text on right side of screen.
+        /// </summary>
+        /// <param name="table">Table to get the plugin data.</param>
+        /// <param name="args">Event arguments.</param>
+        private void OnItemSelected(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
+        {
+            if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
+                return;
+
+            SelectedPlugin = plugin;
+        }
+
+        private void OnItemDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
+        {
+            if (!TryGetPluginByRowIndex(args.RowIndex, out var data))
+                return;
+
+            Config.SetEnabled(data.Id, !Config.IsEnabled(data.Id));
+        }
+
+        private bool TryGetPluginByRowIndex(int rowIndex, out PluginData plugin)
+        {
+            if (rowIndex < 0 || rowIndex >= pluginTable.RowsCount)
             {
-                MyGuiControlTable.Row row = table.GetRow(i);
-				if (row.UserData is PluginData data)
-					data.Show();
-			}
+                plugin = null;
+                return false;
+            }
+
+            var row = pluginTable.GetRow(rowIndex);
+            plugin = row.UserData as PluginData;
+            return plugin != null;
         }
 
         private void AlignRow(Vector2 origin, float spacing, params MyGuiControlBase[] elements)
         {
-			if (elements.Length == 0)
-				return;
+            if (elements.Length == 0)
+                return;
 
-			float totalWidth = 0;
+            float totalWidth = 0;
             for (int i = 0; i < elements.Length; i++)
             {
-				MyGuiControlBase btn = elements[i];
-				totalWidth += btn.Size.X;
-				if (i < elements.Length - 1)
-					totalWidth += spacing;
+                MyGuiControlBase btn = elements[i];
+                totalWidth += btn.Size.X;
+                if (i < elements.Length - 1)
+                    totalWidth += spacing;
             }
 
             float originX = origin.X - (totalWidth / 2);
-			foreach(var btn in elements)
+            foreach (MyGuiControlBase btn in elements)
             {
-				float halfWidth = btn.Size.X / 2;
-				originX += halfWidth;
-				btn.Position = new Vector2(originX, origin.Y);
-				originX += spacing + halfWidth;
+                float halfWidth = btn.Size.X / 2;
+                originX += halfWidth;
+                btn.Position = new Vector2(originX, origin.Y);
+                originX += spacing + halfWidth;
             }
         }
 
-        private void IsCheckedChanged(MyGuiControlCheckbox checkbox)
+        private void OnPluginCheckboxChanged(MyGuiControlCheckbox checkbox)
         {
-            PluginData original = (PluginData)checkbox.UserData;
-            SetEnabled(original, checkbox.IsChecked);
-			if(original.Group.Count > 0 && checkbox.IsChecked)
-            {
-				foreach (PluginData alt in original.Group)
-				{
-					if (SetEnabled(alt, false) && dataCheckboxes.TryGetValue(alt.Id, out MyGuiControlCheckbox altBox))
-                    {
-						altBox.IsCheckedChanged -= IsCheckedChanged;
-						altBox.IsChecked = false;
-						altBox.IsCheckedChanged += IsCheckedChanged;
-					}
-				}
-			}
+            var plugin = (PluginData)checkbox.UserData;
+            EnablePlugin(plugin, checkbox.IsChecked);
+
+            if (ReferenceEquals(plugin, SelectedPlugin))
+                pluginDetails.LoadPluginData();
         }
 
-        private bool SetEnabled(PluginData original, bool enabled)
+        private void EnablePlugin(PluginData plugin, bool enable)
         {
-            if (config.IsEnabled(original.Id) == enabled)
-            {
-				return dataChanges.Remove(original.Id);
-			}
-			else
-            {
-				dataChanges[original.Id] = enabled;
-				return true;
-			}
-		}
+            if (enable == afterRebootEnableFlags[plugin.Id])
+                return;
 
-		private void OnInfoButtonClick(MyGuiControlButton btn)
-		{
-			if(modTable.SelectedRowIndex.HasValue)
-            {
-				PluginData data = modTable.SelectedRow.UserData as PluginData;
-				if (data != null)
-					data.Show();
-            }
-		}
+            afterRebootEnableFlags[plugin.Id] = enable;
 
-		private void OnCloseButtonClick(MyGuiControlButton btn)
-        {
-			dataChanges.Clear();
-			CloseScreen();
+            SetPluginCheckbox(plugin, enable);
+
+            if (enable)
+                DisableOtherPluginsInSameGroup(plugin);
         }
+
+        private void SetPluginCheckbox(PluginData plugin, bool enable)
+        {
+            var checkbox = pluginCheckboxes[plugin.Id];
+            checkbox.IsChecked = enable;
+
+            var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
+            row?.GetCell(2).Text.Clear().Append(FormatCheckboxSortKey(plugin, enable));
+        }
+
+        private void DisableOtherPluginsInSameGroup(PluginData plugin)
+        {
+            foreach (var other in plugin.Group)
+                if (!ReferenceEquals(other, plugin))
+                    EnablePlugin(other, false);
+        }
+
+        private void OnCloseButtonClick(MyGuiControlButton btn)
+        {
+            CloseScreen();
+        }
+
+        public int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != afterRebootEnableFlags[plugin.Id]);
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
-		{
-			if(dataChanges.Count == 0)
-            {
-				CloseScreen();
-            }
-			else
-			{
-                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes"), callback: AskRestartResult));
-			}
-		}
-
-        private void AskRestartResult(MyGuiScreenMessageBox.ResultEnum result)
         {
-			if(result == MyGuiScreenMessageBox.ResultEnum.YES)
+            if (ModifiedCount == 0)
             {
-				Save();
-				LoaderTools.Restart();
-			}
-			else if(result == MyGuiScreenMessageBox.ResultEnum.NO)
-            {
-				Save();
-				CloseScreen();
+                CloseScreen();
+                return;
             }
+
+            MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes?"), callback: AskRestartResult));
         }
 
         private void Save()
         {
-			if(dataChanges.Count > 0)
-			{
-				PluginConfig config = Main.Instance.Config;
-				foreach (KeyValuePair<string, bool> kv in dataChanges)
-					config.SetEnabled(kv.Key, kv.Value);
-				config.Save();
-				dataChanges.Clear();
-			}
+            if (ModifiedCount == 0)
+                return;
+
+            foreach (var plugin in Main.Instance.List)
+                Config.SetEnabled(plugin.Id, afterRebootEnableFlags[plugin.Id]);
+
+            Config.Save();
         }
+
+        #region Restart
+
+        private void AskRestartResult(ResultEnum result)
+        {
+            if (result == ResultEnum.YES)
+            {
+                Save();
+                if (MyGuiScreenGamePlay.Static != null)
+                {
+                    ShowSaveMenu(delegate { UnloadAndRestartGame(); });
+                    return;
+                }
+
+                UnloadAndRestartGame();
+            }
+            else if (result == ResultEnum.NO)
+            {
+                Save();
+                CloseScreen();
+            }
+        }
+
+        /// <summary>
+        /// From WesternGamer/InGameWorldLoading
+        /// </summary>
+        /// <param name="afterMenu">Action after code is executed.</param>
+        private static void ShowSaveMenu(Action afterMenu)
+        {
+            // Sync.IsServer is backwards
+            if (!Sync.IsServer)
+            {
+                afterMenu();
+                return;
+            }
+
+            string message = "";
+            bool isCampaign = false;
+            MyMessageBoxButtonsType buttonsType = MyMessageBoxButtonsType.YES_NO_CANCEL;
+
+            // Sync.IsServer is backwards
+            if (Sync.IsServer && !MySession.Static.Settings.EnableSaving)
+            {
+                message += "Are you sure that you want to restart the game? All progress from the last checkpoint will be lost.";
+                isCampaign = true;
+                buttonsType = MyMessageBoxButtonsType.YES_NO;
+            }
+            else
+            {
+                message += "Save changes before restarting game?";
+            }
+
+            MyGuiScreenMessageBox saveMenu = MyGuiSandbox.CreateMessageBox(buttonType: buttonsType, messageText: new StringBuilder(message), messageCaption: MyTexts.Get(MyCommonTexts.MessageBoxCaptionPleaseConfirm), callback: ShowSaveMenuCallback, cancelButtonText: MyStringId.GetOrCompute("Don't Restart"));
+            saveMenu.InstantClose = false;
+            MyGuiSandbox.AddScreen(saveMenu);
+
+            void ShowSaveMenuCallback(ResultEnum callbackReturn)
+            {
+                if (isCampaign)
+                {
+                    if (callbackReturn == ResultEnum.YES)
+                        afterMenu();
+
+                    return;
+                }
+
+                switch (callbackReturn)
+                {
+                    case ResultEnum.YES:
+                        MyAsyncSaving.Start(delegate { MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreenshotWasTaken; });
+                        break;
+
+                    case ResultEnum.NO:
+                        MyAudio.Static.Mute = true;
+                        MyAudio.Static.StopMusic();
+                        afterMenu();
+                        break;
+                }
+            }
+
+            void UnloadAndExitAfterScreenshotWasTaken(object sender, EventArgs e)
+            {
+                MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreenshotWasTaken;
+                afterMenu();
+            }
+        }
+
+        private static void UnloadAndRestartGame()
+        {
+            MySessionLoader.Unload();
+            MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
+            MySandboxGame.Config.Save();
+            MyScreenManager.CloseAllScreensNowExcept(null);
+            LoaderTools.Restart();
+        }
+
+        #endregion
     }
 }

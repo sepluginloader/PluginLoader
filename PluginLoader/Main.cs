@@ -11,7 +11,6 @@ using System.Diagnostics;
 using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
-using avaness.PluginLoader.Patch;
 
 namespace avaness.PluginLoader
 {

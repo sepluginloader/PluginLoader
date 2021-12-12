@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace avaness.PluginLoader
 {
-    public partial class PluginConfig
+    public class PluginConfig
     {
         private const string fileName = "config.xml";
 
@@ -102,10 +102,10 @@ namespace avaness.PluginLoader
                 }
             }
 
-
-            var temp = new PluginConfig();
-            temp.filePath = path;
-            return temp;
+            return new PluginConfig
+            {
+                filePath = path
+            };
         }
 
         public IEnumerator<string> GetEnumerator()

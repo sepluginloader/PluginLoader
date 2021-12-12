@@ -65,9 +65,11 @@ namespace avaness.PluginLoader.Data
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
+        [XmlIgnore]
+        public bool Enabled => Main.Instance.Config.IsEnabled(Id);
+
         protected PluginData()
         {
-
         }
 
         public abstract Assembly GetAssembly();
@@ -105,6 +107,7 @@ namespace avaness.PluginLoader.Data
                 LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
                 if (e is MissingMemberException)
                     LogFile.WriteLine($"Is {name} up to date?");
+
                 LogFile.Flush();
                 Error();
                 a = null;
