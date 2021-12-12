@@ -20,9 +20,6 @@ namespace avaness.PluginLoader
     {
         public static Main Instance;
 
-        private static string PluginsDir => pluginsDirCache ??= Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
-        private static string pluginsDirCache;
-
         public PluginList List { get; }
         public PluginConfig Config { get; }
         public SplashScreen Splash { get; }
@@ -41,10 +38,11 @@ namespace avaness.PluginLoader
 
             Cursor temp = Cursor.Current;
             Cursor.Current = Cursors.AppStarting;
+            
+            string pluginsDir = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+            Directory.CreateDirectory(pluginsDir);
 
-            Directory.CreateDirectory(PluginsDir);
-
-            LogFile.Init(PluginsDir);
+            LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting");
 
             Splash.SetText("Finding references...");
@@ -52,8 +50,8 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
-            Config = PluginConfig.Load(PluginsDir);
-            List = new PluginList(PluginsDir, Config);
+            Config = PluginConfig.Load(pluginsDir);
+            List = new PluginList(pluginsDir, Config);
 
             Config.Init(List);
 
@@ -67,7 +65,7 @@ namespace avaness.PluginLoader
             {
                 PluginData data = List[id];
                 if (data is GitHubPlugin github)
-                    github.Init(PluginsDir);
+                    github.Init(pluginsDir);
                 if (PluginInstance.TryGet(data, out PluginInstance p))
                     plugins.Add(p);
             }

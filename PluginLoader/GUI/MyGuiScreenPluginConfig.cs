@@ -341,7 +341,7 @@ namespace avaness.PluginLoader.GUI
                 row.AddCell(enabledCell);
             }
 
-            pluginCountLabel.Text = pluginTable.RowsCount + " out of the total " + list.Count + " \nplugins are visible.";
+            pluginCountLabel.Text = pluginTable.RowsCount + "/" + list.Count + " visible";
             pluginTable.Sort(false);
             pluginTable.SelectedRowIndex = null;
             tableFilter = filter;
