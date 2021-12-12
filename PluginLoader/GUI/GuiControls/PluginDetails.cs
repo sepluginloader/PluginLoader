@@ -126,7 +126,9 @@ namespace avaness.PluginLoader.GUI.GuiControls
             downvoteButton.Visible = canVote;
             downvoteButton.Checked = vote < 0;
 
-            descriptionText.Text.Clear().Append(plugin.Tooltip ?? "");
+            descriptionText.Clear();
+            if(plugin.Tooltip != null)
+                descriptionText.AppendText(plugin.Tooltip);
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
 
@@ -216,7 +218,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             downvoteIcon.CanHaveFocus = false;
 
             // Plugin description
-            descriptionText = new MyGuiControlMultilineText(null)
+            descriptionText = new MyGuiControlMultilineText
             {
                 Name = "DescriptionText",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
