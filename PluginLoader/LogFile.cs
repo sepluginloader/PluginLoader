@@ -20,6 +20,17 @@ namespace avaness.PluginLoader
             writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
             if(gameLog)
                 MyLog.Default.WriteLine($"[PluginLoader] {text}");
+            writer?.Flush();
+        }
+
+        public static void WriteTrace(string text, bool gameLog = true)
+        {
+#if DEBUG
+            writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
+            if(gameLog)
+                MyLog.Default.WriteLine($"[PluginLoader] {text}");
+            writer?.Flush();
+#endif
         }
 
         public static void Dispose()
@@ -30,11 +41,6 @@ namespace avaness.PluginLoader
             writer.Flush();
             writer.Close();
             writer = null;
-        }
-
-        public static void Flush()
-        {
-            writer.Flush();
         }
     }
 }

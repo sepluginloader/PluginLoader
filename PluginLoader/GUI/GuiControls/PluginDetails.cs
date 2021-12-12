@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using avaness.PluginLoader.Data;
+using avaness.PluginLoader.Stats;
+using avaness.PluginLoader.Stats.Model;
 using Sandbox.Graphics.GUI;
 using VRage.Game;
 using VRage.Utils;
@@ -25,10 +27,11 @@ namespace avaness.PluginLoader.GUI.GuiControls
         private MyGuiControlLabel usageText;
         private MyGuiControlLabel ratingLabel;
         private RatingControl ratingControl;
+        private MyGuiControlLabel ratingText;
         private MyGuiControlButton upvoteButton;
-        private MyGuiControlImage upVoteIcon;
+        private MyGuiControlImage upvoteIcon;
         private MyGuiControlButton downvoteButton;
-        private MyGuiControlImage downVoteIcon;
+        private MyGuiControlImage downvoteIcon;
         private MyGuiControlMultilineText descriptionText;
         private MyGuiControlCompositePanel descriptionPanel;
         private MyGuiControlLabel enableLabel;
@@ -41,11 +44,11 @@ namespace avaness.PluginLoader.GUI.GuiControls
         // Plugin currently loaded into the panel or null if none are loaded
         private PluginData plugin;
 
-        private readonly Dictionary<string, bool> afterRebootEnableFlags;
+        private readonly MyGuiScreenPluginConfig pluginsDialog;
 
-        public PluginDetailsPanel(Dictionary<string, bool> afterRebootEnableFlags)
+        public PluginDetailsPanel(MyGuiScreenPluginConfig dialog)
         {
-            this.afterRebootEnableFlags = afterRebootEnableFlags;
+            pluginsDialog = dialog;
         }
 
         public PluginData Plugin
@@ -98,17 +101,37 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
         public void LoadPluginData()
         {
+            var stat = PluginStat;
+            var tried = stat.Tried;
+            var vote = stat.Vote;
+
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
+
             authorText.Text = plugin.Author ?? "N/A";
+
             versionText.Text = plugin.Version?.ToString() ?? "N/A";
+
             statusText.Text = plugin.Status == PluginStatus.None ? (plugin.Enabled ? "Up to date" : "N/A") : plugin.StatusString;
-            usageText.Text = "N/A"; // TODO: Get from plugin stats
-            ratingControl.Value = 5; // TODO: Get from plugin stats
-            upvoteButton.Checked = false; // TODO: Get from plugin stats
-            downvoteButton.Checked = false; // TODO: Get from plugin stats
+
+            usageText.Text = stat.Players.ToString() ?? "N/A";
+
+            ratingControl.Value = stat.Rating;
+            ratingText.Text = $"{stat.Downvotes + stat.Upvotes}";
+
+            upvoteIcon.Visible = tried;
+            upvoteButton.Visible = tried;
+            upvoteButton.Checked = vote > 0;
+
+            downvoteIcon.Visible = tried;
+            downvoteButton.Visible = tried;
+            downvoteButton.Checked = vote < 0;
+
             descriptionText.Text.Clear().Append(plugin.Tooltip ?? "");
-            enableCheckbox.IsChecked = afterRebootEnableFlags[plugin.Id];
+            enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
+
+        private readonly PluginStat dummyStat = new();
+        private PluginStat PluginStat => pluginsDialog.PluginStats?.Stats.GetValueOrDefault(plugin.Id) ?? dummyStat;
 
         public virtual void CreateControls(Vector2 rightSideOrigin)
         {
@@ -173,16 +196,24 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 Text = "Rating",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
+            ratingText = new MyGuiControlLabel
+            {
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
+            };
             ratingControl = new RatingControl()
             {
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
             // Voting buttons
-            upvoteButton = CreateRateButton(true);
-            upVoteIcon = CreateRateIcon(upvoteButton, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
-            downvoteButton = CreateRateButton(false);
-            downVoteIcon = CreateRateIcon(downvoteButton, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
+            upvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateUpClicked, size: new Vector2(0.03f));
+            upvoteIcon = CreateRateIcon(upvoteButton, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
+            upvoteButton.CanHaveFocus = false;
+            upvoteIcon.CanHaveFocus = false;
+            downvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateDownClicked, size: new Vector2(0.03f));
+            downvoteIcon = CreateRateIcon(downvoteButton, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
+            downvoteButton.CanHaveFocus = false;
+            downvoteIcon.CanHaveFocus = false;
 
             // Plugin description
             descriptionText = new MyGuiControlMultilineText(null)
@@ -250,14 +281,16 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             layoutTable.Add(ratingLabel, MyAlignH.Left, MyAlignV.Center, row, 0);
             layoutTable.Add(ratingControl, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(ratingText, MyAlignH.Left, MyAlignV.Center, row, 1);
             layoutTable.Add(upvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
-            layoutTable.Add(upVoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
+            layoutTable.Add(upvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
             layoutTable.Add(downvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
-            layoutTable.Add(downVoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
+            layoutTable.Add(downvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
+            ratingText.PositionX += 0.08f;
             upvoteButton.PositionX -= 0.07f;
             downvoteButton.PositionX -= 0.02f;
-            upVoteIcon.Position = upvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(upvoteButton.Size.X / 2f, 0f);
-            downVoteIcon.Position = downvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(downvoteButton.Size.X / 2f, 0f);
+            upvoteIcon.Position = upvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(upvoteButton.Size.X / 2f, 0f);
+            downvoteIcon.Position = downvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(downvoteButton.Size.X / 2f, 0f);
             row++;
 
             descriptionPanel.Size += new Vector2(0.01f, 0f);
@@ -269,7 +302,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             layoutTable.Add(enableCheckbox, MyAlignH.Left, MyAlignV.Center, row, 1);
             row++;
 
-            layoutTable.AddWithSize(infoButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan:2);
+            layoutTable.AddWithSize(infoButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan: 2);
             // row++;
 
             DisableControls();
@@ -287,11 +320,6 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
         #region Vote buttons
 
-        private MyGuiControlButton CreateRateButton(bool positive)
-        {
-            return new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: positive ? OnRateUpClicked : new Action<MyGuiControlButton>(OnRateDownClicked), size: new Vector2(0.03f));
-        }
-
         private MyGuiControlImage CreateRateIcon(MyGuiControlButton button, string texture)
         {
             MyGuiControlImage myGuiControlImage = new MyGuiControlImage(null, null, null, null, new[] { texture });
@@ -303,19 +331,39 @@ namespace avaness.PluginLoader.GUI.GuiControls
         private void AdjustButtonForIcon(MyGuiControlButton button, MyGuiControlImage icon)
         {
             button.Size = new Vector2(button.Size.X, button.Size.X * 4f / 3f);
-            button.HighlightChanged += delegate(MyGuiControlBase x) { icon.ColorMask = (x.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One); };
+            button.HighlightChanged += delegate(MyGuiControlBase control) { icon.ColorMask = (control.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One); };
         }
 
         #endregion
 
         private void OnRateUpClicked(MyGuiControlButton button)
         {
-            // TODO: Submit vote to plugin stats, update from response
+            Vote(1);
         }
 
         private void OnRateDownClicked(MyGuiControlButton button)
         {
-            // TODO: Submit vote to plugin stats, update from response
+            Vote(-1);
+        }
+
+        private void Vote(int vote)
+        {
+            if (!PlayerConsent.HasConsentRequested)
+            {
+                PlayerConsent.ShowDialog();
+                return;
+            }
+
+            var originalStat = PluginStat;
+            if (originalStat.Vote == vote)
+                vote = 0;
+
+            var updatedStat = StatsClient.Vote(plugin.Id, vote);
+            if (updatedStat == null)
+                return;
+
+            pluginsDialog.PluginStats.Stats[plugin.Id] = updatedStat;
+            LoadPluginData();
         }
     }
 }

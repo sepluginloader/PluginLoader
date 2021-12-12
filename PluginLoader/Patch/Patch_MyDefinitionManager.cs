@@ -26,7 +26,7 @@ namespace avaness.PluginLoader.Patch
                 List<MyObjectBuilder_Checkpoint.ModItem> newMods = new List<MyObjectBuilder_Checkpoint.ModItem>(mods);
 
                 PluginList list = Main.Instance.List;
-                foreach (string id in Main.Instance.Config.Plugins)
+                foreach (string id in Main.Instance.Config.EnabledPlugins)
                 {
                     PluginData data = list[id];
                     if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)

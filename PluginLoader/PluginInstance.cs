@@ -124,7 +124,6 @@ namespace avaness.PluginLoader
         private void ThrowError(string error)
         {
             LogFile.WriteLine(error);
-            LogFile.Flush();
             data.Error();
             Dispose();
         }
@@ -139,7 +138,6 @@ namespace avaness.PluginLoader
             if (pluginType == null)
             {
                 LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
-                LogFile.Flush();
                 data.Error();
                 return false;
             }
