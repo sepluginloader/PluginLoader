@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Stats.Model;
 using avaness.PluginLoader.Tools;
 
@@ -44,9 +45,17 @@ namespace avaness.PluginLoader.Stats
 
         public static PluginStats DownloadStats()
         {
+
+            if (!PlayerConsent.ConsentGiven)
+            {
+                LogFile.WriteLine($"Downloading plugin statistics anonymously (it does not allow for voting)");
+                votingToken = null;
+                return SimpleHttpClient.Get<PluginStats>(StatsUri);
+            }
+
             LogFile.WriteLine($"Downloading plugin statistics, ratings and votes for " + PlayerHash);
 
-            var parameters = new Dictionary<string, string> { ["playerHash"] = PlayerHash };
+            var parameters = new Dictionary<string, string> {["playerHash"] = PlayerHash};
             var pluginStats = SimpleHttpClient.Get<PluginStats>(StatsUri, parameters);
 
             votingToken = pluginStats?.VotingToken;

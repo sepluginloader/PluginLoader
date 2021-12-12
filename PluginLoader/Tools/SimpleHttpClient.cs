@@ -38,8 +38,9 @@ namespace avaness.PluginLoader.Tools
         public static TV Get<TV>(string url, Dictionary<string, string> parameters)
             where TV : class, new()
         {
-            var query = FormatQuery(parameters);
-            var uri = $"{url}?{query}";
+            var uriBuilder = new StringBuilder(url);
+            AppendQueryParameters(uriBuilder, parameters);
+            var uri = uriBuilder.ToString();
 
             try
             {
@@ -78,8 +79,10 @@ namespace avaness.PluginLoader.Tools
         public static TV Post<TV>(string url, Dictionary<string, string> parameters)
             where TV : class, new()
         {
-            var query = FormatQuery(parameters);
-            var uri = $"{url}?{query}";
+            var uriBuilder = new StringBuilder(url);
+            AppendQueryParameters(uriBuilder, parameters);
+            var uri = uriBuilder.ToString();
+
             try
             {
                 var request = CreateRequest(HttpMethod.Post, uri);
@@ -174,8 +177,20 @@ namespace avaness.PluginLoader.Tools
             return http;
         }
 
-        private static string FormatQuery(Dictionary<string, string> parameters) =>
-            string.Join("&", parameters.Select(
-                p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
+        private static void AppendQueryParameters(StringBuilder stringBuilder, Dictionary<string, string> parameters)
+        {
+            if (parameters == null || parameters.Count == 0)
+                return;
+
+            var first = true;
+            foreach (var p in parameters)
+            {
+                stringBuilder.Append(first ? '?' : '&');
+                first = false;
+                stringBuilder.Append(Uri.EscapeDataString(p.Key));
+                stringBuilder.Append('=');
+                stringBuilder.Append(Uri.EscapeDataString(p.Value));
+            }
+        }
     }
 }
