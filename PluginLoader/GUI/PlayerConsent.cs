@@ -11,7 +11,7 @@ namespace avaness.PluginLoader.GUI
     {
         public static event Action OnConsentChanged;
 
-        public static void ShowDialog(bool openMenu = false)
+        public static void ShowDialog(Action continuation = null)
         {
             MyGuiSandbox.AddScreen(
                 // FIXME: Replace it with a nicer dialog, the hardcoded center alignment looks bad
@@ -32,56 +32,58 @@ namespace avaness.PluginLoader.GUI
                         "         Plugin Loader will still connect to download the statistics shown.\r\n"),
                     size: new Vector2(0.6f, 0.6f),
                     messageCaption: new StringBuilder("Consent"),
-                    callback: result => StoreConsent(result, openMenu, false)));
+                    callback: result => GetConfirmation(result, continuation)));
         }
 
-        public static bool HasConsentRequested => !string.IsNullOrEmpty(Main.Instance.Config.DataHandlingConsentDate);
+        public static bool ConsentRequested => !string.IsNullOrEmpty(Main.Instance.Config.DataHandlingConsentDate);
 
-        public static bool HasConsentGiven => Main.Instance.Config.DataHandlingConsent;
+        public static bool ConsentGiven => Main.Instance.Config.DataHandlingConsent;
 
-        private static void StoreConsent(MyGuiScreenMessageBox.ResultEnum result, bool openMenu, bool confirmedWithdrawal)
+        private static void GetConfirmation(MyGuiScreenMessageBox.ResultEnum result, Action continuation)
         {
             if (result == MyGuiScreenMessageBox.ResultEnum.CANCEL)
                 return;
 
             var consent = result == MyGuiScreenMessageBox.ResultEnum.YES;
 
-            if (HasConsentGiven && !consent && !confirmedWithdrawal)
+            var consentWithdrawn = ConsentRequested && ConsentGiven && !consent;
+            if (consentWithdrawn)
             {
-                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("Are you sure to withdraw your consent to data handling?\r\n\r\nDoing so would irrecoverably remove all your votes\r\nand usage data from our statistics server."), new StringBuilder("Confirm consent withdrawal"), callback: res => OnConfirmConsentWithdrawal(res, openMenu)));
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("Are you sure to withdraw your consent to data handling?\r\n\r\nDoing so would irrecoverably remove all your votes\r\nand usage data from our statistics server."), new StringBuilder("Confirm consent withdrawal"), callback: res => StoreConsent(res, false, continuation)));
                 return;
             }
 
-            if (!HasConsentRequested || consent != HasConsentGiven)
-            {
-                if (!StatsClient.Consent(consent))
-                {
-                    LogFile.WriteLine("Failed to register player consent on statistics server");
-                    return;
-                }
-
-                var config = Main.Instance.Config;
-                config.DataHandlingConsentDate = Tools.Tools.FormatDateIso8601(DateTime.Today);
-                config.DataHandlingConsent = consent;
-                config.Save();
-
-                if (HasConsentGiven)
-                    StatsClient.Track(Main.Instance.TrackablePluginIds);
-
-                if (!openMenu)
-                    OnConsentChanged?.Invoke();
-            }
-
-            if (consent && openMenu)
-                MyGuiScreenPluginConfig.OpenMenu();
+            StoreConsent(MyGuiScreenMessageBox.ResultEnum.YES, consent, continuation);
         }
 
-        private static void OnConfirmConsentWithdrawal(MyGuiScreenMessageBox.ResultEnum result, bool openMenu)
+        private static void StoreConsent(MyGuiScreenMessageBox.ResultEnum confirmationResult, bool consent, Action continuation)
         {
-            if (result != MyGuiScreenMessageBox.ResultEnum.YES)
+            if (confirmationResult != MyGuiScreenMessageBox.ResultEnum.YES)
                 return;
 
-            StoreConsent(MyGuiScreenMessageBox.ResultEnum.NO, openMenu, true);
+            if (ConsentRequested && consent == ConsentGiven)
+            {
+                continuation?.Invoke();
+                return;
+            }
+
+            if (!StatsClient.Consent(consent))
+            {
+                LogFile.WriteLine("Failed to register player consent on statistics server");
+                return;
+            }
+
+            var config = Main.Instance.Config;
+            config.DataHandlingConsentDate = Tools.Tools.FormatDateIso8601(DateTime.Today);
+            config.DataHandlingConsent = consent;
+            config.Save();
+
+            if (consent)
+                StatsClient.Track(Main.Instance.TrackablePluginIds);
+
+            OnConsentChanged?.Invoke();
+
+            continuation?.Invoke();
         }
     }
 }

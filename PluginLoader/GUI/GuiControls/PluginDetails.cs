@@ -102,8 +102,8 @@ namespace avaness.PluginLoader.GUI.GuiControls
         public void LoadPluginData()
         {
             var stat = PluginStat;
-            var tried = stat.Tried;
             var vote = stat.Vote;
+            var canVote = plugin.Enabled || stat.Tried;
 
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
 
@@ -113,17 +113,17 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             statusText.Text = plugin.Status == PluginStatus.None ? (plugin.Enabled ? "Up to date" : "N/A") : plugin.StatusString;
 
-            usageText.Text = stat.Players.ToString() ?? "N/A";
+            usageText.Text = stat.Players.ToString();
 
             ratingControl.Value = stat.Rating;
             ratingText.Text = $"{stat.Downvotes + stat.Upvotes}";
 
-            upvoteIcon.Visible = tried;
-            upvoteButton.Visible = tried;
+            upvoteIcon.Visible = canVote;
+            upvoteButton.Visible = canVote;
             upvoteButton.Checked = vote > 0;
 
-            downvoteIcon.Visible = tried;
-            downvoteButton.Visible = tried;
+            downvoteIcon.Visible = canVote;
+            downvoteButton.Visible = canVote;
             downvoteButton.Checked = vote < 0;
 
             descriptionText.Text.Clear().Append(plugin.Tooltip ?? "");
@@ -348,11 +348,16 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
         private void Vote(int vote)
         {
-            if (!PlayerConsent.HasConsentRequested)
-            {
-                PlayerConsent.ShowDialog();
+            if (PlayerConsent.ConsentGiven)
+                StoreVote(vote);
+            else
+                PlayerConsent.ShowDialog(() => StoreVote(vote));
+        }
+
+        private void StoreVote(int vote)
+        {
+            if (!PlayerConsent.ConsentGiven)
                 return;
-            }
 
             var originalStat = PluginStat;
             if (originalStat.Vote == vote)
