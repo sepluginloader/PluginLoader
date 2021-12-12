@@ -37,6 +37,9 @@ namespace avaness.StatsServer.Persistence
 
         public void Register(string playerHash, bool consent)
         {
+            if (consent == playerConsents.ContainsKey(playerHash))
+                return;
+
             if (consent)
             {
                 playerConsents[playerHash] = Tools.Tools.FormatDateIso8601(DateTime.Today);
