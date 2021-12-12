@@ -10,3 +10,5 @@ export PL_TIMEOUT=3
 
 export PL_BACKUP_REMOTE_NAME=drive
 export PL_BACKUP_REMOTE_DIR=PluginLoaderBackups
+
+export ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true

@@ -14,7 +14,7 @@ FILENAME="PluginLoaderStatsData.${TODAY}.zip"
 rclone copy "${FILENAME}" "${PL_BACKUP_REMOTE_NAME}:${PL_BACKUP_REMOTE_DIR}/"
 rm "${FILENAME}"
 
-# Remove old backups only the the latest backup above succeeded (otherwise this script has failed already)
+# Remove old backups only once a new backup is succeeded (otherwise this script has failed already)
 # It is normal for this step to fail until we have enough past backups to have something to delete.
 #REMOVE_DATE=$(date -I --date="yesterday")
 REMOVE_DATE=$(date -I --date="a week ago")
