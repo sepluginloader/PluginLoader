@@ -8,12 +8,12 @@ PATH="/home/stats/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 
 # Daily restart
 # mm hh         dom mon dow command
-02 07            *   *   *  /bin/bash $HOME/bin/restart.sh >>$HOME/log/restart.log 2>&1
+00 00            *   *   *  /bin/bash $HOME/bin/restart.sh >>$HOME/log/restart.log 2>&1
 
 # Backup
 # mm hh         dom mon dow command
-02 01            *   *   *  /bin/bash $HOME/bin/backup.sh >>$HOME/log/backup.log 2>&1
+17 00            *   *   *  /bin/bash $HOME/bin/backup.sh >>$HOME/log/backup.log 2>&1
 
 # Cleanup
 # mm hh         dom mon dow command
-32 01            *   *   *  /bin/bash $HOME/bin/cleanup.sh >>$HOME/log/cleanup.log 2>&1
+32 00            *   *   *  /bin/bash $HOME/bin/cleanup.sh >>$HOME/log/cleanup.log 2>&1
