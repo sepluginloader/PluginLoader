@@ -116,7 +116,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             usageText.Text = stat.Players.ToString();
 
             ratingControl.Value = stat.Rating;
-            ratingText.Text = $"{stat.Downvotes + stat.Upvotes}";
+            ratingText.Text = $"{stat.Downvotes + stat.Upvotes} votes";
 
             upvoteIcon.Visible = canVote;
             upvoteButton.Visible = canVote;
@@ -287,7 +287,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             layoutTable.Add(upvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
             layoutTable.Add(downvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
             layoutTable.Add(downvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
-            ratingText.PositionX += 0.08f;
+            ratingText.PositionX += 0.07f;
             upvoteButton.PositionX -= 0.07f;
             downvoteButton.PositionX -= 0.02f;
             upvoteIcon.Position = upvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(upvoteButton.Size.X / 2f, 0f);
