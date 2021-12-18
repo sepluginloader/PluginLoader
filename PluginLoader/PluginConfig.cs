@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
+using avaness.PluginLoader.Data;
+using Sandbox.Engine.Networking;
+using VRage.Game;
 
 namespace avaness.PluginLoader
 {
@@ -130,14 +133,50 @@ namespace avaness.PluginLoader
 
         public void SetEnabled(string id, bool enabled)
         {
+            if (EnabledPlugins.Contains(id) == enabled)
+                return;
+
             if (enabled)
             {
                 EnabledPlugins.Add(id);
+                EnableDependencies(id);
                 Main.Instance.List.SubscribeToItem(id);
             }
             else
             {
                 EnabledPlugins.Remove(id);
+            }
+        }
+
+        private void EnableDependencies(string id)
+        {
+            if (Main.Instance.List[id] is not ModPlugin plugin)
+                return;
+
+            var idHashSet = new HashSet<WorkshopId> { new(plugin.WorkshopId, "Steam") };
+            var dependencyHierarchy = MyWorkshop.GetModsDependencyHiearchy(idHashSet, out var hasReferenceIssue);
+
+            // Return value cannot be null based on current SE code.
+            // But just in case the code would change:
+            if (dependencyHierarchy == null)
+            {
+                LogFile.WriteLine($"WARNING: Got null hierarchy while getting dependencies of mod {id}");
+                return;
+            }
+
+            if (hasReferenceIssue)
+            {
+                LogFile.WriteLine($"WARNING: Reference issue detected while getting dependencies of mod {id}");
+                return;
+            }
+
+            foreach (var workshopItem in dependencyHierarchy)
+            {
+                var pluginId = workshopItem.Id.ToString();
+                if (Main.Instance.List.Contains(pluginId))
+                    SetEnabled(pluginId, true);
+                else
+                    SteamAPI.SubscribeToItem(workshopItem.Id);
             }
         }
     }

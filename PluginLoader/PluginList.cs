@@ -23,6 +23,8 @@ namespace avaness.PluginLoader
             set => plugins[key] = value;
         }
 
+        public bool Contains(string id) => plugins.ContainsKey(id);
+
         public PluginList(string mainDirectory, PluginConfig config)
         {
             var lbl = Main.Instance.Splash;
