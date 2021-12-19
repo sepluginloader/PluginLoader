@@ -389,7 +389,7 @@ namespace avaness.PluginLoader.GUI
             if (!TryGetPluginByRowIndex(args.RowIndex, out var data))
                 return;
 
-            Config.SetEnabled(data.Id, !Config.IsEnabled(data.Id));
+            EnablePlugin(data, !AfterRebootEnableFlags[data.Id]);
         }
 
         private bool TryGetPluginByRowIndex(int rowIndex, out PluginData plugin)
