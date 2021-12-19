@@ -32,9 +32,6 @@ namespace avaness.PluginLoader
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
 
-            ModPlugin mod = (ModPlugin)plugins["514062285"];
-            mod.DependencyIds = new ulong[] { 758597413 };
-
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
