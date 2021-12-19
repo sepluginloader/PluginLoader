@@ -31,11 +31,15 @@ namespace avaness.PluginLoader
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
-            
+
+            ModPlugin mod = (ModPlugin)plugins["514062285"];
+            mod.DependencyIds = new ulong[] { 758597413 };
+
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
+            FindModDependencies();
         }
 
         /// <summary>
@@ -63,6 +67,46 @@ namespace avaness.PluginLoader
             }
             if (groups > 0)
                 LogFile.WriteLine($"Found {groups} plugin groups");
+        }
+
+        private void FindModDependencies()
+        {
+            foreach(PluginData data in plugins.Values)
+            {
+                if (data is ModPlugin mod)
+                    FindModDependencies(mod);
+            }
+        }
+
+        private void FindModDependencies(ModPlugin mod)
+        {
+            if (mod.DependencyIds == null)
+                return;
+
+            Dictionary<ulong, ModPlugin> dependencies = new Dictionary<ulong, ModPlugin>();
+            dependencies.Add(mod.WorkshopId, mod);
+            Stack<ModPlugin> toProcess = new Stack<ModPlugin>();
+            toProcess.Push(mod);
+
+            while (toProcess.Count > 0)
+            {
+                ModPlugin temp = toProcess.Pop();
+
+                if (temp.DependencyIds == null)
+                    continue;
+
+                foreach (ulong id in temp.DependencyIds)
+                {
+                    if (!dependencies.ContainsKey(id) && plugins.TryGetValue(id.ToString(), out PluginData data) && data is ModPlugin dependency)
+                    {
+                        toProcess.Push(dependency);
+                        dependencies[id] = dependency;
+                    }
+                }
+            }
+
+            dependencies.Remove(mod.WorkshopId);
+            mod.Dependencies = dependencies.Values.ToArray();
         }
 
         private void DownloadList(string mainDirectory, PluginConfig config)

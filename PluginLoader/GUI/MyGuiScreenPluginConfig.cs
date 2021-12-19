@@ -448,7 +448,10 @@ namespace avaness.PluginLoader.GUI
             SetPluginCheckbox(plugin, enable);
 
             if (enable)
+            {
                 DisableOtherPluginsInSameGroup(plugin);
+                EnableDependencies(plugin);
+            }
         }
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
@@ -462,9 +465,23 @@ namespace avaness.PluginLoader.GUI
 
         private void DisableOtherPluginsInSameGroup(PluginData plugin)
         {
-            foreach (var other in plugin.Group)
+            foreach (PluginData other in plugin.Group)
+            {
                 if (!ReferenceEquals(other, plugin))
                     EnablePlugin(other, false);
+            }
+        }
+
+        private void EnableDependencies(PluginData plugin)
+        {
+            if (plugin is not ModPlugin mod || mod.Dependencies == null)
+                return;
+
+            foreach (PluginData other in mod.Dependencies)
+            {
+                if (!ReferenceEquals(other, plugin))
+                    EnablePlugin(other, true);
+            }
         }
 
         private void OnCancelButtonClick(MyGuiControlButton btn)
