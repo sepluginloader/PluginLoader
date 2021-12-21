@@ -127,8 +127,15 @@ namespace avaness.PluginLoader
                             using(Stream entryStream = entry.Open())
                             using(StreamReader entryReader = new StreamReader(entryStream))
                             {
-                                PluginData data = (PluginData)xml.Deserialize(entryReader);
-                                plugins[data.Id] = data;
+                                try
+                                {
+                                    PluginData data = (PluginData)xml.Deserialize(entryReader);
+                                    plugins[data.Id] = data;
+                                }
+                                catch (InvalidOperationException e)
+                                {
+                                    LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
+                                }
                             }
                         }
                     }
