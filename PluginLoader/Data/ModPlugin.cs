@@ -33,7 +33,7 @@ namespace avaness.PluginLoader.Data
 
         [ProtoMember(1)]
         [XmlArray]
-        [XmlArrayItem("Dependencies")]
+        [XmlArrayItem("Id")]
         public ulong[] DependencyIds { get; set; } = new ulong[0];
 
         [XmlIgnore]
