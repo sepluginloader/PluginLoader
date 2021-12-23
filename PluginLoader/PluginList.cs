@@ -23,17 +23,20 @@ namespace avaness.PluginLoader
             set => plugins[key] = value;
         }
 
+        public bool Contains(string id) => plugins.ContainsKey(id);
+
         public PluginList(string mainDirectory, PluginConfig config)
         {
             var lbl = Main.Instance.Splash;
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
-            
+
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
+            FindModDependencies();
         }
 
         /// <summary>
@@ -63,6 +66,46 @@ namespace avaness.PluginLoader
                 LogFile.WriteLine($"Found {groups} plugin groups");
         }
 
+        private void FindModDependencies()
+        {
+            foreach(PluginData data in plugins.Values)
+            {
+                if (data is ModPlugin mod)
+                    FindModDependencies(mod);
+            }
+        }
+
+        private void FindModDependencies(ModPlugin mod)
+        {
+            if (mod.DependencyIds == null)
+                return;
+
+            Dictionary<ulong, ModPlugin> dependencies = new Dictionary<ulong, ModPlugin>();
+            dependencies.Add(mod.WorkshopId, mod);
+            Stack<ModPlugin> toProcess = new Stack<ModPlugin>();
+            toProcess.Push(mod);
+
+            while (toProcess.Count > 0)
+            {
+                ModPlugin temp = toProcess.Pop();
+
+                if (temp.DependencyIds == null)
+                    continue;
+
+                foreach (ulong id in temp.DependencyIds)
+                {
+                    if (!dependencies.ContainsKey(id) && plugins.TryGetValue(id.ToString(), out PluginData data) && data is ModPlugin dependency)
+                    {
+                        toProcess.Push(dependency);
+                        dependencies[id] = dependency;
+                    }
+                }
+            }
+
+            dependencies.Remove(mod.WorkshopId);
+            mod.Dependencies = dependencies.Values.ToArray();
+        }
+
         private void DownloadList(string mainDirectory, PluginConfig config)
         {
             string whitelist = Path.Combine(mainDirectory, "whitelist.bin");
@@ -84,8 +127,15 @@ namespace avaness.PluginLoader
                             using(Stream entryStream = entry.Open())
                             using(StreamReader entryReader = new StreamReader(entryStream))
                             {
-                                PluginData data = (PluginData)xml.Deserialize(entryReader);
-                                plugins[data.Id] = data;
+                                try
+                                {
+                                    PluginData data = (PluginData)xml.Deserialize(entryReader);
+                                    plugins[data.Id] = data;
+                                }
+                                catch (InvalidOperationException e)
+                                {
+                                    LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
+                                }
                             }
                         }
                     }

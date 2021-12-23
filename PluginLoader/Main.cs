@@ -43,7 +43,7 @@ namespace avaness.PluginLoader
             Directory.CreateDirectory(pluginsDir);
 
             LogFile.Init(pluginsDir);
-            LogFile.WriteLine("Starting - v"+ Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
+            LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
 
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();

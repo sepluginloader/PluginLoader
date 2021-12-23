@@ -389,7 +389,7 @@ namespace avaness.PluginLoader.GUI
             if (!TryGetPluginByRowIndex(args.RowIndex, out var data))
                 return;
 
-            Config.SetEnabled(data.Id, !Config.IsEnabled(data.Id));
+            EnablePlugin(data, !AfterRebootEnableFlags[data.Id]);
         }
 
         private bool TryGetPluginByRowIndex(int rowIndex, out PluginData plugin)
@@ -448,7 +448,10 @@ namespace avaness.PluginLoader.GUI
             SetPluginCheckbox(plugin, enable);
 
             if (enable)
+            {
                 DisableOtherPluginsInSameGroup(plugin);
+                EnableDependencies(plugin);
+            }
         }
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
@@ -462,9 +465,23 @@ namespace avaness.PluginLoader.GUI
 
         private void DisableOtherPluginsInSameGroup(PluginData plugin)
         {
-            foreach (var other in plugin.Group)
+            foreach (PluginData other in plugin.Group)
+            {
                 if (!ReferenceEquals(other, plugin))
                     EnablePlugin(other, false);
+            }
+        }
+
+        private void EnableDependencies(PluginData plugin)
+        {
+            if (plugin is not ModPlugin mod || mod.Dependencies == null)
+                return;
+
+            foreach (PluginData other in mod.Dependencies)
+            {
+                if (!ReferenceEquals(other, plugin))
+                    EnablePlugin(other, true);
+            }
         }
 
         private void OnCancelButtonClick(MyGuiControlButton btn)

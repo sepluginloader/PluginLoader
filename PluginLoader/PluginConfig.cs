@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
+using avaness.PluginLoader.Data;
+using Sandbox.Engine.Networking;
+using VRage.Game;
 
 namespace avaness.PluginLoader
 {
@@ -130,6 +133,9 @@ namespace avaness.PluginLoader
 
         public void SetEnabled(string id, bool enabled)
         {
+            if (EnabledPlugins.Contains(id) == enabled)
+                return;
+
             if (enabled)
             {
                 EnabledPlugins.Add(id);
