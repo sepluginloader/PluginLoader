@@ -64,6 +64,9 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(6)]
         public string Author { get; set; }
 
+        [ProtoMember(7)]
+        public string Description { get; set; }
+
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
@@ -162,5 +165,25 @@ namespace avaness.PluginLoader.Data
         }
 
         public abstract void Show();
+
+        public string GetDescriptionText()
+        {
+            string text;
+            if(string.IsNullOrEmpty(Description))
+            {
+                if (string.IsNullOrEmpty(Tooltip))
+                    return "No description";
+                else
+                    text = Tooltip;
+            }
+            else
+            {
+                text = Description;
+            }
+
+            if (text.Length < 1000)
+                return text;
+            return text.Substring(0, 1000);
+        }
     }
 }

@@ -127,7 +127,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             downvoteButton.Checked = vote < 0;
 
             descriptionText.Clear();
-            descriptionText.AppendText(string.IsNullOrEmpty(plugin.Tooltip) ? "No description" : plugin.Tooltip);
+            descriptionText.AppendText(plugin.GetDescriptionText());
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
 
