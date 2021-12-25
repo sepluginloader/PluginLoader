@@ -104,8 +104,9 @@ namespace avaness.PluginLoader.GUI.GuiControls
         {
             var stat = PluginStat;
             var vote = stat.Vote;
-            var canVote = (plugin.Enabled || stat.Tried) && !plugin.IsLocal;
-            var showVotes = canVote || !plugin.IsLocal;
+            var nonLocal = !plugin.IsLocal;
+            var canVote = (plugin.Enabled || stat.Tried) && nonLocal;
+            var showVotes = canVote || nonLocal;
 
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
 
@@ -113,8 +114,12 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             versionText.Text = plugin.Version?.ToString() ?? "N/A";
 
+            statusLabel.Visible = nonLocal;
+            statusText.Visible = nonLocal;
             statusText.Text = plugin.Status == PluginStatus.None ? (plugin.Enabled ? "Up to date" : "N/A") : plugin.StatusString;
 
+            usageLabel.Visible = nonLocal;
+            usageText.Visible = nonLocal;
             usageText.Text = stat.Players.ToString();
 
             ratingLabel.Visible = showVotes;
