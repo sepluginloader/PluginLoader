@@ -110,7 +110,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
 
-            authorText.Text = plugin.Author ?? "N/A";
+            authorText.Text = plugin.Author ?? (plugin.IsLocal ? "Local" : "N/A");
 
             versionText.Text = plugin.Version?.ToString() ?? "N/A";
 
