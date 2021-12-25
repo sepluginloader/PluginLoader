@@ -105,6 +105,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             var stat = PluginStat;
             var vote = stat.Vote;
             var canVote = (plugin.Enabled || stat.Tried) && !plugin.IsLocal;
+            var showVotes = canVote || !plugin.IsLocal;
 
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
 
@@ -116,14 +117,18 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             usageText.Text = stat.Players.ToString();
 
-            upvoteIcon.Visible = canVote;
+            ratingLabel.Visible = showVotes;
+
+            upvoteIcon.Visible = showVotes;
             upvoteButton.Visible = canVote;
             upvoteButton.Checked = vote > 0;
+            upvoteCountText.Visible = showVotes;
             upvoteCountText.Text = $"{stat.Upvotes}";
 
-            downvoteIcon.Visible = canVote;
+            downvoteIcon.Visible = showVotes;
             downvoteButton.Visible = canVote;
             downvoteButton.Checked = vote < 0;
+            downvoteCountText.Visible = showVotes;
             downvoteCountText.Text = $"{stat.Downvotes}";
 
             ratingControl.Value = stat.Rating;
