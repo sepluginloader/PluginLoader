@@ -26,12 +26,13 @@ namespace avaness.PluginLoader.GUI.GuiControls
         private MyGuiControlLabel usageLabel;
         private MyGuiControlLabel usageText;
         private MyGuiControlLabel ratingLabel;
-        private RatingControl ratingControl;
-        private MyGuiControlLabel ratingText;
         private MyGuiControlButton upvoteButton;
         private MyGuiControlImage upvoteIcon;
+        private MyGuiControlLabel upvoteCountText;
         private MyGuiControlButton downvoteButton;
         private MyGuiControlImage downvoteIcon;
+        private MyGuiControlLabel downvoteCountText;
+        private RatingControl ratingControl;
         private MyGuiControlMultilineText descriptionText;
         private MyGuiControlCompositePanel descriptionPanel;
         private MyGuiControlLabel enableLabel;
@@ -103,7 +104,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
         {
             var stat = PluginStat;
             var vote = stat.Vote;
-            var canVote = plugin.Enabled || stat.Tried;
+            var canVote = (plugin.Enabled || stat.Tried) && !plugin.IsLocal;
 
             pluginNameText.Text = plugin.FriendlyName ?? "N/A";
 
@@ -115,16 +116,17 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             usageText.Text = stat.Players.ToString();
 
-            ratingControl.Value = stat.Rating;
-            ratingText.Text = $"{stat.Downvotes + stat.Upvotes} votes";
-
             upvoteIcon.Visible = canVote;
             upvoteButton.Visible = canVote;
             upvoteButton.Checked = vote > 0;
+            upvoteCountText.Text = $"{stat.Upvotes}";
 
             downvoteIcon.Visible = canVote;
             downvoteButton.Visible = canVote;
             downvoteButton.Checked = vote < 0;
+            downvoteCountText.Text = $"{stat.Downvotes}";
+
+            ratingControl.Value = stat.Rating;
 
             descriptionText.Clear();
             descriptionText.AppendText(plugin.GetDescriptionText());
@@ -197,24 +199,34 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 Text = "Rating",
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
-            ratingText = new MyGuiControlLabel
+
+            upvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateUpClicked, size: new Vector2(0.03f))
             {
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
+                CanHaveFocus = false
             };
-            ratingControl = new RatingControl()
+            upvoteIcon = CreateRateIcon(upvoteButton, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
+            upvoteIcon.CanHaveFocus = false;
+            upvoteCountText = new MyGuiControlLabel
             {
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
             };
 
-            // Voting buttons
-            upvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateUpClicked, size: new Vector2(0.03f));
-            upvoteIcon = CreateRateIcon(upvoteButton, "Textures\\GUI\\Icons\\Blueprints\\like_test.png");
-            upvoteButton.CanHaveFocus = false;
-            upvoteIcon.CanHaveFocus = false;
-            downvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateDownClicked, size: new Vector2(0.03f));
+            downvoteButton = new MyGuiControlButton(null, MyGuiControlButtonStyleEnum.Rectangular, onButtonClick: OnRateDownClicked, size: new Vector2(0.03f))
+            {
+                CanHaveFocus = false
+            };
             downvoteIcon = CreateRateIcon(downvoteButton, "Textures\\GUI\\Icons\\Blueprints\\dislike_test.png");
-            downvoteButton.CanHaveFocus = false;
             downvoteIcon.CanHaveFocus = false;
+            downvoteCountText = new MyGuiControlLabel
+            {
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP
+            };
+
+            ratingControl = new RatingControl
+            {
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
+                Visible = false  // FIXME: Make the rating (stars) visible later! Its positioning should already be good.
+            };
 
             // Plugin description
             descriptionText = new MyGuiControlMultilineText
@@ -281,17 +293,25 @@ namespace avaness.PluginLoader.GUI.GuiControls
             row++;
 
             layoutTable.Add(ratingLabel, MyAlignH.Left, MyAlignV.Center, row, 0);
+            layoutTable.Add(upvoteCountText, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(upvoteButton, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(upvoteIcon, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(downvoteCountText, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(downvoteButton, MyAlignH.Left, MyAlignV.Center, row, 1);
+            layoutTable.Add(downvoteIcon, MyAlignH.Left, MyAlignV.Center, row, 1);
             layoutTable.Add(ratingControl, MyAlignH.Left, MyAlignV.Center, row, 1);
-            layoutTable.Add(ratingText, MyAlignH.Left, MyAlignV.Center, row, 1);
-            layoutTable.Add(upvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
-            layoutTable.Add(upvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
-            layoutTable.Add(downvoteButton, MyAlignH.Right, MyAlignV.Center, row, 1);
-            layoutTable.Add(downvoteIcon, MyAlignH.Center, MyAlignV.Center, row, 1);
-            ratingText.PositionX += 0.07f;
-            upvoteButton.PositionX -= 0.07f;
-            downvoteButton.PositionX -= 0.02f;
-            upvoteIcon.Position = upvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(upvoteButton.Size.X / 2f, 0f);
-            downvoteIcon.Position = downvoteButton.Position + new Vector2(-0.0015f, -0.002f) - new Vector2(downvoteButton.Size.X / 2f, 0f);
+
+            const float counterWidth = 0.05f;
+            const float spacing = 0.005f;
+            var buttonWidth = upvoteButton.Size.X;
+            var voteWidth = buttonWidth + spacing + counterWidth + 3 * spacing;
+            var buttonToIconOffset = new Vector2(0.004f, -0.001f);
+            upvoteIcon.Position = upvoteButton.Position + buttonToIconOffset;
+            upvoteCountText.Position = upvoteButton.Position + new Vector2(buttonWidth + spacing, 0f);
+            downvoteButton.Position = upvoteButton.Position + new Vector2(voteWidth, 0f);
+            downvoteIcon.Position = downvoteButton.Position + buttonToIconOffset;
+            downvoteCountText.Position = downvoteButton.Position + new Vector2(buttonWidth + spacing, 0f);
+            ratingControl.Position = downvoteButton.Position + new Vector2(voteWidth, 0f);
             row++;
 
             layoutTable.AddWithSize(descriptionPanel, MyAlignH.Center, MyAlignV.Top, row, 0, 1, 2);
