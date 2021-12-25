@@ -138,8 +138,11 @@ namespace avaness.PluginLoader.GUI.GuiControls
 
             ratingControl.Value = stat.Rating;
 
+            descriptionPanel.Visible = nonLocal;
+            descriptionText.Visible = nonLocal;
             descriptionText.Clear();
             descriptionText.AppendText(plugin.GetDescriptionText());
+
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
 
