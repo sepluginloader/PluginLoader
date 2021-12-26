@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using avaness.PluginLoader.Data;
+using avaness.PluginLoader.GUI.GuiControls;
 using avaness.PluginLoader.Stats;
 using avaness.PluginLoader.Stats.Model;
 using Sandbox.Graphics.GUI;
@@ -8,7 +9,7 @@ using VRage.Game;
 using VRage.Utils;
 using VRageMath;
 
-namespace avaness.PluginLoader.GUI.GuiControls
+namespace avaness.PluginLoader.GUI
 {
     public class PluginDetailsPanel : MyGuiControlParent
     {

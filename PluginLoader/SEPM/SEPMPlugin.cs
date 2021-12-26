@@ -1,10 +1,9 @@
-﻿using System;
-using HarmonyLib;
+﻿using HarmonyLib;
 using VRage.Plugins;
 
 namespace SEPluginManager
 {
-	public interface SEPMPlugin : IPlugin
+    public interface SEPMPlugin : IPlugin
 	{
 		void Main(Harmony harmony, Logger log);
 	}

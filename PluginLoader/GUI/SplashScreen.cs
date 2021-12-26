@@ -4,7 +4,6 @@ using System.Reflection;
 using System.IO;
 using VRage;
 using Sandbox.Game;
-using System.Diagnostics;
 
 namespace avaness.PluginLoader.GUI
 {

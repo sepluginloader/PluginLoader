@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Sandbox;
@@ -12,7 +11,7 @@ using VRage.Game;
 using VRage.Utils;
 using VRageMath;
 
-namespace avaness.PluginLoader.Tools
+namespace avaness.PluginLoader.GUI
 {
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public abstract class TableDialogBase : MyGuiScreenDebugBase
@@ -82,16 +81,9 @@ namespace avaness.PluginLoader.Tools
             var columnWidths = ColumnWidths;
 
             if (columnHeaders == null || columnWidths == null)
-            {
-                Debug.Assert(columnHeaders != null);
-                Debug.Assert(columnWidths != null);
                 return;
-            }
 
             ColumnCount = columnHeaders.Length;
-            Debug.Assert(ColumnCount > 0);
-            Debug.Assert(ColumnCount <= 50);
-            Debug.Assert(ColumnCount == columnWidths.Length);
 
             Table = new MyGuiControlTable
             {
@@ -105,7 +97,6 @@ namespace avaness.PluginLoader.Tools
             Table.SetCustomColumnWidths(columnWidths);
 
             var exampleValues = ExampleValues;
-            Debug.Assert(exampleValues.Length == ColumnCount);
             for (var colIdx = 0; colIdx < ColumnCount; colIdx++)
             {
                 Table.SetColumnName(colIdx, new StringBuilder(columnHeaders[colIdx]));
@@ -200,9 +191,6 @@ namespace avaness.PluginLoader.Tools
             if (view == null)
                 return;
 
-            Debug.Assert(view.Labels.Length == ColumnCount);
-            Debug.Assert(view.Values.Length == ColumnCount);
-
             var row = new MyGuiControlTable.Row(key);
             for (var i = 0; i < ColumnCount; i++)
                 row.AddCell(new MyGuiControlTable.Cell(view.Labels[i], view.Values[i]));
@@ -250,8 +238,6 @@ namespace avaness.PluginLoader.Tools
             OnRenamed(key, newName);
 
             var view = GetItemView(key);
-            Debug.Assert(view.Labels.Length == ColumnCount);
-            Debug.Assert(view.Values.Length == ColumnCount);
 
             NamesByKey[key] = view.Labels[0];
 

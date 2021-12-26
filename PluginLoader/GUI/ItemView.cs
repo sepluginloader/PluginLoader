@@ -1,4 +1,4 @@
-namespace avaness.PluginLoader.Tools
+namespace avaness.PluginLoader.GUI
 {
     public class ItemView
     {

@@ -5,7 +5,7 @@ using Sandbox.Graphics.GUI;
 using VRage.Utils;
 using VRageMath;
 
-namespace avaness.PluginLoader.Tools
+namespace avaness.PluginLoader.GUI
 {
     public static class ConfirmationDialog
     {

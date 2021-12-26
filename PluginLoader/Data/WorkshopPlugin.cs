@@ -1,7 +1,6 @@
 ﻿using ProtoBuf;
 using System.IO;
 using VRage;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {

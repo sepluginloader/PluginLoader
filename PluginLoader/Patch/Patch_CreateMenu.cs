@@ -3,7 +3,6 @@ using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game.GUI;
 using System.Text;
 using avaness.PluginLoader.GUI;
-using avaness.PluginLoader.Stats;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;

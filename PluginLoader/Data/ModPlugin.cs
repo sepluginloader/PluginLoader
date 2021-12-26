@@ -3,9 +3,7 @@ using Sandbox.Graphics.GUI;
 using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
-using VRage;
 using VRage.Game;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {

@@ -108,7 +108,7 @@
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\ModPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
-    <Compile Include="GUI\GuiControls\PluginDetails.cs" />
+    <Compile Include="GUI\PluginDetails.cs" />
     <Compile Include="GUI\GuiControls\RatingControl.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
     <Compile Include="GUI\ProfilesDialog.cs" />
@@ -141,10 +141,10 @@
     <Compile Include="Stats\Model\VoteRequest.cs" />
     <Compile Include="Stats\StatsClient.cs" />
     <Compile Include="SteamAPI.cs" />
-    <Compile Include="Tools\ConfirmationDialog.cs" />
-    <Compile Include="Tools\ItemView.cs" />
-    <Compile Include="Tools\TableDialogBase.cs" />
-    <Compile Include="Tools\NameDialog.cs" />
+    <Compile Include="GUI\ConfirmationDialog.cs" />
+    <Compile Include="GUI\ItemView.cs" />
+    <Compile Include="GUI\TableDialogBase.cs" />
+    <Compile Include="GUI\NameDialog.cs" />
     <Compile Include="Tools\PostHttpContent.cs" />
     <Compile Include="Tools\SimpleHttpClient.cs" />
     <Compile Include="Tools\Tools.cs" />

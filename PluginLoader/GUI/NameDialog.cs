@@ -10,7 +10,7 @@ using VRageMath;
 // ReSharper disable VirtualMemberCallInConstructor
 #pragma warning disable 618
 
-namespace avaness.PluginLoader.Tools
+namespace avaness.PluginLoader.GUI
 {
     class NameDialog : MyGuiScreenDebugBase
     {

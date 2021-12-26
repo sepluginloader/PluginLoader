@@ -1,5 +1,4 @@
 ﻿using avaness.PluginLoader.Data;
-using avaness.PluginLoader.GUI.GuiControls;
 using Sandbox;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
@@ -12,7 +11,6 @@ using System.Linq;
 using System.Text;
 using avaness.PluginLoader.Stats;
 using avaness.PluginLoader.Stats.Model;
-using avaness.PluginLoader.Tools;
 using VRage;
 using VRage.Audio;
 using VRage.Game;
