@@ -141,7 +141,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
             descriptionPanel.Visible = nonLocal;
             descriptionText.Visible = nonLocal;
             descriptionText.Clear();
-            descriptionText.AppendText(plugin.GetDescriptionText());
+            plugin.GetDescriptionText(descriptionText);
 
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
         }
@@ -249,6 +249,7 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
                 TextBoxAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP
             };
+            descriptionText.OnLinkClicked += (x, url) => MyGuiSandbox.OpenUrl(url, UrlOpenMode.SteamOrExternalWithConfirm);
             descriptionPanel = new MyGuiControlCompositePanel
             {
                 BackgroundTexture = MyGuiConstants.TEXTURE_RECTANGLE_DARK_BORDER

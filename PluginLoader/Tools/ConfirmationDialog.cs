@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using HarmonyLib;
 using Sandbox;
 using Sandbox.Graphics.GUI;
 using VRage.Utils;
@@ -55,16 +54,10 @@ namespace avaness.PluginLoader.Tools
             Action onClosing1 = onClosing;
             var dlg = new MyGuiScreenMessageBox((MyMessageBoxStyleEnum)num1, (MyMessageBoxButtonsType)num2, messageText1, messageCaption1, okButtonText1, cancelButtonText1, yesButtonText1, noButtonText1, callback1, timeoutInMiliseconds1, (MyGuiScreenMessageBox.ResultEnum)num3, num4 != 0, size1, (float)num5, (float)num6, position1, num7 != 0, num8 != 0, onClosing1);
 
-            LeftAlignText(dlg);
+            if (dlg.Controls.GetControlByName("MyGuiControlMultilineText") is MyGuiControlMultilineText text)
+                text.TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
 
             return dlg;
-        }
-
-        private static void LeftAlignText(MyGuiScreenMessageBox dlg)
-        {
-            var f = AccessTools.DeclaredField(typeof(MyGuiScreenMessageBox), "m_messageBoxText");
-            var t = (MyGuiControlMultilineText)f.GetValue(dlg);
-            t.TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
         }
     }
 }

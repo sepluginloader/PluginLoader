@@ -1,7 +1,9 @@
 ﻿using ProtoBuf;
+using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
@@ -166,24 +168,40 @@ namespace avaness.PluginLoader.Data
 
         public abstract void Show();
 
-        public string GetDescriptionText()
+        public void GetDescriptionText(MyGuiControlMultilineText textbox)
         {
-            string text;
             if(string.IsNullOrEmpty(Description))
             {
                 if (string.IsNullOrEmpty(Tooltip))
-                    return "No description";
+                    textbox.AppendText("No description");
                 else
-                    text = Tooltip;
+                    textbox.AppendText(CapLength(Tooltip, 1000));
+                return;
             }
             else
             {
-                text = Description;
-            }
+                string text = CapLength(Description, 1000);
+                int textStart = 0;
+                foreach (Match m in Regex.Matches(text, @"https?:\/\/(www\.)?[\w-.]{2,256}\.[a-z]{2,4}\b[\w-.@:%\+~#?&//=]*"))
+                {
+                    int textLen = m.Index - textStart;
+                    if (textLen > 0)
+                        textbox.AppendText(text.Substring(textStart, textLen));
 
-            if (text.Length < 1000)
-                return text;
-            return text.Substring(0, 1000);
+                    textbox.AppendLink(m.Value, m.Value);
+                    textStart = m.Index + m.Length;
+                }
+
+                if (textStart < text.Length)
+                    textbox.AppendText(text.Substring(textStart));
+            }
+        }
+
+        private string CapLength(string s, int len)
+        {
+            if (s.Length > len)
+                return s.Substring(0, len);
+            return s;
         }
     }
 }
