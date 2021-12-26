@@ -19,18 +19,27 @@ namespace avaness.PluginLoader
         [XmlArrayItem("Id")]
         public string[] Plugins
         {
-            get
-            {
-                return EnabledPlugins.ToArray();
-            }
+            get { return EnabledPlugins.ToArray(); }
+            set { EnabledPlugins = new HashSet<string>(value); }
+        }
+
+        [XmlIgnore] public HashSet<string> EnabledPlugins { get; private set; } = new();
+
+        [XmlArray]
+        [XmlArrayItem("Profile")]
+        public Profile[] Profiles
+        {
+            get { return ProfileMap.Values.ToArray(); }
             set
             {
-                EnabledPlugins = new HashSet<string>(value);
+                ProfileMap.Clear();
+                foreach (var profile in value)
+                    ProfileMap[profile.Key] = profile;
             }
         }
 
         [XmlIgnore]
-        public HashSet<string> EnabledPlugins { get; private set; } = new HashSet<string>();
+        public readonly Dictionary<string, Profile> ProfileMap = new();
 
         public string ListHash { get; set; }
 
@@ -46,7 +55,6 @@ namespace avaness.PluginLoader
 
         public PluginConfig()
         {
-
         }
 
         public void Init(PluginList plugins)
