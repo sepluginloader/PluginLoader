@@ -24,6 +24,7 @@ namespace avaness.PluginLoader
         }
 
         public bool Contains(string id) => plugins.ContainsKey(id);
+        public bool TryGetPlugin(string id, out PluginData pluginData) => plugins.TryGetValue(id, out pluginData);
 
         public PluginList(string mainDirectory, PluginConfig config)
         {
