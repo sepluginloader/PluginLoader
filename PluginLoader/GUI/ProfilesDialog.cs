@@ -17,7 +17,6 @@ namespace avaness.PluginLoader.GUI
         protected override string ItemName => "profile";
         protected override string[] ColumnHeaders => new[] { "Name", "Enabled plugins and mods" };
         protected override float[] ColumnWidths => new[] { 0.55f, 0.43f };
-        protected override bool RequireUniqueName => false;
 
         public ProfilesDialog(string caption, Action<Profile> onProfileLoaded) : base(caption)
         {
@@ -72,7 +71,7 @@ namespace avaness.PluginLoader.GUI
             return new ItemView(labels, values);
         }
 
-        protected override ItemView ItemTemplate => new(new[] { "", "" }, new object[] { null, 0 });
+        protected override object[] ExampleValues => new object[] { null, 0 };
 
         protected override void OnLoad(string key)
         {

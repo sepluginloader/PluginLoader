@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 using Sandbox;
 using Sandbox.Game.Gui;
@@ -34,13 +33,12 @@ namespace avaness.PluginLoader.Tools
         protected abstract string ItemName { get; }
         protected abstract string[] ColumnHeaders { get; }
         protected abstract float[] ColumnWidths { get; }
-        protected abstract bool RequireUniqueName { get; }
         protected virtual string NormalizeName(string name) => name.Trim();
         protected virtual int CompareNames(string a, string b) => string.Compare(a, b, StringComparison.CurrentCultureIgnoreCase);
 
         protected abstract IEnumerable<string> IterItemKeys();
         protected abstract ItemView GetItemView(string key);
-        protected abstract ItemView ItemTemplate {get;}
+        protected abstract object[] ExampleValues {get;}
 
         protected abstract void OnLoad(string key);
         protected abstract void OnRenamed(string key, string name);
@@ -106,12 +104,13 @@ namespace avaness.PluginLoader.Tools
 
             Table.SetCustomColumnWidths(columnWidths);
 
-            var template = ItemTemplate;
+            var exampleValues = ExampleValues;
+            Debug.Assert(exampleValues.Length == ColumnCount);
             for (var colIdx = 0; colIdx < ColumnCount; colIdx++)
             {
                 Table.SetColumnName(colIdx, new StringBuilder(columnHeaders[colIdx]));
 
-                switch (template.Values[colIdx])
+                switch (exampleValues[colIdx])
                 {
                     case int _:
                         Table.SetColumnComparison(colIdx, CellIntComparison);
@@ -244,43 +243,6 @@ namespace avaness.PluginLoader.Tools
         private void OnNewNameSpecified(string key, string newName)
         {
             newName = NormalizeName(newName);
-
-            if (RequireUniqueName && FindOtherWithSameName(key, newName, out var otherKey))
-            {
-                MyGuiSandbox.AddScreen(
-                    MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO,
-                        messageText: new StringBuilder($"Are you sure to overwrite this saved {ItemName}?\r\n\r\n{NamesByKey[otherKey]}"),
-                        messageCaption: new StringBuilder("Confirmation"),
-                        callback: result => OnOverwriteForSure(result, key, newName, otherKey)));
-                return;
-            }
-
-            OnOverwriteForSure(MyGuiScreenMessageBox.ResultEnum.YES, key, newName, null);
-        }
-
-        private bool FindOtherWithSameName(string renamedKey, string newName, out string otherKey)
-        {
-            newName = NormalizeName(newName);
-            foreach (var (key, name) in NamesByKey)
-            {
-                if (key != renamedKey && CompareNames(name, newName) == 0)
-                {
-                    otherKey = key;
-                    return true;
-                }
-            }
-
-            otherKey = null;
-            return false;
-        }
-
-        private void OnOverwriteForSure(MyGuiScreenMessageBox.ResultEnum result, string key, string newName, string otherKey)
-        {
-            if (result != MyGuiScreenMessageBox.ResultEnum.YES)
-                return;
-
-            if (otherKey != null)
-                OnDeleteForSure(MyGuiScreenMessageBox.ResultEnum.YES, otherKey);
 
             if (!TryFindRow(key, out var rowIdx))
                 return;
