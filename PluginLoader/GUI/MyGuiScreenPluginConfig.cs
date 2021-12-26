@@ -227,9 +227,10 @@ namespace avaness.PluginLoader.GUI
             buttonMore = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Tiny, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Advanced", new StringBuilder("..."), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnMoreButtonClick);
 
             // FIXME: Use MyLayoutHorizontal instead
-            AlignRow(origin + new Vector2(0.1f, 0f), 0.05f, buttonRestart, buttonClose, buttonMore);
+            AlignRow(origin, 0.05f, buttonRestart, buttonClose);
             Controls.Add(buttonRestart);
             Controls.Add(buttonClose);
+            buttonMore.Position = buttonClose.Position + new Vector2(buttonClose.Size.X / 2 + 0.05f, 0);
             Controls.Add(buttonMore);
 
             // Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
