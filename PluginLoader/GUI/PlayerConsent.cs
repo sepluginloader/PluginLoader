@@ -14,7 +14,6 @@ namespace avaness.PluginLoader.GUI
         public static void ShowDialog(Action continuation = null)
         {
             MyGuiSandbox.AddScreen(
-                // FIXME: Replace it with a nicer dialog, the hardcoded center alignment looks bad
                 ConfirmationDialog.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO_CANCEL,
                     messageText: new StringBuilder(
                         "               Would you like to rate plugins and inform developers?\r\n" +

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using avaness.PluginLoader.Stats;
 using avaness.PluginLoader.Stats.Model;
+using avaness.PluginLoader.Tools;
 using VRage;
 using VRage.Audio;
 using VRage.Game;
@@ -32,6 +33,8 @@ namespace avaness.PluginLoader.GUI
 
         private MyGuiControlTable pluginTable;
         private MyGuiControlLabel pluginCountLabel;
+        private MyGuiControlButton buttonMore;
+        private MyGuiControlContextMenu contextMenu;
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
@@ -198,7 +201,7 @@ namespace avaness.PluginLoader.GUI
             pluginTable.SetColumnComparison(2, CellTextComparison);
 
             // Default sorting
-            pluginTable.SortByColumn(2);
+            pluginTable.SortByColumn(2, MyGuiControlTable.SortStateEnum.Ascending);
 
             // Selecting list items load their details in OnItemSelected
             pluginTable.ItemSelected += OnItemSelected;
@@ -221,13 +224,13 @@ namespace avaness.PluginLoader.GUI
             // Adds buttons at bottom of menu
             var buttonRestart = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Restart the game and apply changes.", new StringBuilder("Apply"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnRestartButtonClick);
             var buttonClose = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Closes the dialog without saving changes to plugin selection", new StringBuilder("Cancel"), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnCancelButtonClick);
-            var buttonConsent = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Tiny, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Give or withdraw your consent for data handling", new StringBuilder("..."), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnConsentButtonClick);
+            buttonMore = new MyGuiControlButton(origin, MyGuiControlButtonStyleEnum.Tiny, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP, "Advanced", new StringBuilder("..."), 0.8f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, OnMoreButtonClick);
 
             // FIXME: Use MyLayoutHorizontal instead
-            AlignRow(origin + new Vector2(0.1f, 0f), 0.05f, buttonRestart, buttonClose, buttonConsent);
+            AlignRow(origin + new Vector2(0.1f, 0f), 0.05f, buttonRestart, buttonClose, buttonMore);
             Controls.Add(buttonRestart);
             Controls.Add(buttonClose);
-            Controls.Add(buttonConsent);
+            Controls.Add(buttonMore);
 
             // Adds a place to show the total amount of plugins and to show the total amount of visible plugins.
             pluginCountLabel = new MyGuiControlLabel(new Vector2(origin.X - (BarWidth / 2), buttonRestart.Position.Y), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
@@ -238,6 +241,23 @@ namespace avaness.PluginLoader.GUI
             pluginDetails.CreateControls(rightSideOrigin);
             Controls.Add(pluginDetails);
             pluginDetails.OnPluginToggled += EnablePlugin;
+
+            // Context menu for the more (...) button
+            contextMenu = new MyGuiControlContextMenu();
+            contextMenu.Deactivate();
+            contextMenu.CreateNewContextMenu();
+            contextMenu.AddItem(new StringBuilder("Save profile"), "Saved the current plugin selection", userData: nameof(OnSaveProfile));
+            contextMenu.AddItem(new StringBuilder("Load profile"), "Loads a saved plugin selection", userData: nameof(OnLoadProfile));
+            contextMenu.AddItem(new StringBuilder("------------"));
+            contextMenu.AddItem(
+                new StringBuilder(PlayerConsent.ConsentGiven ? "Revoke consent" : "Give consent"),
+                PlayerConsent.ConsentGiven ? "Revoke consent to data handling, clear my votes" : "Give consent to data handling, allow me to vote",
+                userData: nameof(OnConsent));
+            contextMenu.Enabled = true;
+            contextMenu.ItemClicked += OnContextMenuItemClicked;
+            contextMenu.OnDeactivated += OnContextMenuDeactivated;
+            // contextMenu.SetMaxSize(new Vector2(0.2f, 0.7f));
+            Elements.Add(contextMenu);
 
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
@@ -489,7 +509,92 @@ namespace avaness.PluginLoader.GUI
             CloseScreen();
         }
 
-        private void OnConsentButtonClick(MyGuiControlButton obj)
+        private void OnMoreButtonClick(MyGuiControlButton _)
+        {
+            contextMenu.ItemList_UseSimpleItemListMouseOverCheck = true;
+            contextMenu.Enabled = false;
+            contextMenu.Activate(false);
+            contextMenu.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+            contextMenu.Position = buttonMore.Position + buttonMore.Size * new Vector2(-1.3f, -1.9f);
+            buttonMore.Visible = false;
+            pluginDetails.Visible = false;
+            FocusContextMenuList();
+        }
+
+        private void FocusContextMenuList()
+        {
+            var guiControlsOwner = (IMyGuiControlsOwner)contextMenu;
+            while (guiControlsOwner.Owner != null)
+            {
+                guiControlsOwner = guiControlsOwner.Owner;
+                if (guiControlsOwner is not MyGuiScreenBase myGuiScreenBase)
+                    continue;
+
+                myGuiScreenBase.FocusedControl = contextMenu.GetInnerList();
+                break;
+            }
+        }
+
+        private void OnContextMenuDeactivated()
+        {
+            buttonMore.Visible = true;
+            pluginDetails.Visible = true;
+            contextMenu.Enabled = true;
+        }
+
+        private void OnContextMenuItemClicked(MyGuiControlContextMenu _, MyGuiControlContextMenu.EventArgs args)
+        {
+            contextMenu.Deactivate();
+
+            switch ((string)args.UserData)
+            {
+                case nameof(OnSaveProfile):
+                    OnSaveProfile();
+                    break;
+
+                case nameof(OnLoadProfile):
+                    OnLoadProfile();
+                    break;
+
+                case nameof(OnConsent):
+                    OnConsent();
+                    break;
+            }
+        }
+
+        private void OnSaveProfile()
+        {
+            var timestamp = DateTime.Now.ToString("O").Substring(0, 19).Replace('T', ' ');
+            MyGuiSandbox.AddScreen(new NameDialog(OnProfileNameProvided, "Save profile", timestamp));
+        }
+
+        private void OnProfileNameProvided(string name)
+        {
+            var afterRebootEnablePluginIds = AfterRebootEnableFlags
+                .Where(p => p.Value)
+                .Select(p => p.Key);
+
+            var profile = new Profile(name, afterRebootEnablePluginIds.ToArray());
+            Config.ProfileMap[profile.Key] = profile;
+            Config.Save();
+        }
+
+        private void OnLoadProfile()
+        {
+            MyGuiSandbox.AddScreen(new ProfilesDialog("Load profile", OnProfileLoaded));
+        }
+
+        private void OnProfileLoaded(Profile profile)
+        {
+            var pluginsEnabledInProfile = profile.Plugins.ToHashSet();
+
+            foreach (var plugin in Main.Instance.List)
+                EnablePlugin(plugin, pluginsEnabledInProfile.Contains(plugin.Id));
+
+            pluginTable.SortByColumn(2, MyGuiControlTable.SortStateEnum.Ascending);
+        }
+
+        private void OnConsent()
         {
             PlayerConsent.ShowDialog();
         }
