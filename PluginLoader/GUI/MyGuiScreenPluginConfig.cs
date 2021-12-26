@@ -517,8 +517,6 @@ namespace avaness.PluginLoader.GUI
             contextMenu.Activate(false);
             contextMenu.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
             contextMenu.Position = buttonMore.Position + buttonMore.Size * new Vector2(-1.3f, -1.9f);
-            buttonMore.Visible = false;
-            pluginDetails.Visible = false;
             FocusContextMenuList();
         }
 
@@ -538,8 +536,6 @@ namespace avaness.PluginLoader.GUI
 
         private void OnContextMenuDeactivated()
         {
-            buttonMore.Visible = true;
-            pluginDetails.Visible = true;
             contextMenu.Enabled = true;
         }
 
