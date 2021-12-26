@@ -257,7 +257,7 @@ namespace avaness.PluginLoader.GUI
             contextMenu.ItemClicked += OnContextMenuItemClicked;
             contextMenu.OnDeactivated += OnContextMenuDeactivated;
             // contextMenu.SetMaxSize(new Vector2(0.2f, 0.7f));
-            Elements.Add(contextMenu);
+            Controls.Add(contextMenu);
 
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
@@ -401,6 +401,7 @@ namespace avaness.PluginLoader.GUI
             if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
                 return;
 
+            contextMenu.Deactivate();
             SelectedPlugin = plugin;
         }
 
