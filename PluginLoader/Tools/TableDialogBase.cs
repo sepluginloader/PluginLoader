@@ -161,16 +161,16 @@ namespace avaness.PluginLoader.Tools
                 text: new StringBuilder("Delete"), onButtonClick: OnDeleteButtonClick);
 
             CancelButton = new MyGuiControlButton(
-                visualStyle: MyGuiControlButtonStyleEnum.Small,
+                visualStyle: MyGuiControlButtonStyleEnum.Default,
                 originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
                 text: MyTexts.Get(MyCommonTexts.Cancel), onButtonClick: OnCancelButtonClick);
 
             var xs = 0.85f * DialogSize.X;
             var y = 0.5f * (DialogSize.Y - 0.15f);
             LoadButton.Position = new Vector2(-0.39f * xs, y);
-            RenameButton.Position = new Vector2(-0.12f * xs, y);
-            DeleteButton.Position = new Vector2(0.06f * xs, y);
-            CancelButton.Position = new Vector2(0.42f * xs, y);
+            RenameButton.Position = new Vector2(-0.08f * xs, y);
+            DeleteButton.Position = new Vector2(0.08f * xs, y);
+            CancelButton.Position = new Vector2(0.39f * xs, y);
 
             LoadButton.SetToolTip($"Loads the selected {ItemName}");
             RenameButton.SetToolTip($"Renames the selected {ItemName}");
