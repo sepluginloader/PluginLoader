@@ -1,7 +1,9 @@
 ﻿using ProtoBuf;
+using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
@@ -44,6 +46,8 @@ namespace avaness.PluginLoader.Data
             }
         }
 
+        [XmlIgnore] public bool IsLocal => Source == "Local";
+
         [ProtoMember(1)]
         public virtual string Id { get; set; }
 
@@ -62,12 +66,17 @@ namespace avaness.PluginLoader.Data
         [ProtoMember(6)]
         public string Author { get; set; }
 
+        [ProtoMember(7)]
+        public string Description { get; set; }
+
         [XmlIgnore]
         public List<PluginData> Group { get; } = new List<PluginData>();
 
+        [XmlIgnore]
+        public bool Enabled => Main.Instance.Config.IsEnabled(Id);
+
         protected PluginData()
         {
-
         }
 
         public abstract Assembly GetAssembly();
@@ -105,7 +114,7 @@ namespace avaness.PluginLoader.Data
                 LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
                 if (e is MissingMemberException)
                     LogFile.WriteLine($"Is {name} up to date?");
-                LogFile.Flush();
+
                 Error();
                 a = null;
                 return false;
@@ -158,5 +167,41 @@ namespace avaness.PluginLoader.Data
         }
 
         public abstract void Show();
+
+        public void GetDescriptionText(MyGuiControlMultilineText textbox)
+        {
+            if(string.IsNullOrEmpty(Description))
+            {
+                if (string.IsNullOrEmpty(Tooltip))
+                    textbox.AppendText("No description");
+                else
+                    textbox.AppendText(CapLength(Tooltip, 1000));
+                return;
+            }
+            else
+            {
+                string text = CapLength(Description, 1000);
+                int textStart = 0;
+                foreach (Match m in Regex.Matches(text, @"https?:\/\/(www\.)?[\w-.]{2,256}\.[a-z]{2,4}\b[\w-.@:%\+~#?&//=]*"))
+                {
+                    int textLen = m.Index - textStart;
+                    if (textLen > 0)
+                        textbox.AppendText(text.Substring(textStart, textLen));
+
+                    textbox.AppendLink(m.Value, m.Value);
+                    textStart = m.Index + m.Length;
+                }
+
+                if (textStart < text.Length)
+                    textbox.AppendText(text.Substring(textStart));
+            }
+        }
+
+        private string CapLength(string s, int len)
+        {
+            if (s.Length > len)
+                return s.Substring(0, len);
+            return s;
+        }
     }
 }

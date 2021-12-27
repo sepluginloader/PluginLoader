@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using VRage;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {

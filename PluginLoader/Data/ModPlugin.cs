@@ -3,9 +3,7 @@ using Sandbox.Graphics.GUI;
 using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
-using VRage;
 using VRage.Game;
-using VRage.Game.ModAPI;
 
 namespace avaness.PluginLoader.Data
 {
@@ -28,7 +26,16 @@ namespace avaness.PluginLoader.Data
                 base.Id = value;
                 WorkshopId = ulong.Parse(Id);
             }
+        
         }
+
+        [ProtoMember(1)]
+        [XmlArray]
+        [XmlArrayItem("Id")]
+        public ulong[] DependencyIds { get; set; } = new ulong[0];
+
+        [XmlIgnore]
+        public ModPlugin[] Dependencies { get; set; } = new ModPlugin[0];
 
         public ModPlugin()
         { }
@@ -85,5 +92,6 @@ namespace avaness.PluginLoader.Data
             modContext.Init(WorkshopId.ToString(), null, ModLocation);
             return modContext;
         }
+
     }
 }

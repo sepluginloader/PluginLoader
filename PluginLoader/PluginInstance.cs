@@ -1,8 +1,6 @@
 ﻿using avaness.PluginLoader.Data;
-using HarmonyLib;
 using Sandbox.Game.World;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using VRage.Game.Components;
@@ -124,7 +122,6 @@ namespace avaness.PluginLoader
         private void ThrowError(string error)
         {
             LogFile.WriteLine(error);
-            LogFile.Flush();
             data.Error();
             Dispose();
         }
@@ -139,7 +136,6 @@ namespace avaness.PluginLoader
             if (pluginType == null)
             {
                 LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
-                LogFile.Flush();
                 data.Error();
                 return false;
             }
