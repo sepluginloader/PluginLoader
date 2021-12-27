@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
+using System.Text;
 
 namespace avaness.PluginLoader
 {
@@ -59,14 +60,26 @@ namespace avaness.PluginLoader
             // Remove plugins from config that no longer exist
             List<string> toRemove = new List<string>();
 
+            StringBuilder sb = new StringBuilder("Enabled plugins: ");
             foreach (string id in EnabledPlugins)
             {
                 if (!plugins.Exists(id))
                 {
-                    LogFile.WriteLine($"{id} is no longer available");
+                    LogFile.WriteLine($"{id} was in the config but is no longer available");
                     toRemove.Add(id);
                 }
+                else
+                {
+                    sb.Append(id).Append(", ");
+                }
             }
+
+            if (EnabledPlugins.Count > 0)
+                sb.Length -= 2;
+            else
+                sb.Append("None");
+            LogFile.WriteLine(sb.ToString());
+
 
             foreach (string id in toRemove)
                 EnabledPlugins.Remove(id);

@@ -107,7 +107,7 @@ namespace avaness.PluginLoader
 
         public void RegisterComponents()
         {
-            LogFile.WriteLine("Registering components");
+            LogFile.WriteLine($"Registering {plugins.Count} components");
             foreach (PluginInstance plugin in plugins)
                 plugin.RegisterSession(MySession.Static);
         }
