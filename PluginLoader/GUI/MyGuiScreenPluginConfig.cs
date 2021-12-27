@@ -476,7 +476,8 @@ namespace avaness.PluginLoader.GUI
 
         private void SetPluginCheckbox(PluginData plugin, bool enable)
         {
-            var checkbox = pluginCheckboxes[plugin.Id];
+            if (!pluginCheckboxes.TryGetValue(plugin.Id, out MyGuiControlCheckbox checkbox))
+                return; // The checkbox might not exist if the target plugin is a dependency not currently in the table
             checkbox.IsChecked = enable;
 
             var row = pluginTable.Find(x => ReferenceEquals(x.UserData as PluginData, plugin));
