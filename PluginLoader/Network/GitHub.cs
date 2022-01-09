@@ -7,7 +7,7 @@ namespace avaness.PluginLoader.Network
     public static class GitHub
     {
 
-        public const string listRepoName = "austinvaness/PluginHub";
+        public const string listRepoName = "sepluginloader/PluginHub";
         public const string listRepoCommit = "main";
         public const string listRepoHash = "plugins.sha1";
 
