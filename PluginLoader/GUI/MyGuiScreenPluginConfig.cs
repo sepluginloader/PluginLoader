@@ -18,6 +18,7 @@ using VRage.Input;
 using VRage.Utils;
 using VRageMath;
 using static Sandbox.Graphics.GUI.MyGuiScreenMessageBox;
+using ParallelTasks;
 
 namespace avaness.PluginLoader.GUI
 {
@@ -90,8 +91,7 @@ namespace avaness.PluginLoader.GUI
             foreach (var plugin in Main.Instance.List)
                 AfterRebootEnableFlags[plugin.Id] = plugin.Enabled;
 
-            // FIXME: Move into a background thread
-            PluginStats = StatsClient.DownloadStats();
+            DownloadStats();
 
             pluginDetails = new PluginDetailsPanel(this);
         }
@@ -117,8 +117,21 @@ namespace avaness.PluginLoader.GUI
 
         private void OnConsentChanged()
         {
-            PluginStats = StatsClient.DownloadStats();
-            pluginDetails.LoadPluginData();
+            DownloadStats();
+        }
+
+        private void DownloadStats()
+        {
+            LogFile.WriteLine("Downloading user statistics", false);
+            Parallel.Start(() =>
+            {
+                PluginStats = StatsClient.DownloadStats();
+            }, OnDownloadedStats);
+        }
+
+        private void OnDownloadedStats()
+        {
+            pluginDetails?.LoadPluginData();
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using ProtoBuf;
 using Sandbox.Graphics.GUI;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 using VRage.Game;
@@ -57,6 +58,7 @@ namespace avaness.PluginLoader.Data
         }
 
         private string modLocation;
+        private bool isLegacy;
         public string ModLocation
         {
             get
@@ -64,11 +66,20 @@ namespace avaness.PluginLoader.Data
                 if (modLocation != null)
                     return modLocation;
                 modLocation = Path.Combine(Path.GetFullPath(@"..\..\..\workshop\content\244850\"), WorkshopId.ToString());
+                if (Directory.Exists(modLocation))
+                {
+                    string legacyFile = Directory.EnumerateFiles(modLocation, "*_legacy.bin").FirstOrDefault();
+                    if(legacyFile != null)
+                    {
+                        isLegacy = true;
+                        modLocation = legacyFile;
+                    }
+                }
                 return modLocation;
             }
         }
 
-        public bool Exists => Directory.Exists(ModLocation);
+        public bool Exists => Directory.Exists(ModLocation) || (isLegacy && File.Exists(modLocation));
 
         public MyObjectBuilder_Checkpoint.ModItem GetModItem()
         {

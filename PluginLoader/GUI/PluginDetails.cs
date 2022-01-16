@@ -395,7 +395,7 @@ namespace avaness.PluginLoader.GUI
 
         private void StoreVote(int vote)
         {
-            if (!PlayerConsent.ConsentGiven)
+            if (!PlayerConsent.ConsentGiven || pluginsDialog.PluginStats == null)
                 return;
 
             var originalStat = PluginStat;

@@ -45,7 +45,7 @@ namespace avaness.PluginLoader
         /// </summary>
         public void SubscribeToItem(string id)
         {
-            if(plugins.TryGetValue(id, out PluginData data) && data is SteamPlugin steam)
+            if(plugins.TryGetValue(id, out PluginData data) && data is ISteamItem steam)
                 SteamAPI.SubscribeToItem(steam.WorkshopId);
         }
 
