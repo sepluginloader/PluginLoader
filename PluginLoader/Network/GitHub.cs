@@ -6,6 +6,7 @@ namespace avaness.PluginLoader.Network
 {
     public static class GitHub
     {
+        private const int timeoutMs = 1000;
 
         public const string listRepoName = "sepluginloader/PluginHub";
         public const string listRepoCommit = "main";
@@ -20,6 +21,7 @@ namespace avaness.PluginLoader.Network
             LogFile.WriteLine("Downloading " + uri);
             HttpWebRequest request = WebRequest.CreateHttp(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            request.Timeout = timeoutMs;
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             fileName = response.Headers["Content-Disposition"];
@@ -42,6 +44,7 @@ namespace avaness.PluginLoader.Network
             LogFile.WriteLine("Downloading " + uri);
             HttpWebRequest request = WebRequest.CreateHttp(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            request.Timeout = timeoutMs;
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             return response.GetResponseStream();
