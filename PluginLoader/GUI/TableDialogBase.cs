@@ -60,7 +60,7 @@ namespace avaness.PluginLoader.GUI
             CanHideOthers = true;
             CloseButtonEnabled = true;
 
-            OnEnterCallback = LoadAndClose;
+            m_onEnterCallback = LoadAndClose;
         }
 
         public override void RecreateControls(bool constructor)
