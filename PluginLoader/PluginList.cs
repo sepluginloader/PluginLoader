@@ -169,12 +169,15 @@ namespace avaness.PluginLoader
                             plugins[data.Id] = data;
                     }
                     LogFile.WriteLine("Whitelist retrieved from disk");
+                    return;
                 }
                 catch (Exception e)
                 {
                     LogFile.WriteLine("Error while reading whitelist: " + e);
                 }
             }
+                
+            LogFile.WriteLine("No whitelist is available! Plugin list will contain local plugins only.");
         }
 
         private bool ListChanged(string current, out string hash)
