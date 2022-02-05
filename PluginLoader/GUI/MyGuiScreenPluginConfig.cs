@@ -91,8 +91,6 @@ namespace avaness.PluginLoader.GUI
             foreach (var plugin in Main.Instance.List)
                 AfterRebootEnableFlags[plugin.Id] = plugin.Enabled;
 
-            DownloadStats();
-
             pluginDetails = new PluginDetailsPanel(this);
         }
 
@@ -273,6 +271,8 @@ namespace avaness.PluginLoader.GUI
 
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
+
+            DownloadStats();
         }
 
         /// <summary>
