@@ -6,7 +6,7 @@ namespace avaness.PluginLoader.Network
 {
     public static class GitHub
     {
-        private const int timeoutMs = 1000;
+        private const int timeoutMs = 3000;
 
         public const string listRepoName = "sepluginloader/PluginHub";
         public const string listRepoCommit = "main";
