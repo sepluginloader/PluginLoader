@@ -107,6 +107,9 @@ namespace avaness.PluginLoader.GUI
                 return;
 
             var stat = PluginStat;
+            if (stat == null)
+                return;
+
             var vote = stat.Vote;
             var nonLocal = !plugin.IsLocal;
             var canVote = (plugin.Enabled || stat.Tried) && nonLocal;
@@ -151,7 +154,7 @@ namespace avaness.PluginLoader.GUI
         }
 
         private readonly PluginStat dummyStat = new();
-        private PluginStat PluginStat => pluginsDialog.PluginStats?.Stats.GetValueOrDefault(plugin.Id) ?? dummyStat;
+        private PluginStat PluginStat => pluginsDialog?.PluginStats?.Stats?.GetValueOrDefault(plugin.Id) ?? dummyStat;
 
         public virtual void CreateControls(Vector2 rightSideOrigin)
         {
