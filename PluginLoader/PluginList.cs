@@ -270,11 +270,6 @@ namespace avaness.PluginLoader
             }
         }
 
-        public bool Exists(string id)
-        {
-            return plugins.TryGetValue(id, out PluginData data);
-        }
-
         private void FindLocalPlugins(string mainDirectory)
         {
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
