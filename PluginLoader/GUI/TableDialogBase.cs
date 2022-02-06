@@ -255,8 +255,8 @@ namespace avaness.PluginLoader.GUI
 
         private void OnDeleteButtonClick(MyGuiControlButton _)
         {
-            var key = SelectedKey;
-            if (key == "")
+            string key = SelectedKey;
+            if (string.IsNullOrEmpty(key))
                 return;
 
             var name = NamesByKey.GetValueOrDefault(key) ?? "?";
