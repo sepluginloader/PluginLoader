@@ -17,6 +17,8 @@ namespace avaness.PluginLoader
 
         public int Count => plugins.Count;
 
+        public bool HasError { get; private set; }
+
         public PluginData this[string key]
         {
             get => plugins[key];
@@ -34,7 +36,10 @@ namespace avaness.PluginLoader
             DownloadList(mainDirectory, config);
 
             if(plugins.Count == 0)
+            {
                 LogFile.WriteLine("WARNING: No plugins in the plugin list. Plugin list will contain local plugins only.");
+                HasError = true;
+            }
 
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);

@@ -73,7 +73,14 @@ namespace avaness.PluginLoader.GUI
 
         public static void OpenMenu()
         {
-            MyGuiSandbox.AddScreen(new MyGuiScreenPluginConfig());
+            if(Main.Instance.List.HasError)
+            {
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK, messageText: new StringBuilder("An error occurred while downloading the plugin list.\nPlease send your game log to the developers of Plugin Loader."), messageCaption: MyTexts.Get(MyCommonTexts.MessageBoxCaptionError), callback: (x) => MyGuiSandbox.AddScreen(new MyGuiScreenPluginConfig())));
+            }
+            else
+            {
+                MyGuiSandbox.AddScreen(new MyGuiScreenPluginConfig());
+            }
         }
 
         /// <summary>
