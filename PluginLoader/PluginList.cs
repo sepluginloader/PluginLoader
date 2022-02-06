@@ -13,9 +13,11 @@ namespace avaness.PluginLoader
 {
     public class PluginList : IEnumerable<PluginData>
     {
-        private readonly Dictionary<string, PluginData> plugins = new Dictionary<string, PluginData>();
+        private Dictionary<string, PluginData> plugins = new Dictionary<string, PluginData>();
 
         public int Count => plugins.Count;
+
+        public bool HasError { get; private set; }
 
         public PluginData this[string key]
         {
@@ -32,6 +34,12 @@ namespace avaness.PluginLoader
 
             lbl.SetText("Downloading plugin list...");
             DownloadList(mainDirectory, config);
+
+            if(plugins.Count == 0)
+            {
+                LogFile.WriteLine("WARNING: No plugins in the plugin list. Plugin list will contain local plugins only.");
+                HasError = true;
+            }
 
             FindWorkshopPlugins(config);
             FindLocalPlugins(mainDirectory);
@@ -111,86 +119,155 @@ namespace avaness.PluginLoader
         {
             string whitelist = Path.Combine(mainDirectory, "whitelist.bin");
 
-            try
+            PluginData[] list;
+            string currentHash = config.ListHash;
+            string newHash;
+            if (!TryDownloadWhitelistHash(out newHash))
             {
-                LogFile.WriteLine("Downloading whitelist");
-                if (!File.Exists(whitelist) | ListChanged(config.ListHash, out string hash))
-                {
-                    using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
-                    using (ZipArchive zipFile = new ZipArchive(zipFileStream))
-                    {
-                        XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-                        foreach(var entry in zipFile.Entries)
-                        {
-                            if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
-                                continue;
-
-                            using(Stream entryStream = entry.Open())
-                            using(StreamReader entryReader = new StreamReader(entryStream))
-                            {
-                                try
-                                {
-                                    PluginData data = (PluginData)xml.Deserialize(entryReader);
-                                    plugins[data.Id] = data;
-                                }
-                                catch (InvalidOperationException e)
-                                {
-                                    LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
-                                }
-                            }
-                        }
-                    }
-                    
-                    LogFile.WriteLine("Saving whitelist to disk");
-                    using (Stream binFile = File.Create(whitelist))
-                    {
-                        Serializer.Serialize(binFile, plugins.Values.ToArray());
-                    }
-                    LogFile.WriteLine("Whitelist updated");
-
-                    config.ListHash = hash;
-                    config.Save();
+                // No connection to plugin hub, read from cache
+                if (!TryReadWhitelistFile(whitelist, out list))
                     return;
-                }
             }
-            catch (Exception e)
+            else if(currentHash == null || currentHash != newHash)
             {
-                LogFile.WriteLine("Error while downloading whitelist: " + e);
+                // Plugin list changed, try downloading new version first
+                if (!TryDownloadWhitelistFile(whitelist, newHash, config, out list) 
+                    && !TryReadWhitelistFile(whitelist, out list))
+                    return;
+            }
+            else
+            {
+                // Plugin list did not change, try reading the current version first
+                if (!TryReadWhitelistFile(whitelist, out list) 
+                    && !TryDownloadWhitelistFile(whitelist, newHash, config, out list))
+                    return;
             }
 
-            if (File.Exists(whitelist))
+            if(list != null)
+                plugins = list.ToDictionary(x => x.Id);
+        }
+
+        private bool TryReadWhitelistFile(string file, out PluginData[] list)
+        {
+            list = null;
+
+            if (File.Exists(file) && new FileInfo(file).Length > 0)
             {
+                LogFile.WriteLine("Reading whitelist from cache");
                 try
                 {
-                    LogFile.WriteLine("Reading whitelist from cache");
-                    using (Stream binFile = File.OpenRead(whitelist))
+                    using (Stream binFile = File.OpenRead(file))
                     {
-                        foreach (PluginData data in Serializer.Deserialize<PluginData[]>(binFile))
-                            plugins[data.Id] = data;
+                        list = Serializer.Deserialize<PluginData[]>(binFile);
                     }
                     LogFile.WriteLine("Whitelist retrieved from disk");
+                    return true;
                 }
                 catch (Exception e)
                 {
                     LogFile.WriteLine("Error while reading whitelist: " + e);
                 }
             }
-        }
-
-        private bool ListChanged(string current, out string hash)
-        {
-            using (Stream hashStream = GitHub.DownloadFile(GitHub.listRepoName, GitHub.listRepoCommit, GitHub.listRepoHash))
-            using (StreamReader hashStreamReader = new StreamReader(hashStream))
+            else
             {
-                hash = hashStreamReader.ReadToEnd().Trim();
+                LogFile.WriteLine("No whitelist cache exists");
             }
 
-            return current == null || current != hash;
+            return false;
         }
 
-        public bool Exists(string id)
+        private bool TryDownloadWhitelistFile(string file, string hash, PluginConfig config, out PluginData[] list)
         {
-            return plugins.TryGetValue(id, out PluginData data);
+            list = null;
+            Dictionary<string, PluginData> newPlugins = new Dictionary<string, PluginData>();
+
+            try
+            {
+                using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
+                using (ZipArchive zipFile = new ZipArchive(zipFileStream))
+                {
+                    XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+                    foreach (var entry in zipFile.Entries)
+                    {
+                        if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        using (Stream entryStream = entry.Open())
+                        using (StreamReader entryReader = new StreamReader(entryStream))
+                        {
+                            try
+                            {
+                                PluginData data = (PluginData)xml.Deserialize(entryReader);
+                                newPlugins[data.Id] = data;
+                            }
+                            catch (InvalidOperationException e)
+                            {
+                                LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
+                            }
+                        }
+                    }
+                }
+
+                list = newPlugins.Values.ToArray();
+                return TrySaveWhitelist(file, list, hash, config);
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while downloading whitelist: " + e);
+            }
+
+            return false;
+        }
+
+        private bool TrySaveWhitelist(string file, PluginData[] list, string hash, PluginConfig config)
+        {
+            try
+            {
+                LogFile.WriteLine("Saving whitelist to disk");
+                using (MemoryStream mem = new MemoryStream())
+                {
+                    Serializer.Serialize(mem, list);
+                    using (Stream binFile = File.Create(file))
+                    {
+                        mem.WriteTo(binFile);
+                    }
+                }
+
+                config.ListHash = hash;
+                config.Save();
+
+                LogFile.WriteLine("Whitelist updated");
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while saving whitelist: " + e);
+                try
+                {
+                    File.Delete(file);
+                }
+                catch { }
+                return false;
+            }
+        }
+
+        private bool TryDownloadWhitelistHash(out string hash)
+        {
+            hash = null;
+            try
+            {
+                using (Stream hashStream = GitHub.DownloadFile(GitHub.listRepoName, GitHub.listRepoCommit, GitHub.listRepoHash))
+                using (StreamReader hashStreamReader = new StreamReader(hashStream))
+                {
+                    hash = hashStreamReader.ReadToEnd().Trim();
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while downloading whitelist hash: " + e);
+                return false;
+            }
         }
 
         private void FindLocalPlugins(string mainDirectory)

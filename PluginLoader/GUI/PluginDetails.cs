@@ -103,6 +103,9 @@ namespace avaness.PluginLoader.GUI
 
         public void LoadPluginData()
         {
+            if (plugin == null)
+                return;
+
             var stat = PluginStat;
             var vote = stat.Vote;
             var nonLocal = !plugin.IsLocal;

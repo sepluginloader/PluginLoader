@@ -63,7 +63,7 @@ namespace avaness.PluginLoader
             StringBuilder sb = new StringBuilder("Enabled plugins: ");
             foreach (string id in EnabledPlugins)
             {
-                if (!plugins.Exists(id))
+                if (!plugins.Contains(id))
                 {
                     LogFile.WriteLine($"{id} was in the config but is no longer available");
                     toRemove.Add(id);
