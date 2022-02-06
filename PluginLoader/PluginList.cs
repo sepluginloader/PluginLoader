@@ -204,8 +204,7 @@ namespace avaness.PluginLoader
                 }
 
                 list = newPlugins.Values.ToArray();
-                SaveWhitelist(file, list, hash, config);
-                return true;
+                return TrySaveWhitelist(file, list, hash, config);
             }
             catch (Exception e)
             {
@@ -215,22 +214,36 @@ namespace avaness.PluginLoader
             return false;
         }
 
-        private void SaveWhitelist(string file, PluginData[] list, string hash, PluginConfig config)
+        private bool TrySaveWhitelist(string file, PluginData[] list, string hash, PluginConfig config)
         {
-            LogFile.WriteLine("Saving whitelist to disk");
-            using (MemoryStream mem = new MemoryStream())
+            try
             {
-                Serializer.Serialize(mem, list);
-                using (Stream binFile = File.Create(file))
+                LogFile.WriteLine("Saving whitelist to disk");
+                using (MemoryStream mem = new MemoryStream())
                 {
-                    mem.WriteTo(binFile);
+                    Serializer.Serialize(mem, list);
+                    using (Stream binFile = File.Create(file))
+                    {
+                        mem.WriteTo(binFile);
+                    }
                 }
+
+                config.ListHash = hash;
+                config.Save();
+
+                LogFile.WriteLine("Whitelist updated");
+                return true;
             }
-
-            config.ListHash = hash;
-            config.Save();
-
-            LogFile.WriteLine("Whitelist updated");
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while saving whitelist: " + e);
+                try
+                {
+                    File.Delete(file);
+                }
+                catch { }
+                return false;
+            }
         }
 
         private bool TryDownloadWhitelistHash(out string hash)
