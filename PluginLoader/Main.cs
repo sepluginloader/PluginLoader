@@ -93,7 +93,7 @@ namespace avaness.PluginLoader
 
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
-                var p = plugins[i];
+                PluginInstance p = plugins[i];
                 if (p.Id == id)
                 {
                     instance = p;

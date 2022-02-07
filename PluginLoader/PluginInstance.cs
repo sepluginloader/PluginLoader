@@ -41,7 +41,7 @@ namespace avaness.PluginLoader
                 return false;
             }
 
-            var openConfigDialog = AccessTools.DeclaredMethod(plugin.GetType(), "OpenConfigDialog", Array.Empty<Type>());
+            MethodInfo openConfigDialog = AccessTools.DeclaredMethod(plugin.GetType(), "OpenConfigDialog", Array.Empty<Type>());
             if (openConfigDialog != null)
                 OpenConfigDialog = () => openConfigDialog.Invoke(plugin, Array.Empty<object>());
 

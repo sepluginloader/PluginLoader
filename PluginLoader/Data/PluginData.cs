@@ -168,11 +168,11 @@ namespace avaness.PluginLoader.Data
 
         public abstract void Show();
 
-        public bool HasConfiguration => Main.Instance.TryGetPluginInstance(Id, out var pluginInstance) && pluginInstance.HasConfigDialog;
+        public bool HasConfiguration => Main.Instance.TryGetPluginInstance(Id, out PluginInstance pluginInstance) && pluginInstance.HasConfigDialog;
 
         public void Configure()
         {
-            if (!Main.Instance.TryGetPluginInstance(Id, out var pluginInstance))
+            if (!Main.Instance.TryGetPluginInstance(Id, out PluginInstance pluginInstance))
                 return;
 
             if (!pluginInstance.HasConfigDialog)
