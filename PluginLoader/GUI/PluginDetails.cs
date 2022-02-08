@@ -39,12 +39,14 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlLabel enableLabel;
         private MyGuiControlCheckbox enableCheckbox;
         private MyGuiControlButton infoButton;
+        private MyGuiControlButton configButton;
 
         // Layout management
         private MyLayoutTable layoutTable;
 
         // Plugin currently loaded into the panel or null if none are loaded
         private PluginData plugin;
+        private PluginInstance instance;
 
         private readonly MyGuiScreenPluginConfig pluginsDialog;
 
@@ -62,6 +64,8 @@ namespace avaness.PluginLoader.GUI
                     return;
 
                 plugin = value;
+                if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
+                    this.instance = instance;
 
                 if (plugin == null)
                 {
@@ -148,6 +152,8 @@ namespace avaness.PluginLoader.GUI
             plugin.GetDescriptionText(descriptionText);
 
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
+
+            configButton.Enabled = instance != null && instance.HasConfigDialog;
         }
 
         private readonly PluginStat dummyStat = new();
@@ -279,6 +285,13 @@ namespace avaness.PluginLoader.GUI
                 Text = "Plugin Info"
             };
 
+            // Plugin config button
+            configButton = new MyGuiControlButton(onButtonClick: _ => instance?.OpenConfig())
+            {
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
+                Text = "Plugin Config"
+            };
+
             LayoutControls(rightSideOrigin);
         }
 
@@ -340,7 +353,11 @@ namespace avaness.PluginLoader.GUI
             layoutTable.Add(enableCheckbox, MyAlignH.Left, MyAlignV.Center, row, 1);
             row++;
 
+            const float infoConfigSpacing = 0.015f;
             layoutTable.AddWithSize(infoButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan: 2);
+            layoutTable.AddWithSize(configButton, MyAlignH.Right, MyAlignV.Center, row, 0, 1, colSpan: 2);
+            configButton.Position += new Vector2(0f, infoConfigSpacing);
+            infoButton.Position = configButton.Position + new Vector2(-configButton.Size.X - infoConfigSpacing, 0);
             // row++;
 
             var border = 0.002f * Vector2.One;

@@ -85,6 +85,23 @@ namespace avaness.PluginLoader
             Splash = null;
         }
 
+        public bool TryGetPluginInstance(string id, out PluginInstance instance)
+        {
+            instance = null;
+            if (!init)
+                return false;
+
+            foreach (PluginInstance p in plugins)
+            {
+                if (p.Id == id)
+                {
+                    instance = p;
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         private void ReportEnabledPlugins()
         {
