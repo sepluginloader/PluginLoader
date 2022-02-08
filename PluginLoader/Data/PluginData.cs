@@ -168,19 +168,6 @@ namespace avaness.PluginLoader.Data
 
         public abstract void Show();
 
-        public bool HasConfiguration => Main.Instance.TryGetPluginInstance(Id, out PluginInstance pluginInstance) && pluginInstance.HasConfigDialog;
-
-        public void Configure()
-        {
-            if (!Main.Instance.TryGetPluginInstance(Id, out PluginInstance pluginInstance))
-                return;
-
-            if (!pluginInstance.HasConfigDialog)
-                return;
-
-            pluginInstance.OpenConfigDialog();
-        }
-
         public void GetDescriptionText(MyGuiControlMultilineText textbox)
         {
             if(string.IsNullOrEmpty(Description))

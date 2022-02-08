@@ -14,12 +14,12 @@ namespace avaness.PluginLoader
         private readonly Type mainType;
         private readonly PluginData data;
         private readonly Assembly mainAssembly;
+        private MethodInfo openConfigDialog;
         private IPlugin plugin;
         private IHandleInputPlugin inputPlugin;
 
         public string Id => data.Id;
-        public bool HasConfigDialog => OpenConfigDialog != null;
-        public Action OpenConfigDialog { get; private set; }
+        public bool HasConfigDialog => openConfigDialog != null;
 
         private PluginInstance(PluginData data, Assembly mainAssembly, Type mainType)
         {
@@ -41,11 +41,23 @@ namespace avaness.PluginLoader
                 return false;
             }
 
-            MethodInfo openConfigDialog = AccessTools.DeclaredMethod(plugin.GetType(), "OpenConfigDialog", Array.Empty<Type>());
-            if (openConfigDialog != null)
-                OpenConfigDialog = () => openConfigDialog.Invoke(plugin, Array.Empty<object>());
-
+            openConfigDialog = AccessTools.DeclaredMethod(mainType, "OpenConfigDialog", Array.Empty<Type>());
             return true;
+        }
+
+        public void OpenConfig()
+        {
+            if (plugin == null || openConfigDialog == null)
+                return;
+
+            try
+            {
+                openConfigDialog.Invoke(plugin, Array.Empty<object>());
+            }
+            catch (Exception e)
+            {
+                ThrowError($"Failed to open plugin config for {data} because of an error: {e}");
+            }
         }
 
         public bool Init(object gameInstance)

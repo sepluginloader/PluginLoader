@@ -46,6 +46,7 @@ namespace avaness.PluginLoader.GUI
 
         // Plugin currently loaded into the panel or null if none are loaded
         private PluginData plugin;
+        private PluginInstance instance;
 
         private readonly MyGuiScreenPluginConfig pluginsDialog;
 
@@ -63,6 +64,8 @@ namespace avaness.PluginLoader.GUI
                     return;
 
                 plugin = value;
+                if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
+                    this.instance = instance;
 
                 if (plugin == null)
                 {
@@ -150,7 +153,7 @@ namespace avaness.PluginLoader.GUI
 
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
 
-            configButton.Enabled = plugin.HasConfiguration;
+            configButton.Enabled = instance != null && instance.HasConfigDialog;
         }
 
         private readonly PluginStat dummyStat = new();
@@ -283,7 +286,7 @@ namespace avaness.PluginLoader.GUI
             };
 
             // Plugin config button
-            configButton = new MyGuiControlButton(onButtonClick: _ => Plugin?.Configure())
+            configButton = new MyGuiControlButton(onButtonClick: _ => instance?.OpenConfig())
             {
                 OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP,
                 Text = "Plugin Config"
