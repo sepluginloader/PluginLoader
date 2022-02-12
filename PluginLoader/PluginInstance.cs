@@ -3,6 +3,7 @@ using Sandbox.Game.World;
 using System;
 using System.Linq;
 using System.Reflection;
+using HarmonyLib;
 using VRage.Game.Components;
 using VRage.Plugins;
 
@@ -13,8 +14,12 @@ namespace avaness.PluginLoader
         private readonly Type mainType;
         private readonly PluginData data;
         private readonly Assembly mainAssembly;
+        private MethodInfo openConfigDialog;
         private IPlugin plugin;
         private IHandleInputPlugin inputPlugin;
+
+        public string Id => data.Id;
+        public bool HasConfigDialog => openConfigDialog != null;
 
         private PluginInstance(PluginData data, Assembly mainAssembly, Type mainType)
         {
@@ -29,12 +34,37 @@ namespace avaness.PluginLoader
             {
                 plugin = (IPlugin)Activator.CreateInstance(mainType);
                 inputPlugin = plugin as IHandleInputPlugin;
-                return true;
             }
             catch (Exception e) 
             {
                 ThrowError($"Failed to instantiate {data} because of an error: {e}");
                 return false;
+            }
+
+            try
+            {
+                openConfigDialog = AccessTools.DeclaredMethod(mainType, "OpenConfigDialog", Array.Empty<Type>());
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine($"Unable to find OpenConfigDialog() in {data} due to an error: {e}");
+                openConfigDialog = null;
+            }
+            return true;
+        }
+
+        public void OpenConfig()
+        {
+            if (plugin == null || openConfigDialog == null)
+                return;
+
+            try
+            {
+                openConfigDialog.Invoke(plugin, Array.Empty<object>());
+            }
+            catch (Exception e)
+            {
+                ThrowError($"Failed to open plugin config for {data} because of an error: {e}");
             }
         }
 
