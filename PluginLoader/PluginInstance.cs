@@ -41,7 +41,15 @@ namespace avaness.PluginLoader
                 return false;
             }
 
-            openConfigDialog = AccessTools.DeclaredMethod(mainType, "OpenConfigDialog", Array.Empty<Type>());
+            try
+            {
+                openConfigDialog = AccessTools.DeclaredMethod(mainType, "OpenConfigDialog", Array.Empty<Type>());
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine($"Unable to find OpenConfigDialog() in {data} due to an error: {e}");
+                openConfigDialog = null;
+            }
             return true;
         }
 
