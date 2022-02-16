@@ -64,8 +64,6 @@ namespace avaness.PluginLoader.GUI
                     return;
 
                 plugin = value;
-                if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
-                    this.instance = instance;
 
                 if (plugin == null)
                 {
@@ -73,6 +71,11 @@ namespace avaness.PluginLoader.GUI
                     ClearPluginData();
                     return;
                 }
+
+                if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
+                    this.instance = instance;
+                else
+                    this.instance = null;
 
                 EnableControls();
                 LoadPluginData();
@@ -154,6 +157,7 @@ namespace avaness.PluginLoader.GUI
             enableCheckbox.IsChecked = pluginsDialog.AfterRebootEnableFlags[plugin.Id];
 
             configButton.Enabled = instance != null && instance.HasConfigDialog;
+            configButton.Visible = instance != null;
         }
 
         private readonly PluginStat dummyStat = new();
