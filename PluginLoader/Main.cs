@@ -13,6 +13,7 @@ using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
+using System.Net;
 
 namespace avaness.PluginLoader
 {
@@ -30,6 +31,9 @@ namespace avaness.PluginLoader
 
         public Main()
         {
+            // Fix tls 1.2 not supported on Windows 7 - github.com is tls 1.2 only
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+
             Stopwatch sw = Stopwatch.StartNew();
 
             Splash = new SplashScreen();
