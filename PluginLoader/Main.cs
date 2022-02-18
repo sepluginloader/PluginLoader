@@ -13,6 +13,7 @@ using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
+using System.Net;
 
 namespace avaness.PluginLoader
 {
@@ -44,6 +45,16 @@ namespace avaness.PluginLoader
 
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
+            
+            // Fix tls 1.2 not supported on Windows 7 - github.com is tls 1.2 only
+            try
+            {
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+            }
+            catch (NotSupportedException e)
+            {
+                LogFile.WriteLine("An error occurred while setting up networking, web requests will probably fail: " + e);
+            }
 
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
