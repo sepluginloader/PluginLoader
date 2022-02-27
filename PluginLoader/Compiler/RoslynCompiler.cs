@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace avaness.PluginLoader.Compiler
 {
@@ -23,13 +24,24 @@ namespace avaness.PluginLoader.Compiler
             }
         }
 
-        public byte[] Compile(string assemblyName)
+        public byte[] Compile(string assemblyName, bool ignoreAccessibility)
         {
+            CSharpCompilationOptions compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
+
+            // See https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
+            if (ignoreAccessibility)
+            {
+                compilationOptions = compilationOptions.WithMetadataImportOptions(MetadataImportOptions.All);
+
+                var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+                topLevelBinderFlagsProperty.SetValue(compilationOptions, (uint)1 << 22);
+            }
+
             CSharpCompilation compilation = CSharpCompilation.Create(
                assemblyName,
                syntaxTrees: source.Select(x => x.Tree),
                references: RoslynReferences.EnumerateAllReferences(),
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release));
+               options: compilationOptions);
 
             using (var ms = new MemoryStream())
             {

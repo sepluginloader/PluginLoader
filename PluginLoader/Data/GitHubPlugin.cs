@@ -25,6 +25,9 @@ namespace avaness.PluginLoader.Data
         [XmlArrayItem("Directory")]
         public string[] SourceDirectories { get; set; }
 
+        [ProtoMember(3)]
+        public bool IgnoreAccessibility { get; set; } = false;
+
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
         private string cacheDir, assemblyName;
@@ -122,7 +125,7 @@ namespace avaness.PluginLoader.Data
                 }
                 callback?.Invoke(1);
             }
-            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName());
+            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName(), IgnoreAccessibility);
         }
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)
