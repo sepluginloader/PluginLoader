@@ -49,6 +49,24 @@ namespace avaness.PluginLoader
         public bool DataHandlingConsent { get; set; }
         public string DataHandlingConsentDate { get; set; }
 
+        private int networkTimeout = 5000;
+        public int NetworkTimeout 
+        { 
+            get
+            {
+                return networkTimeout;
+            }
+            set
+            {
+                if (value < 100)
+                    networkTimeout = 100;
+                else if (value > 60000)
+                    networkTimeout = 60000;
+                else
+                    networkTimeout = value;
+            }
+        }
+
         public int Count => EnabledPlugins.Count;
 
         public PluginConfig()
