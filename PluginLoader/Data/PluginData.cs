@@ -115,7 +115,10 @@ namespace avaness.PluginLoader.Data
                 if (e is MissingMemberException)
                     LogFile.WriteLine($"Is {name} up to date?");
 
-                Error();
+                if (e is NotSupportedException && e.Message.Contains("loadFromRemoteSources"))
+                    Error($"The plugin {name} was blocked by windows. Please unblock the file in the dll file properties.");
+                else
+                    Error();
                 a = null;
                 return false;
             }
@@ -153,10 +156,12 @@ namespace avaness.PluginLoader.Data
             return Id + '|' + FriendlyName;
         }
 
-        public void Error()
+        public void Error(string msg = null)
         {
             Status = PluginStatus.Error;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (msg == null)
+                msg = $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.";
+            MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         protected void ErrorSecurity(string hash)
