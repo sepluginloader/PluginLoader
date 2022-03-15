@@ -2,10 +2,13 @@
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using VRage.Utils;
 
 namespace avaness.PluginLoader.Data
 {
@@ -161,7 +164,19 @@ namespace avaness.PluginLoader.Data
             Status = PluginStatus.Error;
             if (msg == null)
                 msg = $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.";
-            MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string file = MyLog.Default.GetFilePath();
+            if(File.Exists(file) && file.EndsWith(".log"))
+            {
+                MyLog.Default.Flush();
+                msg += "\n\nWould you like to open the game log?";
+                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                if (result == DialogResult.Yes)
+                    Process.Start(file);
+            }
+            else
+            {
+                MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         protected void ErrorSecurity(string hash)
