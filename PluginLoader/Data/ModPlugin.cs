@@ -66,7 +66,7 @@ namespace avaness.PluginLoader.Data
                 if (modLocation != null)
                     return modLocation;
                 modLocation = Path.Combine(Path.GetFullPath(@"..\..\..\workshop\content\244850\"), WorkshopId.ToString());
-                if (Directory.Exists(modLocation))
+                if (Directory.Exists(modLocation) && !Directory.Exists(Path.Combine(modLocation, "Data")))
                 {
                     string legacyFile = Directory.EnumerateFiles(modLocation, "*_legacy.bin").FirstOrDefault();
                     if(legacyFile != null)
