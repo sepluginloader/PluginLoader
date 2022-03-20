@@ -1,4 +1,7 @@
 ﻿using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.GUI;
+using Sandbox;
+using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using VRage;
+using VRage.Utils;
 
 namespace avaness.PluginLoader.Data
 {
@@ -23,10 +30,13 @@ namespace avaness.PluginLoader.Data
             set
             {
                 base.Id = value;
+                xmlDialogFolder = Id;
                 if (Directory.Exists(value))
                     FriendlyName = Path.GetFileName(value);
             }
         }
+
+        private string xmlDialogFolder;
 
 
         private LocalFolderPlugin()
@@ -74,7 +84,7 @@ namespace avaness.PluginLoader.Data
             return null;
         }
 
-        public IEnumerable<string> GetProjectFiles(string folder)
+        private IEnumerable<string> GetProjectFiles(string folder)
         {
             string gitOutput = null;
             try
@@ -140,6 +150,92 @@ namespace avaness.PluginLoader.Data
             string folder = Path.GetFullPath(Id);
             if (Directory.Exists(folder))
                 Process.Start("explorer.exe", $"\"{folder}\"");
+        }
+
+        public override bool OpenContextMenu(MyGuiControlContextMenu menu)
+        {
+            menu.Clear();
+            menu.AddItem(new StringBuilder("Remove"));
+            menu.AddItem(new StringBuilder("Load data file"));
+            return true;
+        }
+
+        public override void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        {
+            Main main = Main.Instance;
+            switch (args.ItemIndex)
+            {
+                case 0:
+                    screen.EnablePlugin(this, false);
+                    main.Config.PluginFolders.Remove(Id);
+                    break;
+                case 1:
+                    Thread t = new Thread(new ThreadStart(() => OpenDialog(screen)));
+                    t.SetApartmentState(ApartmentState.STA);
+                    t.Start();
+                    break;
+            }
+        }
+
+        // Open a dialog in a new thread
+        private void OpenDialog(MyGuiScreenPluginConfig screen)
+        {
+            try
+            {
+                // Get the file path via prompt
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.InitialDirectory = xmlDialogFolder;
+                    openFileDialog.Filter = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
+                    openFileDialog.RestoreDirectory = true;
+
+                    if (openFileDialog.ShowDialog(LoaderTools.GetMainForm()) == DialogResult.OK)
+                    {
+                        // Move back to the main thread so that we can interact with keen code again
+                        MySandboxGame.Static.Invoke(
+                            () => DeserializeFile(screen, openFileDialog.FileName),
+                            "PluginLoader");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
+            }
+        }
+
+        // Deserializes a file and refreshes the plugin screen
+        private void DeserializeFile(MyGuiScreenPluginConfig screen, string file)
+        {
+            if (!File.Exists(file))
+                return;
+
+            try
+            {
+                XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+
+                using (StreamReader reader = File.OpenText(file))
+                {
+                    object resultObj = xml.Deserialize(reader);
+                    if(resultObj.GetType() != typeof(GitHubPlugin))
+                    {
+                        throw new Exception("Xml file is not of type GitHubPlugin!");
+                    }
+
+                    GitHubPlugin github = (GitHubPlugin)resultObj;
+                    FriendlyName = github.FriendlyName;
+                    Tooltip = github.Tooltip;
+                    Author = github.Author;
+                    Description = github.Description;
+                    xmlDialogFolder = Path.GetDirectoryName(file);
+                    if(screen.Visible && screen.IsOpened)
+                        screen.RefreshSidePanel();
+                }
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while reading the xml file: " + e);
+            }
         }
     }
 }

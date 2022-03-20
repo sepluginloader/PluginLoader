@@ -499,7 +499,7 @@ namespace avaness.PluginLoader.GUI
                 pluginDetails.LoadPluginData();
         }
 
-        private void EnablePlugin(PluginData plugin, bool enable)
+        public void EnablePlugin(PluginData plugin, bool enable)
         {
             if (enable == AfterRebootEnableFlags[plugin.Id])
                 return;

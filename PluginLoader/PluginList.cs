@@ -283,7 +283,7 @@ namespace avaness.PluginLoader
                 }
             }
 
-            foreach(string folder in config.EnabledPlugins)
+            foreach(string folder in config.PluginFolders)
             {
                 if(Path.IsPathRooted(folder) && Directory.Exists(folder))
                 {

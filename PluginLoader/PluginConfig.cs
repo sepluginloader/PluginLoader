@@ -24,6 +24,16 @@ namespace avaness.PluginLoader
         [XmlIgnore] public HashSet<string> EnabledPlugins { get; private set; } = new();
 
         [XmlArray]
+        [XmlArrayItem("Folder")]
+        public string[] LocalFolderPlugins
+        {
+            get { return PluginFolders.ToArray(); }
+            set { PluginFolders = new HashSet<string>(value); }
+        }
+
+        [XmlIgnore] public HashSet<string> PluginFolders { get; private set; } = new();
+
+        [XmlArray]
         [XmlArrayItem("Profile")]
         public Profile[] Profiles
         {
