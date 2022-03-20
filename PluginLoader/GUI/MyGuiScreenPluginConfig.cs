@@ -34,6 +34,7 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlLabel pluginCountLabel;
         private MyGuiControlButton buttonMore;
         private MyGuiControlContextMenu contextMenu;
+        private MyGuiControlContextMenu pluginContextMenu;
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
@@ -276,10 +277,24 @@ namespace avaness.PluginLoader.GUI
             // contextMenu.SetMaxSize(new Vector2(0.2f, 0.7f));
             Controls.Add(contextMenu);
 
+            // Context menu for the plugin list
+            pluginContextMenu = new MyGuiControlContextMenu();
+            pluginContextMenu.Deactivate();
+            pluginContextMenu.CreateNewContextMenu();
+            pluginContextMenu.AddItem(new StringBuilder("This is a test"));
+            pluginContextMenu.ItemClicked += OnPluginContextMenuItemClicked;
+            pluginContextMenu.OnDeactivated += OnContextMenuDeactivated;
+            Controls.Add(pluginContextMenu);
+
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
 
             DownloadStats();
+        }
+
+        public void RefreshSidePanel()
+        {
+            pluginDetails?.LoadPluginData();
         }
 
         /// <summary>
@@ -419,6 +434,12 @@ namespace avaness.PluginLoader.GUI
         {
             if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
                 return;
+
+            if(args.MouseButton == MyMouseButtonsEnum.Right && plugin.OpenContextMenu(pluginContextMenu))
+            {
+                pluginContextMenu.ItemList_UseSimpleItemListMouseOverCheck = true;
+                pluginContextMenu.Activate();
+            }
 
             contextMenu.Deactivate();
             SelectedPlugin = plugin;
@@ -577,6 +598,11 @@ namespace avaness.PluginLoader.GUI
                     OnConsent();
                     break;
             }
+        }
+
+        private void OnPluginContextMenuItemClicked(MyGuiControlContextMenu menu, MyGuiControlContextMenu.EventArgs args)
+        {
+            SelectedPlugin?.ContextMenuClicked(this, args);
         }
 
         private void OnSaveProfile()

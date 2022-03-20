@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using avaness.PluginLoader.GUI;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
@@ -188,9 +189,11 @@ namespace avaness.PluginLoader.Data
 
         public abstract void Show();
 
-        public void GetDescriptionText(MyGuiControlMultilineText textbox)
+        public virtual void GetDescriptionText(MyGuiControlMultilineText textbox)
         {
-            if(string.IsNullOrEmpty(Description))
+            textbox.Visible = true;
+            textbox.Clear();
+            if (string.IsNullOrEmpty(Description))
             {
                 if (string.IsNullOrEmpty(Tooltip))
                     textbox.AppendText("No description");
@@ -222,6 +225,16 @@ namespace avaness.PluginLoader.Data
             if (s.Length > len)
                 return s.Substring(0, len);
             return s;
+        }
+
+        public virtual bool OpenContextMenu(MyGuiControlContextMenu menu)
+        {
+            return false;
+        }
+
+        public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        {
+
         }
     }
 }

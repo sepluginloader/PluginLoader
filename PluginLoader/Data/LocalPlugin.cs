@@ -1,4 +1,5 @@
 ﻿using System;
+using Sandbox.Graphics.GUI;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -85,6 +86,12 @@ namespace avaness.PluginLoader.Data
                 main.List.Remove(assemblyPath);
 
             return assembly;
+        }
+
+        public override void GetDescriptionText(MyGuiControlMultilineText textbox)
+        {
+            textbox.Visible = false;
+            textbox.Clear();
         }
     }
 }
