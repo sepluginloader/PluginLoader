@@ -42,7 +42,7 @@ namespace avaness.PluginLoader
             }
 
             FindWorkshopPlugins(config);
-            FindLocalPlugins(mainDirectory);
+            FindLocalPlugins(config, mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
             FindModDependencies();
@@ -270,7 +270,7 @@ namespace avaness.PluginLoader
             }
         }
 
-        private void FindLocalPlugins(string mainDirectory)
+        private void FindLocalPlugins(PluginConfig config, string mainDirectory)
         {
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
@@ -280,6 +280,15 @@ namespace avaness.PluginLoader
                     string name = local.FriendlyName;
                     if (!name.StartsWith("0Harmony") && !name.StartsWith("Microsoft"))
                         plugins[local.Id] = local;
+                }
+            }
+
+            foreach(string folder in config.EnabledPlugins)
+            {
+                if(Path.IsPathRooted(folder) && Directory.Exists(folder))
+                {
+                    LocalFolderPlugin local = new LocalFolderPlugin(folder);
+                    plugins[local.Id] = local;
                 }
             }
         }
