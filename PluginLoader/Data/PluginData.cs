@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage.Utils;
+using VRage;
 
 namespace avaness.PluginLoader.Data
 {
@@ -50,7 +51,7 @@ namespace avaness.PluginLoader.Data
             }
         }
 
-        [XmlIgnore] public bool IsLocal => Source == "Local";
+        [XmlIgnore] public bool IsLocal => Source == MyTexts.GetString(MyCommonTexts.Local);
 
         [ProtoMember(1)]
         public virtual string Id { get; set; }
