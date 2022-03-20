@@ -25,6 +25,11 @@ namespace avaness.PluginLoader
         public PluginConfig Config { get; }
         public SplashScreen Splash { get; }
 
+        /// <summary>
+        /// True if a local plugin was loaded
+        /// </summary>
+        public bool HasLocal { get; private set; }
+
         private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
@@ -80,7 +85,11 @@ namespace avaness.PluginLoader
                 if (data is GitHubPlugin github)
                     github.Init(pluginsDir);
                 if (PluginInstance.TryGet(data, out PluginInstance p))
+                {
                     plugins.Add(p);
+                    if (data.IsLocal)
+                        HasLocal = true;
+                }
             }
 
             sw.Stop();

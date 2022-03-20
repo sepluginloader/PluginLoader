@@ -121,6 +121,7 @@
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
+    <Compile Include="Patch\Patch_IngameRestart.cs" />
     <Compile Include="Patch\Patch_MyDefinitionManager.cs" />
     <Compile Include="Patch\Patch_MyScriptManager.cs" />
     <Compile Include="PluginConfig.cs" />
