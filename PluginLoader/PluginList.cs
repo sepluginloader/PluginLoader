@@ -62,6 +62,11 @@ namespace avaness.PluginLoader
             return plugins.Remove(id);
         }
 
+        public void Add(PluginData data)
+        {
+            plugins[data.Id] = data;
+        }
+
         private void FindPluginGroups()
         {
             int groups = 0;
@@ -283,16 +288,15 @@ namespace avaness.PluginLoader
                 }
             }
 
-            foreach(string folder in config.PluginFolders)
+            foreach(var folderConfig in config.PluginFolders.Values)
             {
-                if(Path.IsPathRooted(folder) && Directory.Exists(folder))
+                if(Directory.Exists(folderConfig.Folder) && File.Exists(folderConfig.DataFile))
                 {
-                    LocalFolderPlugin local = new LocalFolderPlugin(folder);
+                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig.Folder, folderConfig.DataFile);
                     plugins[local.Id] = local;
                 }
             }
         }
-
         private void FindWorkshopPlugins(PluginConfig config)
         {
             List<ISteamItem> steamPlugins = new List<ISteamItem>(plugins.Values.Select(x => x as ISteamItem).Where(x => x != null));

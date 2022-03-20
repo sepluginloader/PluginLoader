@@ -24,14 +24,14 @@ namespace avaness.PluginLoader
         [XmlIgnore] public HashSet<string> EnabledPlugins { get; private set; } = new();
 
         [XmlArray]
-        [XmlArrayItem("Folder")]
-        public string[] LocalFolderPlugins
+        [XmlArrayItem("Plugin")]
+        public Data.LocalFolderPlugin.Config[] LocalFolderPlugins
         {
-            get { return PluginFolders.ToArray(); }
-            set { PluginFolders = new HashSet<string>(value); }
+            get { return PluginFolders.Values.ToArray(); }
+            set { PluginFolders = value.ToDictionary(x => x.Folder); }
         }
 
-        [XmlIgnore] public HashSet<string> PluginFolders { get; private set; } = new();
+        [XmlIgnore] public Dictionary<string, Data.LocalFolderPlugin.Config> PluginFolders { get; private set; } = new();
 
         [XmlArray]
         [XmlArrayItem("Profile")]

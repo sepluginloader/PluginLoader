@@ -39,8 +39,8 @@ namespace avaness.PluginLoader
 
             Cursor temp = Cursor.Current;
             Cursor.Current = Cursors.AppStarting;
-            
-            string pluginsDir = Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+
+            string pluginsDir = LoaderTools.PluginsDir;
             Directory.CreateDirectory(pluginsDir);
 
             LogFile.Init(pluginsDir);

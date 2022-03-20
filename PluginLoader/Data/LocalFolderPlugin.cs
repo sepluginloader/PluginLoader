@@ -19,35 +19,30 @@ namespace avaness.PluginLoader.Data
 {
     public class LocalFolderPlugin : PluginData
     {
+        const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
+
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
+        private string[] sourceDirectories;
 
-        public override string Id
+        public Config PathInfo { get; }
+
+        public LocalFolderPlugin(string folder, string xmlFile)
         {
-            get
-            {
-                return base.Id;
-            }
-            set
-            {
-                base.Id = value;
-                xmlDialogFolder = Id;
-                if (Directory.Exists(value))
-                    FriendlyName = Path.GetFileName(value);
-            }
+            Id = folder;
+            FriendlyName = Path.GetFileName(folder);
+            Status = PluginStatus.None;
+            PathInfo = new Config(folder, xmlFile);
+            DeserializeFile(xmlFile);
         }
 
-        private string xmlDialogFolder;
-
-
-        private LocalFolderPlugin()
-        {
-
-        }
-
-        public LocalFolderPlugin(string folder)
+        private LocalFolderPlugin(string folder)
         {
             Id = folder;
             Status = PluginStatus.None;
+            PathInfo = new Config()
+            {
+                Folder = folder
+            };
         }
 
         public override Assembly GetAssembly()
@@ -108,7 +103,7 @@ namespace avaness.PluginLoader.Data
                 if (p.ExitCode == 0)
                 {
                     string[] files = gitOutput.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    return files.Where(x => x.EndsWith(".cs")).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar)));
+                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar)));
                 }
                 else
                 {
@@ -137,7 +132,20 @@ namespace avaness.PluginLoader.Data
 
             char sep = Path.DirectorySeparatorChar;
             return Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories)
-                .Where(x => !x.Contains(sep + "bin" + sep) && !x.Contains(sep + "obj" + sep));
+                .Where(x => !x.Contains(sep + "bin" + sep) && !x.Contains(sep + "obj" + sep) && IsValidProjectFile(x));
+        }
+
+        private bool IsValidProjectFile(string file)
+        {
+            if (sourceDirectories == null || sourceDirectories.Length == 0)
+                return true;
+            file = file.Replace('\\', '/');
+            foreach(string dir in sourceDirectories)
+            {
+                if (file.StartsWith(dir))
+                    return true;
+            }
+            return false;
         }
 
         public override string ToString()
@@ -162,50 +170,20 @@ namespace avaness.PluginLoader.Data
 
         public override void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
         {
-            Main main = Main.Instance;
             switch (args.ItemIndex)
             {
                 case 0:
-                    screen.EnablePlugin(this, false);
-                    main.Config.PluginFolders.Remove(Id);
+                    Main.Instance.Config.PluginFolders.Remove(Id);
+                    screen.RemovePlugin(this);
                     break;
                 case 1:
-                    Thread t = new Thread(new ThreadStart(() => OpenDialog(screen)));
-                    t.SetApartmentState(ApartmentState.STA);
-                    t.Start();
+                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(PathInfo.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
                     break;
-            }
-        }
-
-        // Open a dialog in a new thread
-        private void OpenDialog(MyGuiScreenPluginConfig screen)
-        {
-            try
-            {
-                // Get the file path via prompt
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
-                {
-                    openFileDialog.InitialDirectory = xmlDialogFolder;
-                    openFileDialog.Filter = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
-                    openFileDialog.RestoreDirectory = true;
-
-                    if (openFileDialog.ShowDialog(LoaderTools.GetMainForm()) == DialogResult.OK)
-                    {
-                        // Move back to the main thread so that we can interact with keen code again
-                        MySandboxGame.Static.Invoke(
-                            () => DeserializeFile(screen, openFileDialog.FileName),
-                            "PluginLoader");
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
             }
         }
 
         // Deserializes a file and refreshes the plugin screen
-        private void DeserializeFile(MyGuiScreenPluginConfig screen, string file)
+        private void DeserializeFile(string file, MyGuiScreenPluginConfig screen = null)
         {
             if (!File.Exists(file))
                 return;
@@ -223,12 +201,14 @@ namespace avaness.PluginLoader.Data
                     }
 
                     GitHubPlugin github = (GitHubPlugin)resultObj;
+                    github.Init(LoaderTools.PluginsDir);
                     FriendlyName = github.FriendlyName;
                     Tooltip = github.Tooltip;
                     Author = github.Author;
                     Description = github.Description;
-                    xmlDialogFolder = Path.GetDirectoryName(file);
-                    if(screen.Visible && screen.IsOpened)
+                    sourceDirectories = github.SourceDirectories;
+                    PathInfo.DataFile = file;
+                    if(screen != null && screen.Visible && screen.IsOpened)
                         screen.RefreshSidePanel();
                 }
             }
@@ -236,6 +216,40 @@ namespace avaness.PluginLoader.Data
             {
                 LogFile.WriteLine("Error while reading the xml file: " + e);
             }
+        }
+
+        public static void CreateNew(Action<LocalFolderPlugin> onComplete)
+        {
+            LoaderTools.OpenFolderDialog("Open the root of your project", LoaderTools.PluginsDir, (folder) =>
+            {
+                if (Main.Instance.List.Contains(folder))
+                {
+                    MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That folder already exists in the list!"));
+                    return;
+                }
+
+                LocalFolderPlugin plugin = new LocalFolderPlugin(folder);
+                LoaderTools.OpenFileDialog("Open the xml data file", folder, XmlDataType, (file) => 
+                {
+                    plugin.DeserializeFile(file);
+                    onComplete(plugin);
+                });
+            });
+        }
+
+
+        public class Config
+        {
+            public Config() { }
+
+            public Config(string folder, string dataFile)
+            {
+                Folder = folder;
+                DataFile = dataFile;
+            }
+
+            public string Folder { get; set; }
+            public string DataFile { get; set; }
         }
     }
 }
