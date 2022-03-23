@@ -28,7 +28,7 @@ namespace avaness.PluginLoader.Patch
         {
             if(result == MyGuiScreenMessageBox.ResultEnum.YES)
             {
-                LoaderTools.Restart();
+                LoaderTools.UnloadAndRestart();
             }
         }
     }

@@ -708,11 +708,11 @@ namespace avaness.PluginLoader.GUI
                 Save();
                 if (MyGuiScreenGamePlay.Static != null)
                 {
-                    ShowSaveMenu(delegate { UnloadAndRestartGame(); });
+                    ShowSaveMenu(delegate { LoaderTools.UnloadAndRestart(); });
                     return;
                 }
 
-                UnloadAndRestartGame();
+                LoaderTools.UnloadAndRestart();
             }
             else if (result == ResultEnum.NO)
             {
@@ -783,15 +783,6 @@ namespace avaness.PluginLoader.GUI
                 MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreenshotWasTaken;
                 afterMenu();
             }
-        }
-
-        private static void UnloadAndRestartGame()
-        {
-            MySessionLoader.Unload();
-            MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
-            MySandboxGame.Config.Save();
-            MyScreenManager.CloseAllScreensNowExcept(null);
-            LoaderTools.Restart();
         }
 
         #endregion

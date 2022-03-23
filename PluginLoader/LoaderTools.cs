@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
 using Sandbox;
+using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using SEPluginManager;
 using System;
 using System.Diagnostics;
@@ -12,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using VRage.FileSystem;
+using VRage.Input;
 using VRage.Utils;
 
 namespace avaness.PluginLoader
@@ -26,6 +29,16 @@ namespace avaness.PluginLoader
                 return Application.OpenForms[0];
             else
                 return new Form { TopMost = true };
+        }
+
+
+        public static void UnloadAndRestart()
+        {
+            MySessionLoader.Unload();
+            MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
+            MySandboxGame.Config.Save();
+            MyScreenManager.CloseAllScreensNowExcept(null);
+            Restart();
         }
 
         public static void Restart()
