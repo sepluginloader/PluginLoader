@@ -115,6 +115,13 @@ namespace avaness.PluginLoader.GUI
             PlayerConsent.OnConsentChanged += OnConsentChanged;
         }
 
+        public override void HandleUnhandledInput(bool receivedFocusInThisUpdate)
+        {
+            var input = MyInput.Static;
+            if(input.IsNewKeyPressed(MyKeys.F5) && input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
+                Patch.Patch_IngameRestart.ShowRestartMenu();
+        }
+
         public override void UnloadContent()
         {
             PlayerConsent.OnConsentChanged -= OnConsentChanged;

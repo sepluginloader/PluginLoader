@@ -15,13 +15,18 @@ namespace avaness.PluginLoader.Patch
         {
             if(Main.Instance.HasLocal && MyInput.Static.IsAnyAltKeyPressed() && MyInput.Static.IsAnyCtrlKeyPressed())
             {
-                var box = MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, MyMessageBoxButtonsType.YES_NO, new StringBuilder("Plugin Loader: Are you sure you want to restart the game?"), MyTexts.Get(MyCommonTexts.MessageBoxCaptionPleaseConfirm), callback: OnMessageClosed);
-                box.SkipTransition = true;
-                box.CloseBeforeCallback = true;
-                MyGuiSandbox.AddScreen(box);
+                ShowRestartMenu();
                 return false;
             }
             return true;
+        }
+        
+        public static void ShowRestartMenu()
+        {
+            var box = MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, MyMessageBoxButtonsType.YES_NO, new StringBuilder("Plugin Loader: Are you sure you want to restart the game?"), MyTexts.Get(MyCommonTexts.MessageBoxCaptionPleaseConfirm), callback: OnMessageClosed);
+            box.SkipTransition = true;
+            box.CloseBeforeCallback = true;
+            MyGuiSandbox.AddScreen(box);
         }
 
         private static void OnMessageClosed(MyGuiScreenMessageBox.ResultEnum result)
