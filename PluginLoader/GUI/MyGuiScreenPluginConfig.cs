@@ -301,11 +301,16 @@ namespace avaness.PluginLoader.GUI
             DownloadStats();
         }
 
+        public void RequireRestart()
+        {
+            forceRestart = true;
+        }
+
         private void OnLoadFolder()
         {
             LocalFolderPlugin.CreateNew((plugin) =>
             {
-                Config.PluginFolders[plugin.Id] = plugin.PathInfo;
+                Config.PluginFolders[plugin.Id] = plugin.FolderSettings;
                 CreatePlugin(plugin);
             });
         }

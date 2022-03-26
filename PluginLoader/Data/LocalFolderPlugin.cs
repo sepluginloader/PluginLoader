@@ -24,22 +24,22 @@ namespace avaness.PluginLoader.Data
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
         private string[] sourceDirectories;
 
-        public Config PathInfo { get; }
+        public Config FolderSettings { get; }
 
-        public LocalFolderPlugin(string folder, string xmlFile)
+        public LocalFolderPlugin(Config settings)
         {
-            Id = folder;
-            FriendlyName = Path.GetFileName(folder);
+            Id = settings.Folder;
+            FriendlyName = Path.GetFileName(Id);
             Status = PluginStatus.None;
-            PathInfo = new Config(folder, xmlFile);
-            DeserializeFile(xmlFile);
+            FolderSettings = settings;
+            DeserializeFile(settings.DataFile);
         }
 
         private LocalFolderPlugin(string folder)
         {
             Id = folder;
             Status = PluginStatus.None;
-            PathInfo = new Config()
+            FolderSettings = new Config()
             {
                 Folder = folder
             };
@@ -49,7 +49,7 @@ namespace avaness.PluginLoader.Data
         {
             if (Directory.Exists(Id))
             {
-                RoslynCompiler compiler = new RoslynCompiler();
+                RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild);
                 bool hasFile = false;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Compiling files from ").Append(Id).Append(":").AppendLine();
@@ -165,6 +165,10 @@ namespace avaness.PluginLoader.Data
             menu.Clear();
             menu.AddItem(new StringBuilder("Remove"));
             menu.AddItem(new StringBuilder("Load data file"));
+            if(FolderSettings.DebugBuild)
+                menu.AddItem(new StringBuilder("Switch to release build"));
+            else
+                menu.AddItem(new StringBuilder("Switch to debug build"));
             return true;
         }
 
@@ -175,10 +179,16 @@ namespace avaness.PluginLoader.Data
                 case 0:
                     Main.Instance.Config.PluginFolders.Remove(Id);
                     screen.RemovePlugin(this);
+                    screen.RequireRestart();
                     break;
                 case 1:
-                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(PathInfo.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
+                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
                     break;
+                case 2:
+                    FolderSettings.DebugBuild = !FolderSettings.DebugBuild;
+                    screen.RequireRestart();
+                    break;
+
             }
         }
 
@@ -207,7 +217,7 @@ namespace avaness.PluginLoader.Data
                     Author = github.Author;
                     Description = github.Description;
                     sourceDirectories = github.SourceDirectories;
-                    PathInfo.DataFile = file;
+                    FolderSettings.DataFile = file;
                     if(screen != null && screen.Visible && screen.IsOpened)
                         screen.RefreshSidePanel();
                 }
@@ -250,6 +260,8 @@ namespace avaness.PluginLoader.Data
 
             public string Folder { get; set; }
             public string DataFile { get; set; }
+            public bool DebugBuild { get; set; } = true;
+            public bool Valid => Directory.Exists(Folder) && File.Exists(DataFile);
         }
     }
 }

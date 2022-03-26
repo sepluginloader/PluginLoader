@@ -12,6 +12,12 @@ namespace avaness.PluginLoader.Compiler
     public class RoslynCompiler
     {
         private readonly List<Source> source = new List<Source>();
+        private bool debugBuild;
+
+        public RoslynCompiler(bool debugBuild = false)
+        {
+            this.debugBuild = debugBuild;
+        }
 
         public void Load(Stream s, string name)
         {
@@ -29,7 +35,8 @@ namespace avaness.PluginLoader.Compiler
                assemblyName,
                syntaxTrees: source.Select(x => x.Tree),
                references: RoslynReferences.EnumerateAllReferences(),
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release));
+               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, 
+               optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release));
 
             using (var ms = new MemoryStream())
             {

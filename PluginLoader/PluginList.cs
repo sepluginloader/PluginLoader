@@ -290,9 +290,9 @@ namespace avaness.PluginLoader
 
             foreach(var folderConfig in config.PluginFolders.Values)
             {
-                if(Directory.Exists(folderConfig.Folder) && File.Exists(folderConfig.DataFile))
+                if(folderConfig.Valid)
                 {
-                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig.Folder, folderConfig.DataFile);
+                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig);
                     plugins[local.Id] = local;
                 }
             }
