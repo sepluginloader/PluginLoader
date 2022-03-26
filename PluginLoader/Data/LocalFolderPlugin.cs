@@ -58,8 +58,9 @@ namespace avaness.PluginLoader.Data
                     using (FileStream fileStream = File.OpenRead(file))
                     {
                         hasFile = true;
-                        sb.Append(file, Id.Length, file.Length - Id.Length).Append(", ");
-                        compiler.Load(fileStream, Path.GetFileName(file));
+                        string name = file.Substring(Id.Length + 1, file.Length - (Id.Length + 1));
+                        sb.Append(name).Append(", ");
+                        compiler.Load(fileStream, file);
                     }
                 }
 
@@ -71,8 +72,8 @@ namespace avaness.PluginLoader.Data
                 else
                     return null;
 
-                byte[] data = compiler.Compile(FriendlyName + '_' + Path.GetRandomFileName());
-                Assembly a = Assembly.Load(data);
+                byte[] data = compiler.Compile(FriendlyName + '_' + Path.GetRandomFileName(), out byte[] symbols);
+                Assembly a = Assembly.Load(data, symbols);
                 Version = a.GetName().Version;
                 return a;
             }
