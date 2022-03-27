@@ -76,10 +76,12 @@ namespace avaness.PluginLoader.Compiler
                 }
                 else
                 {
-                    // load this 'virtual' DLL so that we can use
-                    pdb.Seek(0, SeekOrigin.Begin);
-                    symbols = pdb.ToArray();
-
+                    if(debugBuild)
+                    {
+                        pdb.Seek(0, SeekOrigin.Begin);
+                        symbols = pdb.ToArray();
+                    }
+                    
                     ms.Seek(0, SeekOrigin.Begin);
                     return ms.ToArray();
                 }
