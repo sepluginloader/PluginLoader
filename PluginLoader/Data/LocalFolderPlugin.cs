@@ -70,14 +70,17 @@ namespace avaness.PluginLoader.Data
                     LogFile.WriteLine(sb.ToString());
                 }
                 else
-                    return null;
+                {
+                    throw new IOException("No files were found in the directory specified.");
+                }
 
                 byte[] data = compiler.Compile(FriendlyName + '_' + Path.GetRandomFileName(), out byte[] symbols);
                 Assembly a = Assembly.Load(data, symbols);
                 Version = a.GetName().Version;
                 return a;
             }
-            return null;
+
+            throw new DirectoryNotFoundException("Unable to find directory '" + Id + "'");
         }
 
         private IEnumerable<string> GetProjectFiles(string folder)
@@ -104,7 +107,7 @@ namespace avaness.PluginLoader.Data
                 if (p.ExitCode == 0)
                 {
                     string[] files = gitOutput.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar)));
+                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar))).Where(x => File.Exists(x));
                 }
                 else
                 {
