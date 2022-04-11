@@ -290,7 +290,6 @@ namespace avaness.PluginLoader.GUI
             pluginContextMenu = new MyGuiControlContextMenu();
             pluginContextMenu.Deactivate();
             pluginContextMenu.CreateNewContextMenu();
-            pluginContextMenu.AddItem(new StringBuilder("This is a test"));
             pluginContextMenu.ItemClicked += OnPluginContextMenuItemClicked;
             pluginContextMenu.OnDeactivated += OnContextMenuDeactivated;
             Controls.Add(pluginContextMenu);
