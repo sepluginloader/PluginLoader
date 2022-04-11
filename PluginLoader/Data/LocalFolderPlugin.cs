@@ -85,7 +85,7 @@ namespace avaness.PluginLoader.Data
 
         private IEnumerable<string> GetProjectFiles(string folder)
         {
-            string gitOutput = null;
+            string gitError = null;
             try
             {
                 Process p = new Process();
@@ -93,6 +93,7 @@ namespace avaness.PluginLoader.Data
                 // Redirect the output stream of the child process.
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardError = true;
                 p.StartInfo.FileName = "git";
                 p.StartInfo.Arguments = "ls-files --cached --others --exclude-standard";
                 p.StartInfo.WorkingDirectory = folder;
@@ -101,7 +102,8 @@ namespace avaness.PluginLoader.Data
                 // Do not wait for the child process to exit before
                 // reading to the end of its redirected stream.
                 // Read the output stream first and then wait.
-                gitOutput = p.StandardOutput.ReadToEnd();
+                string gitOutput = p.StandardOutput.ReadToEnd();
+                gitError = p.StandardError.ReadToEnd();
                 p.WaitForExit();
 
                 if (p.ExitCode == 0)
@@ -111,11 +113,11 @@ namespace avaness.PluginLoader.Data
                 }
                 else
                 {
-                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.");
-                    if (!string.IsNullOrWhiteSpace(gitOutput))
+                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files. " + p.HasExited);
+                    if (!string.IsNullOrWhiteSpace(gitError))
                     {
-                        sb.AppendLine("Git output: ");
-                        sb.Append(gitOutput).AppendLine();
+                        sb.AppendLine(" Git output: ");
+                        sb.Append(gitError).AppendLine();
                     }
                     LogFile.WriteLine(sb.ToString());
                 }
@@ -123,10 +125,10 @@ namespace avaness.PluginLoader.Data
             catch (Exception e) 
             {
                 StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.");
-                if(!string.IsNullOrWhiteSpace(gitOutput))
+                if(!string.IsNullOrWhiteSpace(gitError))
                 {
-                    sb.AppendLine("Git output: ");
-                    sb.Append(gitOutput).AppendLine();
+                    sb.AppendLine(" Git output: ");
+                    sb.Append(gitError).AppendLine();
                 }
                 sb.AppendLine("Exception: ");
                 sb.Append(e);
