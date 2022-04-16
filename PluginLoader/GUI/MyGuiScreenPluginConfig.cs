@@ -272,7 +272,7 @@ namespace avaness.PluginLoader.GUI
             contextMenu = new MyGuiControlContextMenu();
             contextMenu.Deactivate();
             contextMenu.CreateNewContextMenu();
-            contextMenu.AddItem(new StringBuilder("Add Folder"), "Open and compile a folder for development", userData: nameof(OnLoadFolder));
+            contextMenu.AddItem(new StringBuilder("Add development folder"), "Open and compile a folder for development", userData: nameof(OnLoadFolder));
             contextMenu.AddItem(new StringBuilder("Save profile"), "Saved the current plugin selection", userData: nameof(OnSaveProfile));
             contextMenu.AddItem(new StringBuilder("Load profile"), "Loads a saved plugin selection", userData: nameof(OnLoadProfile));
             contextMenu.AddItem(new StringBuilder("------------"));
