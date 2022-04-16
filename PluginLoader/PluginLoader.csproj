@@ -102,6 +102,7 @@
     <Compile Include="Compiler\RoslynReferences.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\ISteamItem.cs" />
+    <Compile Include="Data\LocalFolderPlugin.cs" />
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\SEPMPlugin.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />
+    <Compile Include="Patch\Patch_IngameRestart.cs" />
     <Compile Include="Patch\Patch_MyDefinitionManager.cs" />
     <Compile Include="Patch\Patch_MyScriptManager.cs" />
     <Compile Include="PluginConfig.cs" />
@@ -154,6 +156,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="deploy.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

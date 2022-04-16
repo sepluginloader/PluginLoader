@@ -122,7 +122,7 @@ namespace avaness.PluginLoader.Data
                 }
                 callback?.Invoke(1);
             }
-            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName());
+            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName(), out _);
         }
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)

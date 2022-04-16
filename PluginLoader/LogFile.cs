@@ -15,6 +15,10 @@ namespace avaness.PluginLoader
             writer = File.CreateText(file);
         }
 
+        /// <summary>
+        /// Writes the specifed text to the log file.
+        /// WARNING: Not thread safe!
+        /// </summary>
         public static void WriteLine(string text, bool gameLog = true)
         {
             writer?.WriteLine($"{DateTime.UtcNow:O} {text}");

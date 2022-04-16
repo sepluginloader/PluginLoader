@@ -34,11 +34,13 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlLabel pluginCountLabel;
         private MyGuiControlButton buttonMore;
         private MyGuiControlContextMenu contextMenu;
+        private MyGuiControlContextMenu pluginContextMenu;
 
         private static PluginConfig Config => Main.Instance.Config;
         private string[] tableFilter;
 
         public readonly Dictionary<string, bool> AfterRebootEnableFlags = new();
+        private bool forceRestart = false;
         public PluginStats PluginStats;
 
         private PluginData SelectedPlugin
@@ -73,7 +75,7 @@ namespace avaness.PluginLoader.GUI
 
         public static void OpenMenu()
         {
-            if(Main.Instance.List.HasError)
+            if (Main.Instance.List.HasError)
             {
                 MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK, messageText: new StringBuilder("An error occurred while downloading the plugin list.\nPlease send your game log to the developers of Plugin Loader."), messageCaption: MyTexts.Get(MyCommonTexts.MessageBoxCaptionError), callback: (x) => MyGuiSandbox.AddScreen(new MyGuiScreenPluginConfig())));
             }
@@ -111,6 +113,13 @@ namespace avaness.PluginLoader.GUI
             base.LoadContent();
             RecreateControls(true);
             PlayerConsent.OnConsentChanged += OnConsentChanged;
+        }
+
+        public override void HandleUnhandledInput(bool receivedFocusInThisUpdate)
+        {
+            var input = MyInput.Static;
+            if(input.IsNewKeyPressed(MyKeys.F5) && input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
+                Patch.Patch_IngameRestart.ShowRestartMenu();
         }
 
         public override void UnloadContent()
@@ -263,6 +272,7 @@ namespace avaness.PluginLoader.GUI
             contextMenu = new MyGuiControlContextMenu();
             contextMenu.Deactivate();
             contextMenu.CreateNewContextMenu();
+            contextMenu.AddItem(new StringBuilder("Add development folder"), "Open and compile a folder for development", userData: nameof(OnLoadFolder));
             contextMenu.AddItem(new StringBuilder("Save profile"), "Saved the current plugin selection", userData: nameof(OnSaveProfile));
             contextMenu.AddItem(new StringBuilder("Load profile"), "Loads a saved plugin selection", userData: nameof(OnLoadProfile));
             contextMenu.AddItem(new StringBuilder("------------"));
@@ -276,10 +286,55 @@ namespace avaness.PluginLoader.GUI
             // contextMenu.SetMaxSize(new Vector2(0.2f, 0.7f));
             Controls.Add(contextMenu);
 
+            // Context menu for the plugin list
+            pluginContextMenu = new MyGuiControlContextMenu();
+            pluginContextMenu.Deactivate();
+            pluginContextMenu.CreateNewContextMenu();
+            pluginContextMenu.ItemClicked += OnPluginContextMenuItemClicked;
+            pluginContextMenu.OnDeactivated += OnContextMenuDeactivated;
+            Controls.Add(pluginContextMenu);
+
             // Refreshes the table to show plugins on plugin list
             RefreshTable();
 
             DownloadStats();
+        }
+
+        public void RequireRestart()
+        {
+            forceRestart = true;
+        }
+
+        private void OnLoadFolder()
+        {
+            LocalFolderPlugin.CreateNew((plugin) =>
+            {
+                Config.PluginFolders[plugin.Id] = plugin.FolderSettings;
+                CreatePlugin(plugin);
+            });
+        }
+
+        public void CreatePlugin(PluginData data)
+        {
+            Main.Instance.List.Add(data);
+            AfterRebootEnableFlags[data.Id] = true;
+            Config.SetEnabled(data.Id, true);
+            forceRestart = true;
+            RefreshTable(tableFilter);
+        }
+
+        public void RemovePlugin(PluginData data)
+        {
+            Main.Instance.List.Remove(data.Id);
+            AfterRebootEnableFlags.Remove(data.Id);
+            Config.SetEnabled(data.Id, false);
+            forceRestart = true;
+            RefreshTable(tableFilter);
+        }
+
+        public void RefreshSidePanel()
+        {
+            pluginDetails?.LoadPluginData();
         }
 
         /// <summary>
@@ -420,6 +475,12 @@ namespace avaness.PluginLoader.GUI
             if (!TryGetPluginByRowIndex(args.RowIndex, out var plugin))
                 return;
 
+            if (args.MouseButton == MyMouseButtonsEnum.Right && plugin.OpenContextMenu(pluginContextMenu))
+            {
+                pluginContextMenu.ItemList_UseSimpleItemListMouseOverCheck = true;
+                pluginContextMenu.Activate();
+            }
+
             contextMenu.Deactivate();
             SelectedPlugin = plugin;
         }
@@ -478,7 +539,7 @@ namespace avaness.PluginLoader.GUI
                 pluginDetails.LoadPluginData();
         }
 
-        private void EnablePlugin(PluginData plugin, bool enable)
+        public void EnablePlugin(PluginData plugin, bool enable)
         {
             if (enable == AfterRebootEnableFlags[plugin.Id])
                 return;
@@ -565,6 +626,10 @@ namespace avaness.PluginLoader.GUI
 
             switch ((string)args.UserData)
             {
+                case nameof(OnLoadFolder):
+                    OnLoadFolder();
+                    break;
+
                 case nameof(OnSaveProfile):
                     OnSaveProfile();
                     break;
@@ -577,6 +642,11 @@ namespace avaness.PluginLoader.GUI
                     OnConsent();
                     break;
             }
+        }
+
+        private void OnPluginContextMenuItemClicked(MyGuiControlContextMenu menu, MyGuiControlContextMenu.EventArgs args)
+        {
+            SelectedPlugin?.ContextMenuClicked(this, args);
         }
 
         private void OnSaveProfile()
@@ -616,11 +686,11 @@ namespace avaness.PluginLoader.GUI
             PlayerConsent.ShowDialog();
         }
 
-        private int ModifiedCount => Main.Instance.List.Count(plugin => plugin.Enabled != AfterRebootEnableFlags[plugin.Id]);
+        private bool RequiresRestart => forceRestart || Main.Instance.List.Any(plugin => plugin.Enabled != AfterRebootEnableFlags[plugin.Id]);
 
         private void OnRestartButtonClick(MyGuiControlButton btn)
         {
-            if (ModifiedCount == 0)
+            if (!RequiresRestart)
             {
                 CloseScreen();
                 return;
@@ -631,7 +701,7 @@ namespace avaness.PluginLoader.GUI
 
         private void Save()
         {
-            if (ModifiedCount == 0)
+            if (!RequiresRestart)
                 return;
 
             foreach (var plugin in Main.Instance.List)
@@ -649,11 +719,11 @@ namespace avaness.PluginLoader.GUI
                 Save();
                 if (MyGuiScreenGamePlay.Static != null)
                 {
-                    ShowSaveMenu(delegate { UnloadAndRestartGame(); });
+                    ShowSaveMenu(delegate { LoaderTools.UnloadAndRestart(); });
                     return;
                 }
 
-                UnloadAndRestartGame();
+                LoaderTools.UnloadAndRestart();
             }
             else if (result == ResultEnum.NO)
             {
@@ -724,15 +794,6 @@ namespace avaness.PluginLoader.GUI
                 MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreenshotWasTaken;
                 afterMenu();
             }
-        }
-
-        private static void UnloadAndRestartGame()
-        {
-            MySessionLoader.Unload();
-            MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
-            MySandboxGame.Config.Save();
-            MyScreenManager.CloseAllScreensNowExcept(null);
-            LoaderTools.Restart();
         }
 
         #endregion

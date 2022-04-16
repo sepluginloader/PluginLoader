@@ -42,7 +42,7 @@ namespace avaness.PluginLoader
             }
 
             FindWorkshopPlugins(config);
-            FindLocalPlugins(mainDirectory);
+            FindLocalPlugins(config, mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
             FindModDependencies();
@@ -60,6 +60,11 @@ namespace avaness.PluginLoader
         public bool Remove(string id)
         {
             return plugins.Remove(id);
+        }
+
+        public void Add(PluginData data)
+        {
+            plugins[data.Id] = data;
         }
 
         private void FindPluginGroups()
@@ -270,7 +275,7 @@ namespace avaness.PluginLoader
             }
         }
 
-        private void FindLocalPlugins(string mainDirectory)
+        private void FindLocalPlugins(PluginConfig config, string mainDirectory)
         {
             foreach (string dll in Directory.EnumerateFiles(mainDirectory, "*.dll", SearchOption.AllDirectories))
             {
@@ -282,8 +287,16 @@ namespace avaness.PluginLoader
                         plugins[local.Id] = local;
                 }
             }
-        }
 
+            foreach(var folderConfig in config.PluginFolders.Values)
+            {
+                if(folderConfig.Valid)
+                {
+                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig);
+                    plugins[local.Id] = local;
+                }
+            }
+        }
         private void FindWorkshopPlugins(PluginConfig config)
         {
             List<ISteamItem> steamPlugins = new List<ISteamItem>(plugins.Values.Select(x => x as ISteamItem).Where(x => x != null));

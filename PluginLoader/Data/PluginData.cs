@@ -1,11 +1,16 @@
 ﻿using ProtoBuf;
+using avaness.PluginLoader.GUI;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using VRage.Utils;
+using VRage;
 
 namespace avaness.PluginLoader.Data
 {
@@ -46,7 +51,7 @@ namespace avaness.PluginLoader.Data
             }
         }
 
-        [XmlIgnore] public bool IsLocal => Source == "Local";
+        [XmlIgnore] public bool IsLocal => Source == MyTexts.GetString(MyCommonTexts.Local);
 
         [ProtoMember(1)]
         public virtual string Id { get; set; }
@@ -115,7 +120,10 @@ namespace avaness.PluginLoader.Data
                 if (e is MissingMemberException)
                     LogFile.WriteLine($"Is {name} up to date?");
 
-                Error();
+                if (e is NotSupportedException && e.Message.Contains("loadFromRemoteSources"))
+                    Error($"The plugin {name} was blocked by windows. Please unblock the file in the dll file properties.");
+                else
+                    Error();
                 a = null;
                 return false;
             }
@@ -153,10 +161,24 @@ namespace avaness.PluginLoader.Data
             return Id + '|' + FriendlyName;
         }
 
-        public void Error()
+        public void Error(string msg = null)
         {
             Status = PluginStatus.Error;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (msg == null)
+                msg = $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.";
+            string file = MyLog.Default.GetFilePath();
+            if(File.Exists(file) && file.EndsWith(".log"))
+            {
+                MyLog.Default.Flush();
+                msg += "\n\nWould you like to open the game log?";
+                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                if (result == DialogResult.Yes)
+                    Process.Start(file);
+            }
+            else
+            {
+                MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         protected void ErrorSecurity(string hash)
@@ -168,9 +190,11 @@ namespace avaness.PluginLoader.Data
 
         public abstract void Show();
 
-        public void GetDescriptionText(MyGuiControlMultilineText textbox)
+        public virtual void GetDescriptionText(MyGuiControlMultilineText textbox)
         {
-            if(string.IsNullOrEmpty(Description))
+            textbox.Visible = true;
+            textbox.Clear();
+            if (string.IsNullOrEmpty(Description))
             {
                 if (string.IsNullOrEmpty(Tooltip))
                     textbox.AppendText("No description");
@@ -202,6 +226,16 @@ namespace avaness.PluginLoader.Data
             if (s.Length > len)
                 return s.Substring(0, len);
             return s;
+        }
+
+        public virtual bool OpenContextMenu(MyGuiControlContextMenu menu)
+        {
+            return false;
+        }
+
+        public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        {
+
         }
     }
 }

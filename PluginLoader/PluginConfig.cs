@@ -24,6 +24,16 @@ namespace avaness.PluginLoader
         [XmlIgnore] public HashSet<string> EnabledPlugins { get; private set; } = new();
 
         [XmlArray]
+        [XmlArrayItem("Plugin")]
+        public Data.LocalFolderPlugin.Config[] LocalFolderPlugins
+        {
+            get { return PluginFolders.Values.ToArray(); }
+            set { PluginFolders = value.ToDictionary(x => x.Folder); }
+        }
+
+        [XmlIgnore] public Dictionary<string, Data.LocalFolderPlugin.Config> PluginFolders { get; private set; } = new();
+
+        [XmlArray]
         [XmlArrayItem("Profile")]
         public Profile[] Profiles
         {
@@ -48,6 +58,24 @@ namespace avaness.PluginLoader
         // User consent to use the StatsServer
         public bool DataHandlingConsent { get; set; }
         public string DataHandlingConsentDate { get; set; }
+
+        private int networkTimeout = 5000;
+        public int NetworkTimeout 
+        { 
+            get
+            {
+                return networkTimeout;
+            }
+            set
+            {
+                if (value < 100)
+                    networkTimeout = 100;
+                else if (value > 60000)
+                    networkTimeout = 60000;
+                else
+                    networkTimeout = value;
+            }
+        }
 
         public int Count => EnabledPlugins.Count;
 

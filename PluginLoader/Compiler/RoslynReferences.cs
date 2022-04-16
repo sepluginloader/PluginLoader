@@ -17,7 +17,9 @@ namespace avaness.PluginLoader.Compiler
         {
             if (allReferences.Count > 0)
                 return;
-            
+
+            AssemblyName harmonyInfo = typeof(HarmonyLib.Harmony).Assembly.GetName();
+
             Stack<Assembly> loadedAssemblies = new Stack<Assembly>(AppDomain.CurrentDomain.GetAssemblies().Where(IsValidReference));
 
             StringBuilder sb = new StringBuilder();
@@ -32,6 +34,14 @@ namespace avaness.PluginLoader.Compiler
             {
                 foreach (Assembly a in loadedAssemblies)
                 {
+                    // Prevent other Harmony versions from being loaded
+                    AssemblyName name = a.GetName();
+                    if (name.Name == harmonyInfo.Name && name.Version != harmonyInfo.Version)
+                    {
+                        LogFile.WriteLine($"WARNING: Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
+                        continue;
+                    }
+
                     AddAssemblyReference(a);
                     sb.AppendLine(a.FullName);
                 }
@@ -42,6 +52,13 @@ namespace avaness.PluginLoader.Compiler
 
                     foreach (AssemblyName name in a.GetReferencedAssemblies())
                     {
+                        // Prevent other Harmony versions from being loaded
+                        if (name.Name == harmonyInfo.Name && name.Version != harmonyInfo.Version)
+                        {
+                            LogFile.WriteLine($"WARNING: Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
+                            continue;
+                        }
+
                         if (!ContainsReference(name) && TryLoadAssembly(name, out Assembly aRef) && IsValidReference(aRef))
                         {
                             AddAssemblyReference(aRef);

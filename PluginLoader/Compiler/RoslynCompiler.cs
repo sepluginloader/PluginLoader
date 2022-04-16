@@ -6,12 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 
 namespace avaness.PluginLoader.Compiler
 {
     public class RoslynCompiler
     {
         private readonly List<Source> source = new List<Source>();
+        private bool debugBuild;
+
+        public RoslynCompiler(bool debugBuild = false)
+        {
+            this.debugBuild = debugBuild;
+        }
 
         public void Load(Stream s, string name)
         {
@@ -19,22 +27,38 @@ namespace avaness.PluginLoader.Compiler
             using (mem)
             {
                 s.CopyTo(mem);
-                source.Add(new Source(mem, name));
+                source.Add(new Source(mem, name, debugBuild));
             }
         }
 
-        public byte[] Compile(string assemblyName)
+        public byte[] Compile(string assemblyName, out byte[] symbols)
         {
-            CSharpCompilation compilation = CSharpCompilation.Create(
-               assemblyName,
-               syntaxTrees: source.Select(x => x.Tree),
-               references: RoslynReferences.EnumerateAllReferences(),
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release));
+            symbols = null;
 
-            using (var ms = new MemoryStream())
+            CSharpCompilation compilation = CSharpCompilation.Create(
+                assemblyName,
+                syntaxTrees: source.Select(x => x.Tree),
+                references: RoslynReferences.EnumerateAllReferences(),
+                options: new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary, 
+                    optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release));
+
+            using (MemoryStream pdb = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
                 // write IL code into memory
-                EmitResult result = compilation.Emit(ms);
+                EmitResult result;
+                if (debugBuild)
+                {
+                    result = compilation.Emit(ms, pdb,
+                        embeddedTexts: source.Select(x => x.Text),
+                        options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb, pdbFilePath: Path.ChangeExtension(assemblyName, "pdb")));
+                }
+                else
+                {
+                    result = compilation.Emit(ms);
+                }
+                 
                 if (!result.Success)
                 {
                     // handle exceptions
@@ -52,7 +76,12 @@ namespace avaness.PluginLoader.Compiler
                 }
                 else
                 {
-                    // load this 'virtual' DLL so that we can use
+                    if(debugBuild)
+                    {
+                        pdb.Seek(0, SeekOrigin.Begin);
+                        symbols = pdb.ToArray();
+                    }
+                    
                     ms.Seek(0, SeekOrigin.Begin);
                     return ms.ToArray();
                 }
@@ -60,16 +89,25 @@ namespace avaness.PluginLoader.Compiler
 
         }
 
-
         private class Source
         {
             public string Name { get; }
             public SyntaxTree Tree { get; }
+            public EmbeddedText Text { get; }
 
-            public Source(Stream s, string name)
+            public Source(Stream s, string name, bool includeText)
             {
                 Name = name;
-                Tree = CSharpSyntaxTree.ParseText(SourceText.From(s), new CSharpParseOptions(LanguageVersion.Latest));
+                SourceText source = SourceText.From(s, canBeEmbedded: includeText);
+                if (includeText)
+                {
+                    Text = EmbeddedText.FromSource(name, source);
+                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest), name);
+                }
+                else
+                {
+                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
+                }
             }
         }
     }

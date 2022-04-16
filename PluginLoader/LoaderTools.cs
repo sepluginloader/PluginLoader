@@ -1,4 +1,7 @@
 ﻿using HarmonyLib;
+using Sandbox;
+using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using SEPluginManager;
 using System;
 using System.Diagnostics;
@@ -8,18 +11,34 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
+using VRage.FileSystem;
+using VRage.Input;
+using VRage.Utils;
 
 namespace avaness.PluginLoader
 {
     public static class LoaderTools
     {
+        public static string PluginsDir => Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+
         public static Form GetMainForm()
         {
             if (Application.OpenForms.Count > 0)
                 return Application.OpenForms[0];
             else
                 return new Form { TopMost = true };
+        }
+
+
+        public static void UnloadAndRestart()
+        {
+            MySessionLoader.Unload();
+            MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
+            MySandboxGame.Config.Save();
+            MyScreenManager.CloseAllScreensNowExcept(null);
+            Restart();
         }
 
         public static void Restart()
@@ -110,6 +129,73 @@ namespace avaness.PluginLoader
         private static bool HasStaticConstructor(Type t)
         {
             return t.GetConstructors(BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Instance).Any(c => c.IsStatic);
+        }
+
+
+        public static void OpenFileDialog(string title, string directory, string filter, Action<string> onOk)
+        {
+            Thread t = new Thread(new ThreadStart(() => OpenFileDialogThread(title, directory, filter, onOk)));
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+        }
+        private static void OpenFileDialogThread(string title, string directory, string filter, Action<string> onOk)
+        {
+            try
+            {
+                // Get the file path via prompt
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    if(Directory.Exists(directory))
+                        openFileDialog.InitialDirectory = directory;
+                    openFileDialog.Title = title;
+                    openFileDialog.Filter = filter;
+                    openFileDialog.RestoreDirectory = true;
+
+                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    {
+                        // Move back to the main thread so that we can interact with keen code again
+                        MySandboxGame.Static.Invoke(
+                            () => onOk(openFileDialog.FileName),
+                            "PluginLoader");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
+            }
+        }
+
+        public static void OpenFolderDialog(string title, string directory, Action<string> onOk)
+        {
+            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, directory, onOk)));
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+        }
+        private static void OpenFolderDialogThread(string title, string directory, Action<string> onOk)
+        {
+            try
+            {
+                // Get the file path via prompt
+                using (FolderBrowserDialog openFileDialog = new FolderBrowserDialog())
+                {
+                    if (Directory.Exists(directory))
+                        openFileDialog.SelectedPath = directory;
+                    openFileDialog.Description = title;
+
+                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    {
+                        // Move back to the main thread so that we can interact with keen code again
+                        MySandboxGame.Static.Invoke(
+                            () => onOk(openFileDialog.SelectedPath),
+                            "PluginLoader");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
+            }
         }
     }
 }
