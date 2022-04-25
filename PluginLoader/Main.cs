@@ -82,10 +82,7 @@ namespace avaness.PluginLoader
             Version expectedHarmony = new Version(HarmonyVersion);
             Version actualHarmony = typeof(Harmony).Assembly.GetName().Version;
             if (expectedHarmony != actualHarmony)
-            {
                 LogFile.WriteLine($"WARNING: Unexpected Harmony version, plugins may be unstable. Expected {expectedHarmony} but found {actualHarmony}");
-                MessageBox.Show(LoaderTools.GetMainForm(), "Plugin Loader is using the wrong version of Harmony. This may cause some plugins to fail.", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
 
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
