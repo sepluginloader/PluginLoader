@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using VRage.FileSystem;
 using VRage.Plugins;
 using VRage.Utils;
 
@@ -18,6 +19,8 @@ namespace avaness.RunPluginLoader
             Log("Loading PluginLoader and dependencies...");
             try
             {
+                DeleteExtraHarmony();
+
                 string dir = GetAssemblyDirectory();
                 harmony = Assembly.LoadFile(Path.Combine(dir, "0Harmony"));
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveHarmony;
@@ -59,6 +62,20 @@ namespace avaness.RunPluginLoader
                     f.Close();
                     break;
                 }
+            }
+        }
+
+        private void DeleteExtraHarmony()
+        {
+            string dll = Path.Combine(MyFileSystem.ExePath, "0Harmony.dll");
+            if(File.Exists(dll))
+            {
+                try
+                {
+                    File.Delete(dll);
+                    Log("Deleted extra Harmony file.");
+                }
+                catch { }
             }
         }
 
