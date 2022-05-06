@@ -167,5 +167,23 @@ namespace avaness.PluginLoader.Data
         {
             MyGuiSandbox.OpenUrl("https://github.com/" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
         }
+
+        public static GitHubPlugin DeserializeFile(string file)
+        {
+            if (!File.Exists(file))
+                throw new FileNotFoundException("Could not find file '" + file + "'");
+
+            XmlSerializer xml = new XmlSerializer(typeof(PluginData));
+            using (StreamReader reader = File.OpenText(file))
+            {
+                object resultObj = xml.Deserialize(reader);
+                if (resultObj.GetType() != typeof(GitHubPlugin))
+                    throw new Exception("Xml file is not of type GitHubPlugin!");
+
+                GitHubPlugin github = (GitHubPlugin)resultObj;
+                github.Init(LoaderTools.PluginsDir);
+                return github;
+            }
+        }
     }
 }

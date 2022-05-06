@@ -132,13 +132,13 @@ namespace avaness.PluginLoader
         }
 
 
-        public static void OpenFileDialog(string title, string directory, string filter, Action<string> onOk)
+        public static void OpenFileDialog(string title, string directory, string filter, Action<bool, string> onClose)
         {
-            Thread t = new Thread(new ThreadStart(() => OpenFileDialogThread(title, directory, filter, onOk)));
+            Thread t = new Thread(new ThreadStart(() => OpenFileDialogThread(title, directory, filter, onClose)));
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
         }
-        private static void OpenFileDialogThread(string title, string directory, string filter, Action<string> onOk)
+        private static void OpenFileDialogThread(string title, string directory, string filter, Action<bool, string> onClose)
         {
             try
             {
@@ -151,11 +151,17 @@ namespace avaness.PluginLoader
                     openFileDialog.Filter = filter;
                     openFileDialog.RestoreDirectory = true;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK && File.Exists(openFileDialog.FileName))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.FileName),
+                            () => onClose(true, openFileDialog.FileName),
+                            "PluginLoader");
+                    }
+                    else
+                    {
+                        MySandboxGame.Static.Invoke(
+                            () => onClose(false, null),
                             "PluginLoader");
                     }
                 }
@@ -166,13 +172,13 @@ namespace avaness.PluginLoader
             }
         }
 
-        public static void OpenFolderDialog(string title, string directory, Action<string> onOk)
+        public static void OpenFolderDialog(string title, string directory, Action<bool, string> onClose)
         {
-            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, directory, onOk)));
+            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, directory, onClose)));
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
         }
-        private static void OpenFolderDialogThread(string title, string directory, Action<string> onOk)
+        private static void OpenFolderDialogThread(string title, string directory, Action<bool, string> onClose)
         {
             try
             {
@@ -183,11 +189,17 @@ namespace avaness.PluginLoader
                         openFileDialog.SelectedPath = directory;
                     openFileDialog.Description = title;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK && Directory.Exists(openFileDialog.SelectedPath))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.SelectedPath),
+                            () => onClose(true, openFileDialog.SelectedPath),
+                            "PluginLoader");
+                    }
+                    else
+                    {
+                        MySandboxGame.Static.Invoke(
+                            () => onClose(false, null),
                             "PluginLoader");
                     }
                 }

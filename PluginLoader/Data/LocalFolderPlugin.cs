@@ -20,29 +20,23 @@ namespace avaness.PluginLoader.Data
     public class LocalFolderPlugin : PluginData
     {
         const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
+        const int GitTimeout = 10000;
 
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
-        private string[] sourceDirectories;
 
         public Config FolderSettings { get; }
+        public GitHubPlugin DataFile { get; private set;  }
 
-        public LocalFolderPlugin(Config settings)
+        public LocalFolderPlugin(Config settings, GitHubPlugin github = null)
         {
             Id = settings.Folder;
             FriendlyName = Path.GetFileName(Id);
             Status = PluginStatus.None;
             FolderSettings = settings;
-            DeserializeFile(settings.DataFile);
-        }
-
-        private LocalFolderPlugin(string folder)
-        {
-            Id = folder;
-            Status = PluginStatus.None;
-            FolderSettings = new Config()
-            {
-                Folder = folder
-            };
+            if(github == null)
+                github = GitHubPlugin.DeserializeFile(settings.DataFile);
+            DataFile = github;
+            CopyData(github);
         }
 
         public override Assembly GetAssembly()
@@ -53,7 +47,7 @@ namespace avaness.PluginLoader.Data
                 bool hasFile = false;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Compiling files from ").Append(Id).Append(":").AppendLine();
-                foreach(var file in GetProjectFiles(Id))
+                foreach(var file in GetProjectFiles(Id, DataFile.SourceDirectories))
                 {
                     using (FileStream fileStream = File.OpenRead(file))
                     {
@@ -83,7 +77,7 @@ namespace avaness.PluginLoader.Data
             throw new DirectoryNotFoundException("Unable to find directory '" + Id + "'");
         }
 
-        private IEnumerable<string> GetProjectFiles(string folder)
+        public static IEnumerable<string> GetProjectFiles(string folder, string[] sourceDirectories)
         {
             string gitError = null;
             try
@@ -104,12 +98,16 @@ namespace avaness.PluginLoader.Data
                 // Read the output stream first and then wait.
                 string gitOutput = p.StandardOutput.ReadToEnd();
                 gitError = p.StandardError.ReadToEnd();
-                p.WaitForExit();
+                if(!p.WaitForExit(GitTimeout))
+                {
+                    p.Kill();
+                    throw new TimeoutException("Git operation timed out.");
+                }
 
                 if (p.ExitCode == 0)
                 {
                     string[] files = gitOutput.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar))).Where(x => File.Exists(x));
+                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x, sourceDirectories)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar))).Where(x => File.Exists(x));
                 }
                 else
                 {
@@ -138,10 +136,10 @@ namespace avaness.PluginLoader.Data
 
             char sep = Path.DirectorySeparatorChar;
             return Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories)
-                .Where(x => !x.Contains(sep + "bin" + sep) && !x.Contains(sep + "obj" + sep) && IsValidProjectFile(x));
+                .Where(x => !x.Contains(sep + "bin" + sep) && !x.Contains(sep + "obj" + sep) && IsValidProjectFile(x, sourceDirectories));
         }
 
-        private bool IsValidProjectFile(string file)
+        private static bool IsValidProjectFile(string file, string[] sourceDirectories)
         {
             if (sourceDirectories == null || sourceDirectories.Length == 0)
                 return true;
@@ -170,7 +168,7 @@ namespace avaness.PluginLoader.Data
         {
             menu.Clear();
             menu.AddItem(new StringBuilder("Remove"));
-            menu.AddItem(new StringBuilder("Load data file"));
+            menu.AddItem(new StringBuilder("Edit"));
             if(FolderSettings.DebugBuild)
                 menu.AddItem(new StringBuilder("Switch to release build"));
             else
@@ -188,7 +186,7 @@ namespace avaness.PluginLoader.Data
                     screen.RequireRestart();
                     break;
                 case 1:
-                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
+                    MyGuiSandbox.AddScreen(new MyGuiScreenLocalFolder(screen, this));
                     break;
                 case 2:
                     FolderSettings.DebugBuild = !FolderSettings.DebugBuild;
@@ -199,58 +197,13 @@ namespace avaness.PluginLoader.Data
         }
 
         // Deserializes a file and refreshes the plugin screen
-        private void DeserializeFile(string file, MyGuiScreenPluginConfig screen = null)
+        public void CopyData(GitHubPlugin github)
         {
-            if (!File.Exists(file))
-                return;
-
-            try
-            {
-                XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-
-                using (StreamReader reader = File.OpenText(file))
-                {
-                    object resultObj = xml.Deserialize(reader);
-                    if(resultObj.GetType() != typeof(GitHubPlugin))
-                    {
-                        throw new Exception("Xml file is not of type GitHubPlugin!");
-                    }
-
-                    GitHubPlugin github = (GitHubPlugin)resultObj;
-                    github.Init(LoaderTools.PluginsDir);
-                    FriendlyName = github.FriendlyName;
-                    Tooltip = github.Tooltip;
-                    Author = github.Author;
-                    Description = github.Description;
-                    sourceDirectories = github.SourceDirectories;
-                    FolderSettings.DataFile = file;
-                    if(screen != null && screen.Visible && screen.IsOpened)
-                        screen.RefreshSidePanel();
-                }
-            }
-            catch (Exception e)
-            {
-                LogFile.WriteLine("Error while reading the xml file: " + e);
-            }
-        }
-
-        public static void CreateNew(Action<LocalFolderPlugin> onComplete)
-        {
-            LoaderTools.OpenFolderDialog("Open the root of your project", LoaderTools.PluginsDir, (folder) =>
-            {
-                if (Main.Instance.List.Contains(folder))
-                {
-                    MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That folder already exists in the list!"));
-                    return;
-                }
-
-                LocalFolderPlugin plugin = new LocalFolderPlugin(folder);
-                LoaderTools.OpenFileDialog("Open the xml data file", folder, XmlDataType, (file) => 
-                {
-                    plugin.DeserializeFile(file);
-                    onComplete(plugin);
-                });
-            });
+            FriendlyName = github.FriendlyName;
+            Tooltip = github.Tooltip;
+            Author = github.Author;
+            Description = github.Description;
+            DataFile = github;
         }
 
 
@@ -262,6 +215,15 @@ namespace avaness.PluginLoader.Data
             {
                 Folder = folder;
                 DataFile = dataFile;
+            }
+
+            public Config Copy()
+            {
+                Config copy = new Config(Folder, DataFile)
+                {
+                    DebugBuild = DebugBuild
+                };
+                return copy;
             }
 
             public string Folder { get; set; }
