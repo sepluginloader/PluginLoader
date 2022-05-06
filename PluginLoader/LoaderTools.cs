@@ -34,6 +34,7 @@ namespace avaness.PluginLoader
 
         public static void UnloadAndRestart()
         {
+            LogFile.Dispose();
             MySessionLoader.Unload();
             MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
             MySandboxGame.Config.Save();

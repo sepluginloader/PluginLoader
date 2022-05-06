@@ -12,7 +12,14 @@ namespace avaness.PluginLoader
         public static void Init(string mainPath)
         {
             string file = Path.Combine(mainPath, fileName);
-            writer = File.CreateText(file);
+            try
+            {
+                writer = File.CreateText(file);
+            }
+            catch
+            {
+                writer = null;
+            }
         }
 
         /// <summary>
@@ -21,10 +28,17 @@ namespace avaness.PluginLoader
         /// </summary>
         public static void WriteLine(string text, bool gameLog = true)
         {
-            writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
-            if(gameLog)
-                MyLog.Default.WriteLine($"[PluginLoader] {text}");
-            writer?.Flush();
+            try
+            {
+                writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
+                if (gameLog)
+                    MyLog.Default.WriteLine($"[PluginLoader] {text}");
+                writer?.Flush();
+            }
+            catch 
+            {
+                Dispose();
+            }
         }
 
         public static void WriteTrace(string text, bool gameLog = true)
@@ -42,8 +56,12 @@ namespace avaness.PluginLoader
             if (writer == null)
                 return;
 
-            writer.Flush();
-            writer.Close();
+            try
+            {
+                writer.Flush();
+                writer.Close();
+            }
+            catch { }
             writer = null;
         }
     }
