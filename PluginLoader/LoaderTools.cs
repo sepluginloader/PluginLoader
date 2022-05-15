@@ -38,6 +38,9 @@ namespace avaness.PluginLoader
             MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
             MySandboxGame.Config.Save();
             MyScreenManager.CloseAllScreensNowExcept(null);
+            
+            MyPlugins.Unload();
+            
             Restart();
         }
 
