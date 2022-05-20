@@ -32,7 +32,7 @@ namespace avaness.PluginLoader
             {
                 writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
                 if (gameLog)
-                    MyLog.Default.WriteLine($"[PluginLoader] {text}");
+                    WriteGameLog(text);
                 writer?.Flush();
             }
             catch 
@@ -41,12 +41,21 @@ namespace avaness.PluginLoader
             }
         }
 
+        /// <summary>
+        /// Writes the specifed text to the game log file.
+        /// This function is thread safe.
+        /// </summary>
+        public static void WriteGameLog(string text)
+        {
+            MyLog.Default.WriteLine($"[PluginLoader] {text}");
+        }
+
         public static void WriteTrace(string text, bool gameLog = true)
         {
 #if DEBUG
             writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
             if(gameLog)
-                MyLog.Default.WriteLine($"[PluginLoader] {text}");
+                LogFile.WriteGameLog($"[PluginLoader] {text}");
             writer?.Flush();
 #endif
         }
