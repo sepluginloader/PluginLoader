@@ -307,8 +307,11 @@ namespace avaness.PluginLoader.GUI
 
         private void OnLoadFolder()
         {
-            MyGuiScreenLocalFolder folder = new MyGuiScreenLocalFolder(this);
-            MyGuiSandbox.AddScreen(folder);
+            LocalFolderPlugin.CreateNew((plugin) =>
+            {
+                Config.PluginFolders[plugin.Id] = plugin.FolderSettings;
+                CreatePlugin(plugin);
+            });
         }
 
         public void CreatePlugin(PluginData data)

@@ -109,7 +109,6 @@
     <Compile Include="Data\SteamPlugin.cs" />
     <Compile Include="Data\ModPlugin.cs" />
     <Compile Include="Data\WorkshopPlugin.cs" />
-    <Compile Include="GUI\MyGuiScreenLocalFolder.cs" />
     <Compile Include="GUI\PluginDetails.cs" />
     <Compile Include="GUI\GuiControls\RatingControl.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
