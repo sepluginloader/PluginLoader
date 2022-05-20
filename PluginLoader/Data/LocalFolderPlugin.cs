@@ -20,6 +20,7 @@ namespace avaness.PluginLoader.Data
     public class LocalFolderPlugin : PluginData
     {
         const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
+        const int GitTimeout = 10000;
 
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
         private string[] sourceDirectories;
@@ -104,7 +105,11 @@ namespace avaness.PluginLoader.Data
                 // Read the output stream first and then wait.
                 string gitOutput = p.StandardOutput.ReadToEnd();
                 gitError = p.StandardError.ReadToEnd();
-                p.WaitForExit();
+                if (!p.WaitForExit(GitTimeout))
+                {
+                    p.Kill();
+                    throw new TimeoutException("Git operation timed out.");
+                }
 
                 if (p.ExitCode == 0)
                 {
