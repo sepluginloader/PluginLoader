@@ -111,10 +111,10 @@ namespace avaness.PluginLoader.Data
                 }
                 else
                 {
-                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files. " + p.HasExited);
+                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.").AppendLine();
                     if (!string.IsNullOrWhiteSpace(gitError))
                     {
-                        sb.AppendLine(" Git output: ");
+                        sb.AppendLine("Git output: ");
                         sb.Append(gitError).AppendLine();
                     }
                     LogFile.WriteLine(sb.ToString());
@@ -122,14 +122,14 @@ namespace avaness.PluginLoader.Data
             }
             catch (Exception e) 
             {
-                StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.");
+                StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.").AppendLine();
                 if(!string.IsNullOrWhiteSpace(gitError))
                 {
                     sb.AppendLine(" Git output: ");
                     sb.Append(gitError).AppendLine();
                 }
                 sb.AppendLine("Exception: ");
-                sb.Append(e);
+                sb.Append(e).AppendLine();
                 LogFile.WriteLine(sb.ToString());
             }
 
