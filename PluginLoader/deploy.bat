@@ -3,7 +3,7 @@ Rem Run this script with the full file path as argument
 
 if [%1] == [] goto eof
 
-set workshop="C:\Program Files (x86)\Steam\steamapps\workshop\content\244850\2407984968"
+set workshop="%~dp0..\workshop\content\244850\2407984968"
 set counter=1
 
 Rem Wait for the file to be ready
