@@ -15,6 +15,7 @@ using System.Threading;
 using System.Windows.Forms;
 using VRage.FileSystem;
 using VRage.Input;
+using VRage.Plugins;
 using VRage.Utils;
 
 namespace avaness.PluginLoader
@@ -34,10 +35,12 @@ namespace avaness.PluginLoader
 
         public static void UnloadAndRestart()
         {
+            LogFile.Dispose();
             MySessionLoader.Unload();
             MySandboxGame.Config.ControllerDefaultOnStart = MyInput.Static.IsJoystickLastUsed;
             MySandboxGame.Config.Save();
             MyScreenManager.CloseAllScreensNowExcept(null);
+            MyPlugins.Unload();
             Restart();
         }
 
@@ -162,7 +165,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
+                LogFile.WriteGameLog("Error while opening file dialog: " + e);
             }
         }
 
@@ -194,7 +197,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                MyLog.Default.WriteLine("Error while opening file dialog: " + e);
+                LogFile.WriteGameLog("Error while opening file dialog: " + e);
             }
         }
     }

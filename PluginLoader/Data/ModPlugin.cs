@@ -99,7 +99,7 @@ namespace avaness.PluginLoader.Data
         public MyModContext GetModContext()
         {
             MyModContext modContext = new MyModContext();
-            modContext.Init(new MyObjectBuilder_Checkpoint.ModItem(WorkshopId, "Steam"));
+            modContext.Init(GetModItem());
             modContext.Init(WorkshopId.ToString(), null, ModLocation);
             return modContext;
         }

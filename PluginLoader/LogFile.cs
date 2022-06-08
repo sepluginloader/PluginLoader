@@ -12,7 +12,14 @@ namespace avaness.PluginLoader
         public static void Init(string mainPath)
         {
             string file = Path.Combine(mainPath, fileName);
-            writer = File.CreateText(file);
+            try
+            {
+                writer = File.CreateText(file);
+            }
+            catch
+            {
+                writer = null;
+            }
         }
 
         /// <summary>
@@ -21,10 +28,26 @@ namespace avaness.PluginLoader
         /// </summary>
         public static void WriteLine(string text, bool gameLog = true)
         {
-            writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
-            if(gameLog)
-                MyLog.Default.WriteLine($"[PluginLoader] {text}");
-            writer?.Flush();
+            try
+            {
+                writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
+                if (gameLog)
+                    WriteGameLog(text);
+                writer?.Flush();
+            }
+            catch 
+            {
+                Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Writes the specifed text to the game log file.
+        /// This function is thread safe.
+        /// </summary>
+        public static void WriteGameLog(string text)
+        {
+            MyLog.Default.WriteLine($"[PluginLoader] {text}");
         }
 
         public static void WriteTrace(string text, bool gameLog = true)
@@ -32,7 +55,7 @@ namespace avaness.PluginLoader
 #if DEBUG
             writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
             if(gameLog)
-                MyLog.Default.WriteLine($"[PluginLoader] {text}");
+                LogFile.WriteGameLog($"[PluginLoader] {text}");
             writer?.Flush();
 #endif
         }
@@ -42,8 +65,12 @@ namespace avaness.PluginLoader
             if (writer == null)
                 return;
 
-            writer.Flush();
-            writer.Close();
+            try
+            {
+                writer.Flush();
+                writer.Close();
+            }
+            catch { }
             writer = null;
         }
     }

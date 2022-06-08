@@ -20,6 +20,7 @@ namespace avaness.PluginLoader.Data
     public class LocalFolderPlugin : PluginData
     {
         const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
+        const int GitTimeout = 10000;
 
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
         private string[] sourceDirectories;
@@ -104,7 +105,11 @@ namespace avaness.PluginLoader.Data
                 // Read the output stream first and then wait.
                 string gitOutput = p.StandardOutput.ReadToEnd();
                 gitError = p.StandardError.ReadToEnd();
-                p.WaitForExit();
+                if (!p.WaitForExit(GitTimeout))
+                {
+                    p.Kill();
+                    throw new TimeoutException("Git operation timed out.");
+                }
 
                 if (p.ExitCode == 0)
                 {
@@ -113,10 +118,10 @@ namespace avaness.PluginLoader.Data
                 }
                 else
                 {
-                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files. " + p.HasExited);
+                    StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.").AppendLine();
                     if (!string.IsNullOrWhiteSpace(gitError))
                     {
-                        sb.AppendLine(" Git output: ");
+                        sb.AppendLine("Git output: ");
                         sb.Append(gitError).AppendLine();
                     }
                     LogFile.WriteLine(sb.ToString());
@@ -124,14 +129,14 @@ namespace avaness.PluginLoader.Data
             }
             catch (Exception e) 
             {
-                StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.");
+                StringBuilder sb = new StringBuilder("An error occurred while checking git for project files.").AppendLine();
                 if(!string.IsNullOrWhiteSpace(gitError))
                 {
                     sb.AppendLine(" Git output: ");
                     sb.Append(gitError).AppendLine();
                 }
                 sb.AppendLine("Exception: ");
-                sb.Append(e);
+                sb.Append(e).AppendLine();
                 LogFile.WriteLine(sb.ToString());
             }
 

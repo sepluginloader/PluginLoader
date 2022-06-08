@@ -53,12 +53,12 @@ namespace avaness.PluginLoader.Stats
         {
             if (!PlayerConsent.ConsentGiven)
             {
-                MyLog.Default.WriteLine("Downloading plugin statistics anonymously...");
+                LogFile.WriteGameLog("Downloading plugin statistics anonymously...");
                 votingToken = null;
                 return SimpleHttpClient.Get<PluginStats>(StatsUri);
             }
 
-            MyLog.Default.WriteLine("Downloading plugin statistics, ratings and votes for " + PlayerHash);
+            LogFile.WriteGameLog("Downloading plugin statistics, ratings and votes for " + PlayerHash);
 
             var parameters = new Dictionary<string, string> { ["playerHash"] = PlayerHash };
             var pluginStats = SimpleHttpClient.Get<PluginStats>(StatsUri, parameters);

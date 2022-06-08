@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using LitJson;
+using VRage.Utils;
 
 namespace avaness.PluginLoader.Tools
 {
@@ -29,7 +30,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: GET {url} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: GET {url} [{e.Message}]");
                 return null;
             }
         }
@@ -54,7 +55,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: GET {uri} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: GET {uri} [{e.Message}]");
                 return null;
             }
         }
@@ -70,7 +71,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
                 return null;
             }
         }
@@ -91,7 +92,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: POST {uri} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: POST {uri} [{e.Message}]");
                 return null;
             }
         }
@@ -111,7 +112,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
                 return null;
             }
         }
@@ -130,7 +131,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteLine($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
                 return false;
             }
         }
