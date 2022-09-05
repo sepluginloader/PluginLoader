@@ -102,11 +102,11 @@ namespace avaness.PluginLoader.Compiler
                 if (includeText)
                 {
                     Text = EmbeddedText.FromSource(name, source);
-                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest), name);
+                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.CSharp7_3), name);
                 }
                 else
                 {
-                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
+                    Tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.CSharp7_3));
                 }
             }
         }
