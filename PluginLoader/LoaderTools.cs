@@ -2,7 +2,6 @@
 using Sandbox;
 using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
-using SEPluginManager;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -48,12 +47,6 @@ namespace avaness.PluginLoader
         {
             Application.Restart();
             Process.GetCurrentProcess().Kill();
-        }
-
-        public static void ExecuteMain(SEPMPlugin plugin)
-        {
-            string name = plugin.GetType().ToString();
-            plugin.Main(new Harmony(name), new Logger());
         }
 
         public static string GetHash1(string file)

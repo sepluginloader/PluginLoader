@@ -237,14 +237,6 @@ namespace avaness.PluginLoader
                     LogFile.WriteLine("Resolving 0Harmony");
                 return typeof(Harmony).Assembly;
             }
-            else if (args.Name.Contains("SEPluginManager"))
-            {
-                if (assembly != null)
-                    LogFile.WriteLine("Resolving SEPluginManager for " + assembly);
-                else
-                    LogFile.WriteLine("Resolving SEPluginManager");
-                return typeof(SEPluginManager.SEPMPlugin).Assembly;
-            }
 
             return null;
         }
