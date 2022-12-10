@@ -142,7 +142,6 @@
     <Compile Include="GUI\ItemView.cs" />
     <Compile Include="GUI\TableDialogBase.cs" />
     <Compile Include="GUI\NameDialog.cs" />
-    <Compile Include="Tools\PostHttpContent.cs" />
     <Compile Include="Tools\SimpleHttpClient.cs" />
     <Compile Include="Tools\Tools.cs" />
   </ItemGroup>
