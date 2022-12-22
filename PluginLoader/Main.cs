@@ -19,7 +19,7 @@ namespace avaness.PluginLoader
 {
     public class Main : IHandleInputPlugin
     {
-        const string HarmonyVersion = "2.2.1.0";
+        const string HarmonyVersion = "2.2.2.0";
 
         public static Main Instance;
 
