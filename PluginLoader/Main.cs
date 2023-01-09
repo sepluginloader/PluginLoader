@@ -68,10 +68,15 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
+            Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
+            Config.CheckGameVersion();
             List = new PluginList(pluginsDir, Config);
 
             Config.Init(List);
+
+            if (Config.GameVersionChanged)
+                ClearGitHubCache(pluginsDir);
 
             StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
 
@@ -112,6 +117,36 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
+        }
+
+        private void ClearGitHubCache(string pluginsDir)
+        {
+            string pluginCache = Path.Combine(pluginsDir, "GitHub");
+            if (!Directory.Exists(pluginCache))
+                return;
+
+            bool hasGitHub = false;
+            foreach(string id in Config.EnabledPlugins)
+            {
+                if(List.TryGetPlugin(id, out PluginData pluginData) && pluginData is GitHubPlugin)
+                {
+                    hasGitHub = true;
+                    break;
+                }
+            }
+
+            if(hasGitHub)
+            {
+                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers version has changed so all GitHub plugins must be downloaded and compiled. Press OK to continue.", "PluginLoader", MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+            }
+
+            try
+            {
+                Directory.Delete(pluginCache);
+            }
+            catch { }
         }
 
         public bool TryGetPluginInstance(string id, out PluginInstance instance)
