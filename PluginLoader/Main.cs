@@ -14,6 +14,8 @@ using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
 using System.Net;
+using avaness.PluginLoader.Network;
+using System.Threading.Tasks;
 
 namespace avaness.PluginLoader
 {
@@ -26,6 +28,8 @@ namespace avaness.PluginLoader
         public PluginList List { get; }
         public PluginConfig Config { get; }
         public SplashScreen Splash { get; }
+
+        public NuGetClient NuGet { get; } = new NuGetClient();
 
         /// <summary>
         /// True if a local plugin was loaded
@@ -67,6 +71,9 @@ namespace avaness.PluginLoader
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
+
+            Splash.SetText("Downloading NuGet packages...");
+            Task.Run(DownloadNuGetPackages).GetAwaiter().GetResult();
 
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
@@ -117,6 +124,14 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
+        }
+
+        private async Task DownloadNuGetPackages()
+        {
+            NuGetClient client = NuGet;
+            client.Init();
+            //await client.InstallPackage("OVRSharp", "1.2.0");
+            // TODO: Install packages needed by enabled plugins
         }
 
         private void ClearGitHubCache(string pluginsDir)
