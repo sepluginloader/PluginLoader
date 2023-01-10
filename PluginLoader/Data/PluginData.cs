@@ -17,6 +17,7 @@ namespace avaness.PluginLoader.Data
     [XmlInclude(typeof(GitHubPlugin))]
     [XmlInclude(typeof(ModPlugin))]
     [ProtoContract]
+    [ProtoInclude(100, typeof(ObsoletePlugin))]
     [ProtoInclude(103, typeof(GitHubPlugin))]
     [ProtoInclude(104, typeof(ModPlugin))]
     public abstract class PluginData : IEquatable<PluginData>

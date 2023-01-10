@@ -162,11 +162,25 @@ namespace avaness.PluginLoader
                 LogFile.WriteLine("Reading whitelist from cache");
                 try
                 {
+                    PluginData[] rawData;
                     using (Stream binFile = File.OpenRead(file))
                     {
-                        list = Serializer.Deserialize<PluginData[]>(binFile);
+                        rawData = Serializer.Deserialize<PluginData[]>(binFile);
+                    }
+
+                    int obsolete = 0;
+                    List<PluginData> tempList = new List<PluginData>(rawData.Length);
+                    foreach (PluginData data in rawData)
+                    {
+                        if (data is ObsoletePlugin)
+                            obsolete++;
+                        else
+                            tempList.Add(data);
                     }
                     LogFile.WriteLine("Whitelist retrieved from disk");
+                    list = tempList.ToArray();
+                    if (obsolete > 0)
+                        LogFile.WriteLine("WARNING: " + obsolete + " obsolete plugins found in the whitelist file.");
                     return true;
                 }
                 catch (Exception e)
