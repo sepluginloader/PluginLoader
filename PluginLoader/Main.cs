@@ -72,7 +72,8 @@ namespace avaness.PluginLoader
             Config = PluginConfig.Load(pluginsDir);
             Config.CheckGameVersion();
             List = new PluginList(pluginsDir, Config);
-
+            
+            Splash.SetText("Starting...");
             Config.Init(List);
 
             if (Config.GameVersionChanged)
@@ -137,7 +138,7 @@ namespace avaness.PluginLoader
 
             if(hasGitHub)
             {
-                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers version has changed so all GitHub plugins must be downloaded and compiled. Press OK to continue.", "PluginLoader", MessageBoxButtons.OKCancel);
+                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated so all GitHub plugins that are currently enabled must be downloaded and compiled. Press OK to continue.", "PluginLoader", MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                     return;
             }
