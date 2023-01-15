@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.Linq;
 using System.Text;
+using VRage.Game;
 
 namespace avaness.PluginLoader
 {
@@ -50,6 +51,10 @@ namespace avaness.PluginLoader
         public readonly Dictionary<string, Profile> ProfileMap = new();
 
         public string ListHash { get; set; }
+
+        public int GameVersion { get; set; }
+        [XmlIgnore]
+        public bool GameVersionChanged { get; private set; }
 
         // Base URL for the statistics server, change to http://localhost:5000 in config.xml for local development
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -114,6 +119,26 @@ namespace avaness.PluginLoader
 
             if (toRemove.Count > 0)
                 Save();
+        }
+
+        public void CheckGameVersion()
+        {
+            int currentGameVersion = MyFinalBuildConstants.APP_VERSION?.Version ?? 0;
+            int storedGameVersion = GameVersion;
+            if(currentGameVersion != 0)
+            {
+                if (storedGameVersion == 0)
+                {
+                    GameVersion = currentGameVersion;
+                    Save();
+                }
+                else if(storedGameVersion != currentGameVersion)
+                {
+                    GameVersion = currentGameVersion;
+                    GameVersionChanged = true;
+                    Save();
+                }
+            }
         }
 
         public void Disable()

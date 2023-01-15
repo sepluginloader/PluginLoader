@@ -14,12 +14,10 @@ using VRage;
 
 namespace avaness.PluginLoader.Data
 {
-    [XmlInclude(typeof(WorkshopPlugin))]
-    [XmlInclude(typeof(SEPMPlugin))]
     [XmlInclude(typeof(GitHubPlugin))]
     [XmlInclude(typeof(ModPlugin))]
     [ProtoContract]
-    [ProtoInclude(100, typeof(SteamPlugin))]
+    [ProtoInclude(100, typeof(ObsoletePlugin))]
     [ProtoInclude(103, typeof(GitHubPlugin))]
     [ProtoInclude(104, typeof(ModPlugin))]
     public abstract class PluginData : IEquatable<PluginData>

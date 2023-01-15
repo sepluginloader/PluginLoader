@@ -85,7 +85,7 @@ namespace avaness.PluginLoader.Data
 
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
-            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit)
+            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit || Main.Instance.Config.GameVersionChanged)
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");

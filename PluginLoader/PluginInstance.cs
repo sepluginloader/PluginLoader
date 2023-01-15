@@ -76,8 +76,6 @@ namespace avaness.PluginLoader
             try
             {
 
-                if (plugin is SEPluginManager.SEPMPlugin sepm)
-                    LoaderTools.ExecuteMain(sepm);
                 plugin.Init(gameInstance);
                 return true;
             }

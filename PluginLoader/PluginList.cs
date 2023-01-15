@@ -41,7 +41,8 @@ namespace avaness.PluginLoader
                 HasError = true;
             }
 
-            FindWorkshopPlugins(config);
+            UpdateWorkshopItems(config);
+
             FindLocalPlugins(config, mainDirectory);
             LogFile.WriteLine($"Found {plugins.Count} plugins");
             FindPluginGroups();
@@ -161,11 +162,25 @@ namespace avaness.PluginLoader
                 LogFile.WriteLine("Reading whitelist from cache");
                 try
                 {
+                    PluginData[] rawData;
                     using (Stream binFile = File.OpenRead(file))
                     {
-                        list = Serializer.Deserialize<PluginData[]>(binFile);
+                        rawData = Serializer.Deserialize<PluginData[]>(binFile);
+                    }
+
+                    int obsolete = 0;
+                    List<PluginData> tempList = new List<PluginData>(rawData.Length);
+                    foreach (PluginData data in rawData)
+                    {
+                        if (data is ObsoletePlugin)
+                            obsolete++;
+                        else
+                            tempList.Add(data);
                     }
                     LogFile.WriteLine("Whitelist retrieved from disk");
+                    list = tempList.ToArray();
+                    if (obsolete > 0)
+                        LogFile.WriteLine("WARNING: " + obsolete + " obsolete plugins found in the whitelist file.");
                     return true;
                 }
                 catch (Exception e)
@@ -297,61 +312,15 @@ namespace avaness.PluginLoader
                 }
             }
         }
-        private void FindWorkshopPlugins(PluginConfig config)
+
+        private void UpdateWorkshopItems(PluginConfig config)
         {
             List<ISteamItem> steamPlugins = new List<ISteamItem>(plugins.Values.Select(x => x as ISteamItem).Where(x => x != null));
 
             Main.Instance.Splash.SetText($"Updating workshop items...");
 
             SteamAPI.Update(steamPlugins.Where(x => config.IsEnabled(x.Id)).Select(x => x.WorkshopId));
-
-            string workshop = Path.GetFullPath(@"..\..\..\workshop\content\244850\");
-            foreach (ISteamItem steam in steamPlugins)
-            {
-                try
-                {
-                    string path = Path.Combine(workshop, steam.Id);
-                    if(Directory.Exists(path))
-                    {
-                        if (steam is SteamPlugin plugin && TryGetPlugin(path, out string dllFile))
-                            plugin.Init(dllFile);
-                    }
-                    else if (config.IsEnabled(steam.Id))
-                    {
-                        ((PluginData)steam).Status = PluginStatus.Error;
-                        LogFile.WriteLine($"The plugin '{steam}' is missing and cannot be loaded.");
-                    }
-                }
-                catch (Exception e)
-                {
-                    LogFile.WriteLine($"An error occurred while searching for the workshop plugin {steam}: {e}");
-                }
-            }
         }
-
-        private bool TryGetPlugin(string modRoot, out string pluginFile)
-        {
-
-            foreach (string file in Directory.EnumerateFiles(modRoot, "*.plugin"))
-            {
-                string name = Path.GetFileName(file);
-                if (!name.StartsWith("0Harmony", StringComparison.OrdinalIgnoreCase))
-                {
-                    pluginFile = file;
-                    return true;
-                }
-            }
-
-            string sepm = Path.Combine(modRoot, "Data", "sepm-plugin.zip");
-            if (File.Exists(sepm))
-            {
-                pluginFile = sepm;
-                return true;
-            }
-            pluginFile = null;
-            return false;
-        }
-
 
 
         public IEnumerator<PluginData> GetEnumerator()

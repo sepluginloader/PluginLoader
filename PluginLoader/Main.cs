@@ -19,7 +19,7 @@ namespace avaness.PluginLoader
 {
     public class Main : IHandleInputPlugin
     {
-        const string HarmonyVersion = "2.2.1.0";
+        const string HarmonyVersion = "2.2.2.0";
 
         public static Main Instance;
 
@@ -68,10 +68,16 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
 
+            Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
+            Config.CheckGameVersion();
             List = new PluginList(pluginsDir, Config);
-
+            
+            Splash.SetText("Starting...");
             Config.Init(List);
+
+            if (Config.GameVersionChanged)
+                ClearGitHubCache(pluginsDir);
 
             StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
 
@@ -112,6 +118,36 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
+        }
+
+        private void ClearGitHubCache(string pluginsDir)
+        {
+            string pluginCache = Path.Combine(pluginsDir, "GitHub");
+            if (!Directory.Exists(pluginCache))
+                return;
+
+            bool hasGitHub = false;
+            foreach(string id in Config.EnabledPlugins)
+            {
+                if(List.TryGetPlugin(id, out PluginData pluginData) && pluginData is GitHubPlugin)
+                {
+                    hasGitHub = true;
+                    break;
+                }
+            }
+
+            if(hasGitHub)
+            {
+                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated so all GitHub plugins that are currently enabled must be downloaded and compiled. Press OK to continue.", "PluginLoader", MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+            }
+
+            try
+            {
+                Directory.Delete(pluginCache);
+            }
+            catch { }
         }
 
         public bool TryGetPluginInstance(string id, out PluginInstance instance)
@@ -236,14 +272,6 @@ namespace avaness.PluginLoader
                 else
                     LogFile.WriteLine("Resolving 0Harmony");
                 return typeof(Harmony).Assembly;
-            }
-            else if (args.Name.Contains("SEPluginManager"))
-            {
-                if (assembly != null)
-                    LogFile.WriteLine("Resolving SEPluginManager for " + assembly);
-                else
-                    LogFile.WriteLine("Resolving SEPluginManager");
-                return typeof(SEPluginManager.SEPMPlugin).Assembly;
             }
 
             return null;

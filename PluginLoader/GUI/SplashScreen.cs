@@ -11,6 +11,7 @@ namespace avaness.PluginLoader.GUI
 	{
 		private const float barWidth = 0.98f; // 98% of width
 		private const float barHeight = 0.06f; // 6% of height
+		private static readonly Color backgroundColor = Color.FromArgb(4, 4, 4);
 
 		private readonly bool invalid;
 		private readonly Label lbl;
@@ -49,7 +50,7 @@ namespace avaness.PluginLoader.GUI
 			{
 				Name = "PluginLoaderInfo",
 				Font = lblFont,
-				BackColor = Color.Black,
+				BackColor = backgroundColor,
 				ForeColor = Color.White,
 				MaximumSize = Size,
 				Size = new Size(Size.Width, lblFont.Height),
