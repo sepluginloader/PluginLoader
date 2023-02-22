@@ -37,7 +37,7 @@ namespace avaness.PluginLoader.Patch
                 lastBtn.Position = lastButtonPosition + MyGuiConstants.MENU_BUTTONS_POSITION_DELTA;
             }
 
-            MyGuiControlButton openBtn = new MyGuiControlButton(position, MyGuiControlButtonStyleEnum.StripeLeft, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM, text: new StringBuilder("Plugins"), onButtonClick: _ => MyGuiScreenPluginConfig.OpenMenu())
+            MyGuiControlButton openBtn = new MyGuiControlButton(position, MyGuiControlButtonStyleEnum.StripeLeft, originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM, text: new StringBuilder("Plugins"), onButtonClick: _ => MainPluginMenu.Open())
             {
                 BorderEnabled = false,
                 BorderSize = 0,

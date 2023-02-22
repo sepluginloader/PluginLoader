@@ -111,9 +111,11 @@
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\ModPlugin.cs" />
+    <Compile Include="GUI\MainPluginMenu.cs" />
     <Compile Include="GUI\PluginDetails.cs" />
     <Compile Include="GUI\GuiControls\RatingControl.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
+    <Compile Include="GUI\PluginScreen.cs" />
     <Compile Include="GUI\ProfilesDialog.cs" />
     <Compile Include="GUI\SplashScreen.cs">
       <SubType>Form</SubType>
