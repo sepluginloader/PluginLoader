@@ -32,15 +32,12 @@ namespace avaness.PluginLoader.GUI
 
         public override void RecreateControls(bool constructor)
         {
-            Vector2 halfSize = m_size.Value / 2;
-
             // Top
-            MyGuiControlLabel caption = AddCaption("Plugin Loader");
+            MyGuiControlLabel caption = AddCaption("Plugin Loader", captionScale: 1);
             AddBarBelow(caption);
-            Vector2 start = GetTopLeftAfter(caption, GuiSpacing * 2);
 
             // Bottom
-            Vector2 bottomMid = new Vector2(0, halfSize.Y);
+            Vector2 bottomMid = new Vector2(0, m_size.Value.Y / 2);
             MyGuiControlButton btnApply = new MyGuiControlButton(position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Apply"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM);
             MyGuiControlButton btnCancel = new MyGuiControlButton(position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Cancel"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM);
             Controls.Add(btnApply);
@@ -85,18 +82,96 @@ namespace avaness.PluginLoader.GUI
             btnAdd.Position = new Vector2(-topLeft.X, topLeft.Y + list.Size.Y);
             parent.Controls.Add(btnAdd);
 
-            MyGuiControlButton btnOpen = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall);
+            MyGuiControlButton btnOpen = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnPluginOpenClick)
+            {
+                UserData = list,
+                Enabled = false,
+            };
             PositionToLeft(btnAdd, btnOpen, spacing: 0);
             AddImageToButton(btnOpen, @"Textures\GUI\link.dds", 0.8f);
             parent.Controls.Add(btnOpen);
-            
-            if(!mods)
+            list.ItemSelected += (list, args) =>
             {
-                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall);
+                btnOpen.Enabled = TryGetListPlugin(list, args.RowIndex, out _);
+            };
+
+            if (!mods)
+            {
+                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnPluginSettingsClick)
+                {
+                    UserData = list,
+                    Enabled = false
+                };
                 PositionToLeft(btnOpen, btnSettings, spacing: GuiSpacing / 4);
-                AddImageToButton(btnSettings, "Textures\\GUI\\Controls\\button_filter_system_highlight.dds", 1);
+                AddImageToButton(btnSettings, @"Textures\GUI\Controls\button_filter_system_highlight.dds", 1);
                 parent.Controls.Add(btnSettings);
+                list.ItemSelected += (list, args) =>
+                {
+                    btnSettings.Enabled = TryGetListPlugin(list, args.RowIndex, out PluginData plugin) 
+                        && TryGetPluginInstance(plugin, out PluginInstance instance) && instance.HasConfigDialog;
+                };
             }
+
+
+            list.ItemDoubleClicked += OnListItemDoubleClicked;
+
+        }
+
+        private void OnListItemDoubleClicked(MyGuiControlTable list, MyGuiControlTable.EventArgs args)
+        {
+            if(TryGetListPlugin(list, args.RowIndex, out PluginData plugin))
+                OpenPluginDetails(plugin);
+        }
+
+        private void OnPluginSettingsClick(MyGuiControlButton btn)
+        {
+            MyGuiControlTable list = btn.UserData as MyGuiControlTable;
+            if (list != null && TryGetListPlugin(list, out PluginData plugin) 
+                && TryGetPluginInstance(plugin, out PluginInstance instance))
+                instance.OpenConfig();
+        }
+
+        private void OnPluginOpenClick(MyGuiControlButton btn)
+        {
+            MyGuiControlTable list = btn.UserData as MyGuiControlTable;
+            if (list != null && TryGetListPlugin(list, out PluginData plugin))
+                OpenPluginDetails(plugin);
+        }
+
+        private bool TryGetPluginInstance(PluginData plugin, out PluginInstance instance)
+        {
+            return Main.Instance.TryGetPluginInstance(plugin.Id, out instance);
+        }
+
+        private void OpenPluginDetails(PluginData plugin)
+        {
+            MyGuiSandbox.AddScreen(new PluginDetailMenu(plugin));
+        }
+
+        private bool TryGetListPlugin(MyGuiControlTable list, out PluginData plugin)
+        {
+            MyGuiControlTable.Row row = list.SelectedRow;
+            if (row == null)
+            {
+                plugin = null;
+                return false;
+            }
+
+            plugin = row.UserData as PluginData;
+            return plugin != null;
+        }
+
+        private bool TryGetListPlugin(MyGuiControlTable list, int index, out PluginData plugin)
+        {
+            if(index >= 0 && index < list.RowsCount)
+            {
+                MyGuiControlTable.Row row = list.GetRow(index);
+                plugin = row.UserData as PluginData;
+                return plugin != null;
+            }
+
+            plugin = null;
+            return false;
         }
 
         private MyGuiControlTable CreatePluginTable(Vector2 parentSize, float bottomPadding, bool mods)

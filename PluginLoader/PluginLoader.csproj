@@ -112,6 +112,7 @@
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\ModPlugin.cs" />
     <Compile Include="GUI\MainPluginMenu.cs" />
+    <Compile Include="GUI\PluginDetailMenu.cs" />
     <Compile Include="GUI\PluginDetails.cs" />
     <Compile Include="GUI\GuiControls\RatingControl.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
