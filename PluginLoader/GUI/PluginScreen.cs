@@ -151,7 +151,8 @@ namespace avaness.PluginLoader.GUI
         protected void AddImageToButton(MyGuiControlButton button, string iconTexture, float iconSize = 1)
         {
             MyGuiControlImage icon = new MyGuiControlImage(size: button.Size * iconSize, textures: new[] { iconTexture });
-            button.HighlightChanged += delegate (MyGuiControlBase control) { icon.ColorMask = (control.HasHighlight ? MyGuiConstants.HIGHLIGHT_TEXT_COLOR : Vector4.One); };
+            icon.Enabled = button.Enabled;
+            icon.HasHighlight = button.HasHighlight;
             button.Elements.Add(icon);
         }
     }
