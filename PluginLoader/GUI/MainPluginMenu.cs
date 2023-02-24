@@ -13,6 +13,7 @@ namespace avaness.PluginLoader.GUI
     {
         private List<PluginData> plugins;
         private HashSet<string> enabledPlugins;
+        private MyGuiControlCheckbox consentBox;
 
         public MainPluginMenu(IEnumerable<PluginData> plugins, IEnumerable<string> enabledPlugins) : base(size: new Vector2(1, 0.9f))
         {
@@ -29,6 +30,13 @@ namespace avaness.PluginLoader.GUI
         {
             return nameof(MainPluginMenu);
         }
+
+        public override void UnloadContent()
+        {
+            base.UnloadContent();
+            PlayerConsent.OnConsentChanged -= OnConsentChanged;
+        }
+
 
         public override void RecreateControls(bool constructor)
         {
@@ -231,13 +239,18 @@ namespace avaness.PluginLoader.GUI
             layout.Add(new MyGuiControlButton(text: new StringBuilder("Plugin Hub"), toolTip: "Open the Plugin Hub", onButtonClick: OnPluginHubClick), MyAlignH.Center);
             AdvanceLayout(ref layout);
 
-            MyGuiControlCheckbox consentBox = new MyGuiControlCheckbox(toolTip: "Consent to use your data for usage tracking", isChecked: PlayerConsent.ConsentGiven);
+            consentBox = new MyGuiControlCheckbox(toolTip: "Consent to use your data for usage tracking", isChecked: PlayerConsent.ConsentGiven);
             consentBox.IsCheckedChanged += OnConsentBoxChanged;
-            PlayerConsent.OnConsentChanged += () => UpdateConsentBox(consentBox);
+            PlayerConsent.OnConsentChanged += OnConsentChanged;
             layout.Add(consentBox, MyAlignH.Left);
             MyGuiControlLabel lblConsent = new MyGuiControlLabel(text: "Track Usage");
             PositionToRight(consentBox, lblConsent, spacing: 0);
             parent.Controls.Add(lblConsent);
+        }
+
+        private void OnConsentChanged()
+        {
+            UpdateConsentBox(consentBox);
         }
 
         private void OnConsentBoxChanged(MyGuiControlCheckbox checkbox)
