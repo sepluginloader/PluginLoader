@@ -1,10 +1,13 @@
 ﻿using avaness.PluginLoader.Data;
+using avaness.PluginLoader.Stats;
+using avaness.PluginLoader.Stats.Model;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.Game;
 using VRage.Utils;
 using VRageMath;
 
@@ -14,12 +17,16 @@ namespace avaness.PluginLoader.GUI
     {
         private PluginData plugin;
         private PluginInstance pluginInstance;
+        private PluginStat stats;
 
         public PluginDetailMenu(PluginData plugin) : base(size: new Vector2(0.5f, 0.8f))
         {
             this.plugin = plugin;
             if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
                 pluginInstance = instance;
+            PluginStats stats = Main.Instance.Stats;
+            if (stats != null && !stats.Stats.TryGetValue(plugin.Id, out this.stats))
+                this.stats = new PluginStat();
         }
 
         public override string GetFriendlyName()
@@ -52,8 +59,7 @@ namespace avaness.PluginLoader.GUI
 
             layout.Add(new MyGuiControlLabel(text: plugin.FriendlyName, textScale: 0.9f), MyAlignH.Left, MyAlignV.Bottom, 0, 0);
             layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
-            int installs = GetNumInstalls(plugin);
-            layout.Add(new MyGuiControlLabel(text: installs + " installs"), MyAlignH.Left, MyAlignV.Center, 2, 0);
+            layout.Add(new MyGuiControlLabel(text: stats.Players + " installs"), MyAlignH.Left, MyAlignV.Center, 2, 0);
 
             MyGuiControlCompositePanel panel = new MyGuiControlCompositePanel()
             {
@@ -67,6 +73,41 @@ namespace avaness.PluginLoader.GUI
             descriptionText.OnLinkClicked += (x, url) => MyGuiSandbox.OpenUrl(url, UrlOpenMode.SteamOrExternalWithConfirm);
             plugin.GetDescriptionText(descriptionText);
             Controls.Add(descriptionText);
+
+            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(toolTip: "Enabled");
+            layout.Add(enabledCheckbox, MyAlignH.Right, MyAlignV.Top, 0, 1);
+
+            MyGuiControlParent votingPanel = new MyGuiControlParent();
+            layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
+            CreateVotingPanel(votingPanel);
+
+        }
+
+        private void CreateVotingPanel(MyGuiControlParent parent)
+        {
+            MyLayoutHorizontal layout = new MyLayoutHorizontal(parent, 0);
+
+            MyGuiControlButton btnVoteUp = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnRateUpClicked);
+            AddImageToButton(btnVoteUp, @"Textures\GUI\Icons\Blueprints\like_test.png", 0.8f);
+            layout.Add(btnVoteUp, MyAlignV.Bottom);
+
+            MyGuiControlLabel lblVoteUp = new MyGuiControlLabel(text: stats.Upvotes.ToString());
+            PositionToRight(btnVoteUp, lblVoteUp, spacing: GuiSpacing / 5);
+            AdvanceLayout(ref layout, lblVoteUp.Size.X + GuiSpacing);
+            parent.Controls.Add(lblVoteUp);
+
+            MyGuiControlButton btnVoteDown = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnRateUpClicked);
+            AddImageToButton(btnVoteDown, @"Textures\GUI\\Icons\Blueprints\dislike_test.png", 0.8f);
+            layout.Add(btnVoteDown, MyAlignV.Bottom);
+
+            MyGuiControlLabel lblVoteDown = new MyGuiControlLabel(text: stats.Downvotes.ToString());
+            PositionToRight(btnVoteDown, lblVoteDown, spacing: GuiSpacing / 5);
+            parent.Controls.Add(lblVoteDown);
+        }
+
+        private void OnRateUpClicked(MyGuiControlButton btn)
+        {
+
         }
 
         private void OnPluginSettingsClick(MyGuiControlButton btn)
@@ -78,11 +119,6 @@ namespace avaness.PluginLoader.GUI
         private void OnPluginOpenClick(MyGuiControlButton btn)
         {
             plugin.Show();
-        }
-
-        private int GetNumInstalls(PluginData plugin)
-        {
-            return 0; // TODO
         }
 
         private void SettingsClick(MyGuiControlButton btn)
