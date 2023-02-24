@@ -95,7 +95,7 @@ namespace avaness.PluginLoader.GUI
                 UserData = list,
                 Enabled = false,
             };
-            PositionToLeft(btnAdd, btnOpen, spacing: 0);
+            PositionToLeft(btnAdd, btnOpen, spacing: GuiSpacing / 5);
             AddImageToButton(btnOpen, @"Textures\GUI\link.dds", 0.8f);
             parent.Controls.Add(btnOpen);
             list.ItemSelected += (list, args) =>
@@ -110,7 +110,7 @@ namespace avaness.PluginLoader.GUI
                     UserData = list,
                     Enabled = false
                 };
-                PositionToLeft(btnOpen, btnSettings, spacing: GuiSpacing / 4);
+                PositionToLeft(btnOpen, btnSettings, spacing: GuiSpacing / 5);
                 AddImageToButton(btnSettings, @"Textures\GUI\Controls\button_filter_system_highlight.dds", 1);
                 parent.Controls.Add(btnSettings);
                 list.ItemSelected += (list, args) =>
