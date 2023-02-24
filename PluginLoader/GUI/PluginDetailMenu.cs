@@ -36,6 +36,8 @@ namespace avaness.PluginLoader.GUI
 
         public override void RecreateControls(bool constructor)
         {
+            base.RecreateControls(constructor);
+
             // Top
             MyGuiControlLabel caption = AddCaption("Plugin Details", captionScale: 1);
             AddBarBelow(caption);
