@@ -227,9 +227,9 @@ namespace avaness.PluginLoader.GUI
             MyLayoutVertical layout = new MyLayoutVertical(parent, 0);
 
             layout.Add(new MyGuiControlButton(text: new StringBuilder("Profiles"), toolTip: "Load or edit profiles", onButtonClick: OnProfilesClick), MyAlignH.Center);
-            AdvanceLayout(ref layout, GuiSpacing);
+            AdvanceLayout(ref layout);
             layout.Add(new MyGuiControlButton(text: new StringBuilder("Plugin Hub"), toolTip: "Open the Plugin Hub", onButtonClick: OnPluginHubClick), MyAlignH.Center);
-            AdvanceLayout(ref layout, GuiSpacing);
+            AdvanceLayout(ref layout);
 
             MyGuiControlCheckbox consentBox = new MyGuiControlCheckbox(toolTip: "Consent to use your data for usage tracking", isChecked: PlayerConsent.ConsentGiven);
             consentBox.IsCheckedChanged += OnConsentBoxChanged;

@@ -81,12 +81,12 @@ namespace avaness.PluginLoader.GUI
             Controls.Add(bar);
         }
 
-        protected void AdvanceLayout(ref MyLayoutVertical layout, float amount)
+        protected void AdvanceLayout(ref MyLayoutVertical layout, float amount = GuiSpacing)
         {
             layout.Advance(amount * MyGuiConstants.GUI_OPTIMAL_SIZE.Y);
         }
 
-        protected void AdvanceLayout(ref MyLayoutHorizontal layout, float amount)
+        protected void AdvanceLayout(ref MyLayoutHorizontal layout, float amount = GuiSpacing)
         {
             layout.Advance(amount * MyGuiConstants.GUI_OPTIMAL_SIZE.Y);
         }
