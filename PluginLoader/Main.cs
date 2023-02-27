@@ -138,9 +138,7 @@ namespace avaness.PluginLoader
 
             if(hasGitHub)
             {
-                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated so all GitHub plugins that are currently enabled must be downloaded and compiled. Press OK to continue.", "PluginLoader", MessageBoxButtons.OKCancel);
-                if (result == DialogResult.Cancel)
-                    return;
+                MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated, so all plugins that are currently enabled must be downloaded and compiled.", "PluginLoader", MessageBoxButtons.OK);
             }
 
             try
