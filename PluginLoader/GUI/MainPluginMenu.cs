@@ -84,7 +84,7 @@ namespace avaness.PluginLoader.GUI
             Vector2 topLeft = parent.Size * -0.5f;
 
             MyGuiControlButton btnAdd = new MyGuiControlButton(visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.Increase, 
-                originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP);
+                originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, onButtonClick: (x) => OpenAddPluginMenu(mods));
 
             MyGuiControlTable list = CreatePluginTable(parent.Size, btnAdd.Size.Y, mods);
             parent.Controls.Add(list);
@@ -125,6 +125,11 @@ namespace avaness.PluginLoader.GUI
 
             list.ItemDoubleClicked += OnListItemDoubleClicked;
 
+        }
+
+        private void OpenAddPluginMenu(bool mods)
+        {
+            MyGuiSandbox.AddScreen(new AddPluginMenu(plugins, mods));
         }
 
         private void OnListItemDoubleClicked(MyGuiControlTable list, MyGuiControlTable.EventArgs args)

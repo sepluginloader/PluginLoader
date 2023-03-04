@@ -24,9 +24,8 @@ namespace avaness.PluginLoader.GUI
             this.plugin = plugin;
             if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
                 pluginInstance = instance;
-            PluginStats stats = Main.Instance.Stats;
-            if (stats != null && !stats.Stats.TryGetValue(plugin.Id, out this.stats))
-                this.stats = new PluginStat();
+            PluginStats stats = Main.Instance.Stats ?? new PluginStats();
+            this.stats = stats.GetStatsForPlugin(plugin);
         }
 
         public override string GetFriendlyName()
@@ -63,18 +62,13 @@ namespace avaness.PluginLoader.GUI
             layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
             layout.Add(new MyGuiControlLabel(text: stats.Players + " installs"), MyAlignH.Left, MyAlignV.Center, 2, 0);
 
-            MyGuiControlCompositePanel panel = new MyGuiControlCompositePanel()
+            MyGuiControlMultilineText descriptionText = new MyGuiControlMultilineText(textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
             {
-                BackgroundTexture = MyGuiConstants.TEXTURE_RECTANGLE_DARK_BORDER
+                VisualStyle = MyGuiControlMultilineStyleEnum.BackgroundBordered
             };
-            layout.AddWithSize(panel, MyAlignH.Center, MyAlignV.Center, 3, 0, colSpan: 2);
-            MyGuiControlMultilineText descriptionText = new MyGuiControlMultilineText(position: panel.Position, size: panel.Size, textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
-            {
-                OriginAlign = panel.OriginAlign
-            };
+            layout.AddWithSize(descriptionText, MyAlignH.Center, MyAlignV.Center, 3, 0, colSpan: 2);
             descriptionText.OnLinkClicked += (x, url) => MyGuiSandbox.OpenUrl(url, UrlOpenMode.SteamOrExternalWithConfirm);
             plugin.GetDescriptionText(descriptionText);
-            Controls.Add(descriptionText);
 
             MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(toolTip: "Enabled");
             layout.Add(enabledCheckbox, MyAlignH.Right, MyAlignV.Top, 0, 1);

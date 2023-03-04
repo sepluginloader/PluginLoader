@@ -31,13 +31,13 @@ namespace avaness.PluginLoader.GUI
             base.LoadContent();
             RecreateControls(true);
         }
-
-        protected MyLayoutTable GetLayoutTableBetween(MyGuiControlBase top, MyGuiControlBase bottom, float verticalSpacing = GuiSpacing, float horizontalSpacing = GuiSpacing)
+        
+        protected RectangleF GetAreaBetween(MyGuiControlBase top, MyGuiControlBase bottom, float verticalSpacing = GuiSpacing, float horizontalSpacing = GuiSpacing)
         {
             Vector2 halfSize = m_size.Value / 2;
 
             float topPosY = GetCoordTopLeftFromAligned(top).Y;
-            Vector2 topPos = new Vector2(horizontalSpacing - halfSize.X, topPosY + top.Size.Y + verticalSpacing) ;
+            Vector2 topPos = new Vector2(horizontalSpacing - halfSize.X, topPosY + top.Size.Y + verticalSpacing);
 
             float bottomPosY = GetCoordTopLeftFromAligned(bottom).Y;
             Vector2 bottomPos = new Vector2(halfSize.X - horizontalSpacing, bottomPosY - verticalSpacing);
@@ -45,22 +45,14 @@ namespace avaness.PluginLoader.GUI
             Vector2 size = bottomPos - topPos;
             size.X = Math.Abs(size.X);
             size.Y = Math.Abs(size.Y);
-            
-            return new MyLayoutTable(this, topPos, size);
+
+            return new RectangleF(topPos, size);
         }
 
-        protected Vector2 GetTopLeftAfter(MyGuiControlBase control, float spacing = GuiSpacing)
+        protected MyLayoutTable GetLayoutTableBetween(MyGuiControlBase top, MyGuiControlBase bottom, float verticalSpacing = GuiSpacing, float horizontalSpacing = GuiSpacing)
         {
-            Vector2 controlPos = control.GetPositionAbsoluteBottomLeft();
-            Vector2 halfSize = m_size.Value / 2;
-            return new Vector2(-halfSize.X, (controlPos.Y - halfSize.Y) + spacing);
-        }
-
-        protected Vector2 GetTopLeftBefore(MyGuiControlBase control, float spacing = GuiSpacing)
-        {
-            Vector2 controlPos = control.GetPositionAbsoluteBottomLeft();
-            Vector2 halfSize = m_size.Value / 2;
-            return new Vector2(-halfSize.X, (controlPos.Y - halfSize.Y) + spacing);
+            RectangleF rect = GetAreaBetween(top, bottom, verticalSpacing, horizontalSpacing);
+            return new MyLayoutTable(this, rect.Position, rect.Size);
         }
 
         protected void AddBarBelow(MyGuiControlBase control, float barWidth = 0.8f, float spacing = GuiSpacing)
