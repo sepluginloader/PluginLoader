@@ -12,18 +12,20 @@ namespace avaness.PluginLoader.GUI
     class MainPluginMenu : PluginScreen
     {
         private List<PluginData> plugins;
+        private PluginConfig config;
         private HashSet<string> enabledPlugins;
         private MyGuiControlCheckbox consentBox;
 
-        public MainPluginMenu(IEnumerable<PluginData> plugins, IEnumerable<string> enabledPlugins) : base(size: new Vector2(1, 0.9f))
+        public MainPluginMenu(IEnumerable<PluginData> plugins, PluginConfig config) : base(size: new Vector2(1, 0.9f))
         {
             this.plugins = plugins.ToList();
-            this.enabledPlugins = new HashSet<string>(enabledPlugins);
+            this.config = config;
+            this.enabledPlugins = new HashSet<string>(config.EnabledPlugins);
         }
 
         public static void Open()
         {
-            MyGuiSandbox.AddScreen(new MainPluginMenu(Main.Instance.List, Main.Instance.Config.EnabledPlugins));
+            MyGuiSandbox.AddScreen(new MainPluginMenu(Main.Instance.List, Main.Instance.Config));
         }
 
         public override string GetFriendlyName()
@@ -48,8 +50,8 @@ namespace avaness.PluginLoader.GUI
 
             // Bottom
             Vector2 bottomMid = new Vector2(0, m_size.Value.Y / 2);
-            MyGuiControlButton btnApply = new MyGuiControlButton(position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Apply"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM);
-            MyGuiControlButton btnCancel = new MyGuiControlButton(position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Cancel"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM);
+            MyGuiControlButton btnApply = new MyGuiControlButton(position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Apply"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM, onButtonClick: OnApplyClick);
+            MyGuiControlButton btnCancel = new MyGuiControlButton(position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Cancel"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM, onButtonClick: OnCancelClick);
             Controls.Add(btnApply);
             Controls.Add(btnCancel);
             AddBarAbove(btnApply);
@@ -373,9 +375,63 @@ namespace avaness.PluginLoader.GUI
             }
         }
 
+        #region Restart
+
         private bool IsEnabled(PluginData plugin)
         {
             return enabledPlugins.Contains(plugin.Id);
         }
+
+        private void SetEnabled(PluginData plugin, bool enabled)
+        {
+            if (enabled)
+                enabledPlugins.Add(plugin.Id);
+            else
+                enabledPlugins.Remove(plugin.Id);
+        }
+
+        private void OnCancelClick(MyGuiControlButton btn)
+        {
+            CloseScreen();
+        }
+
+        private void OnApplyClick(MyGuiControlButton btn)
+        {
+            if(RequiresRestart())
+            {
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes?"), callback: AskRestartResult));
+            }
+            CloseScreen();
+        }
+
+        private void AskRestartResult(MyGuiScreenMessageBox.ResultEnum result)
+        {
+            if (result == MyGuiScreenMessageBox.ResultEnum.YES)
+            {
+                Save();
+                LoaderTools.AskToRestart();
+            }
+            else if (result == MyGuiScreenMessageBox.ResultEnum.NO)
+            {
+                Save();
+                CloseScreen();
+            }
+        }
+
+        private void Save()
+        {
+            config.EnabledPlugins.Clear();
+            foreach (string id in enabledPlugins)
+                config.SetEnabled(id, true);
+            config.Save();
+        }
+
+        private bool RequiresRestart()
+        {
+            HashSet<string> actualPlugins = config.EnabledPlugins;
+            return enabledPlugins.Count != actualPlugins.Count || !enabledPlugins.SetEquals(actualPlugins);
+        }
+
+        #endregion
     }
 }

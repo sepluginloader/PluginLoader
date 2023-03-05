@@ -16,6 +16,11 @@ using VRage.FileSystem;
 using VRage.Input;
 using VRage.Plugins;
 using VRage.Utils;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.Screens.Helpers;
+using VRage;
+using VRage.Audio;
+using Sandbox.Game.Gui;
 
 namespace avaness.PluginLoader
 {
@@ -29,6 +34,78 @@ namespace avaness.PluginLoader
                 return Application.OpenForms[0];
             else
                 return new Form { TopMost = true };
+        }
+
+        public static void AskToRestart()
+        {
+            if (MyGuiScreenGamePlay.Static != null)
+                AskSave(delegate { UnloadAndRestart(); });
+            else
+                UnloadAndRestart();
+        }
+
+        /// <summary>
+        /// From WesternGamer/InGameWorldLoading
+        /// </summary>
+        /// <param name="afterMenu">Action after code is executed.</param>
+        private static void AskSave(Action afterMenu)
+        {
+            // Sync.IsServer is backwards
+            if (!Sync.IsServer)
+            {
+                afterMenu();
+                return;
+            }
+
+            string message = "";
+            bool isCampaign = false;
+            MyMessageBoxButtonsType buttonsType = MyMessageBoxButtonsType.YES_NO_CANCEL;
+
+            // Sync.IsServer is backwards
+            if (Sync.IsServer && !MySession.Static.Settings.EnableSaving)
+            {
+                message += "Are you sure that you want to restart the game? All progress from the last checkpoint will be lost.";
+                isCampaign = true;
+                buttonsType = MyMessageBoxButtonsType.YES_NO;
+            }
+            else
+            {
+                message += "Save changes before restarting game?";
+            }
+
+            MyGuiScreenMessageBox saveMenu = MyGuiSandbox.CreateMessageBox(buttonType: buttonsType, messageText: new StringBuilder(message), messageCaption: MyTexts.Get(MyCommonTexts.MessageBoxCaptionPleaseConfirm), callback: ShowSaveMenuCallback, cancelButtonText: MyStringId.GetOrCompute("Don't Restart"));
+            saveMenu.InstantClose = false;
+            MyGuiSandbox.AddScreen(saveMenu);
+
+            void ShowSaveMenuCallback(MyGuiScreenMessageBox.ResultEnum callbackReturn)
+            {
+                if (isCampaign)
+                {
+                    if (callbackReturn == MyGuiScreenMessageBox.ResultEnum.YES)
+                        afterMenu();
+
+                    return;
+                }
+
+                switch (callbackReturn)
+                {
+                    case MyGuiScreenMessageBox.ResultEnum.YES:
+                        MyAsyncSaving.Start(delegate { MySandboxGame.Static.OnScreenshotTaken += UnloadAndExitAfterScreenshotWasTaken; });
+                        break;
+
+                    case MyGuiScreenMessageBox.ResultEnum.NO:
+                        MyAudio.Static.Mute = true;
+                        MyAudio.Static.StopMusic();
+                        afterMenu();
+                        break;
+                }
+            }
+
+            void UnloadAndExitAfterScreenshotWasTaken(object sender, EventArgs e)
+            {
+                MySandboxGame.Static.OnScreenshotTaken -= UnloadAndExitAfterScreenshotWasTaken;
+                afterMenu();
+            }
         }
 
 
