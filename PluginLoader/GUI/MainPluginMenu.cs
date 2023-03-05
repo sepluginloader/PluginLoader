@@ -343,17 +343,15 @@ namespace avaness.PluginLoader.GUI
                     row.AddCell(new MyGuiControlTable.Cell(plugin.Version?.ToString() ?? "N/A", toolTip: tip));
                 }
 
-                var enabled = true;//AfterRebootEnableFlags[plugin.Id];
                 var enabledCell = new MyGuiControlTable.Cell();
-                var enabledCheckbox = new MyGuiControlCheckbox(isChecked: enabled)
+                var enabledCheckbox = new MyGuiControlCheckbox(isChecked: IsEnabled(plugin))
                 {
                     UserData = plugin,
                     Visible = true
                 };
-                //enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
+                enabledCheckbox.IsCheckedChanged += OnPluginCheckboxChanged;
                 enabledCell.Control = enabledCheckbox;
                 list.Controls.Add(enabledCheckbox);
-                //pluginCheckboxes[plugin.Id] = enabledCheckbox;
                 row.AddCell(enabledCell);
 
                 list.Add(row);
@@ -373,6 +371,12 @@ namespace avaness.PluginLoader.GUI
                 for (int i = 1; i < list.ColumnsCount; i++)
                     list.SetColumnVisibility(i, true);
             }
+        }
+
+        private void OnPluginCheckboxChanged(MyGuiControlCheckbox checkbox)
+        {
+            if(checkbox.UserData is PluginData plugin)
+                SetEnabled(plugin, checkbox.IsChecked);
         }
 
         #region Restart
