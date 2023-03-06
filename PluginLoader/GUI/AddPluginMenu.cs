@@ -150,7 +150,11 @@ namespace avaness.PluginLoader.GUI
         {
             MyLayoutHorizontal layout = new MyLayoutHorizontal(parent, 0);
 
-            MyGuiControlImage imgVoteUp = new MyGuiControlImage(size: new Vector2(parent.Size.Y) * 0.8f, backgroundTexture: @"Textures\GUI\Icons\Blueprints\like_test.png");
+            float height = parent.Size.Y;
+            float width = (height * MyGuiConstants.GUI_OPTIMAL_SIZE.Y) / MyGuiConstants.GUI_OPTIMAL_SIZE.X;
+            Vector2 size = new Vector2(width, height) * 0.8f;
+
+            MyGuiControlImage imgVoteUp = new MyGuiControlImage(size: size, textures: new[] { @"Textures\GUI\Icons\Blueprints\like_test.png" });
             layout.Add(imgVoteUp, MyAlignV.Center);
 
             MyGuiControlLabel lblVoteUp = new MyGuiControlLabel(text: stats.Upvotes.ToString());
@@ -158,7 +162,7 @@ namespace avaness.PluginLoader.GUI
             AdvanceLayout(ref layout, lblVoteUp.Size.X + GuiSpacing);
             parent.Controls.Add(lblVoteUp);
 
-            MyGuiControlImage imgVoteDown = new MyGuiControlImage(size: new Vector2(parent.Size.Y) * 0.8f, backgroundTexture: @"Textures\GUI\Icons\Blueprints\dislike_test.png");
+            MyGuiControlImage imgVoteDown = new MyGuiControlImage(size: size, textures: new[] { @"Textures\GUI\Icons\Blueprints\dislike_test.png" });
             layout.Add(imgVoteDown, MyAlignV.Center);
 
             MyGuiControlLabel lblVoteDown = new MyGuiControlLabel(text: stats.Downvotes.ToString());
