@@ -49,7 +49,6 @@ namespace avaness.PluginLoader.GUI.GuiControls
                 else if (mouseClick && (MyInput.Static.IsNewPrimaryButtonReleased() || MyInput.Static.IsNewSecondaryButtonReleased()))
                 {
                     mouseClick = false;
-                    MyGuiSoundManager.PlaySound(GuiSounds.MouseClick);
                     if (OnButtonClicked != null)
                         OnButtonClicked.Invoke(this);
                 }

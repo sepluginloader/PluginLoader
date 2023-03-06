@@ -10,6 +10,8 @@ using System.Linq;
 using avaness.PluginLoader.Stats.Model;
 using VRage.Game;
 using avaness.PluginLoader.GUI.GuiControls;
+using VRage.Audio;
+using Sandbox;
 
 namespace avaness.PluginLoader.GUI
 {
@@ -241,13 +243,25 @@ namespace avaness.PluginLoader.GUI
             }
             layout.Add(new MyGuiControlLabel(text: plugin.Source), MyAlignH.Left, MyAlignV.Bottom, 4, 0);
 
+            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(position: contentTopLeft + new Vector2(contentSize.X, 0), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP)
+            {
+                Name = "PluginEnabled"
+            };
+            contentArea.Controls.Add(enabledCheckbox);
+
             panel.Controls.Add(contentArea);
         }
 
         private void OnPluginItemClicked(ParentButton btn)
         {
+            MyGuiControlBase checkbox = btn.Controls.GetControlByName("PluginEnabled");
+            if (checkbox != null && checkbox.CheckMouseOver(false))
+                return;
             if (btn.UserData is PluginData plugin)
+            {
+                MyGuiSoundManager.PlaySound(GuiSounds.MouseClick);
                 MyScreenManager.AddScreen(new PluginDetailMenu(plugin));
+            }
         }
 
         private void CreateVotingPanel(MyGuiControlParent parent, PluginStat stats)
