@@ -71,10 +71,11 @@ namespace avaness.PluginLoader.GUI
                 Size = area.Size,
                 ScrollbarVEnabled = true,
                 CanFocusChildren = true,
+                ScrolledAreaPadding = new MyGuiBorderThickness(0.005f),
+                DrawScrollBarSeparator = true,
             };
-            RectangleF scrollArea = scrollPanel.GetScissoringArea().Value;
-            gridArea.Position = scrollArea.Position;
-            gridArea.Size = scrollArea.Size;
+            gridArea.Position = area.Position;
+            gridArea.Size = area.Size - (scrollPanel.ScrolledAreaPadding.SizeChange + new Vector2(scrollPanel.ScrollbarVSizeX, 0));
             CreatePluginList(gridArea);
             Controls.Add(scrollPanel);
         }
