@@ -15,13 +15,15 @@ namespace avaness.PluginLoader.GUI
 {
     class PluginDetailMenu : PluginScreen
     {
+        private HashSet<string> enabledPlugins;
         private PluginData plugin;
         private PluginInstance pluginInstance;
         private PluginStat stats;
 
-        public PluginDetailMenu(PluginData plugin) : base(size: new Vector2(0.5f, 0.8f))
+        public PluginDetailMenu(PluginData plugin, HashSet<string> enabledPlugins) : base(size: new Vector2(0.5f, 0.8f))
         {
             this.plugin = plugin;
+            this.enabledPlugins = enabledPlugins;
             if (Main.Instance.TryGetPluginInstance(plugin.Id, out PluginInstance instance))
                 pluginInstance = instance;
             PluginStats stats = Main.Instance.Stats ?? new PluginStats();
@@ -70,13 +72,19 @@ namespace avaness.PluginLoader.GUI
             descriptionText.OnLinkClicked += (x, url) => MyGuiSandbox.OpenUrl(url, UrlOpenMode.SteamOrExternalWithConfirm);
             plugin.GetDescriptionText(descriptionText);
 
-            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(toolTip: "Enabled");
+            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(toolTip: "Enabled", isChecked: enabledPlugins.Contains(plugin.Id));
+            enabledCheckbox.IsCheckedChanged += OnEnabledChanged;
             layout.Add(enabledCheckbox, MyAlignH.Right, MyAlignV.Top, 0, 1);
 
             MyGuiControlParent votingPanel = new MyGuiControlParent();
             layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
             CreateVotingPanel(votingPanel);
 
+        }
+
+        private void OnEnabledChanged(MyGuiControlCheckbox checkbox)
+        {
+            plugin.UpdateEnabledPlugins(enabledPlugins, checkbox.IsChecked);
         }
 
         private void CreateVotingPanel(MyGuiControlParent parent)

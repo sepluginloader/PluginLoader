@@ -22,6 +22,7 @@ namespace avaness.PluginLoader.GUI
         const float PercentSearchBox = 0.8f;
 
         private List<PluginData> plugins = new List<PluginData>();
+        private HashSet<string> enabledPlugins;
         private PluginStats stats;
         private bool mods;
         private MyGuiControlCombobox sortDropdown;
@@ -31,11 +32,12 @@ namespace avaness.PluginLoader.GUI
 
         enum SortingMethod { Name, Usage, Rating }
 
-        public AddPluginMenu(IEnumerable<PluginData> plugins, bool mods) : base(size: new Vector2(0.8f, 0.9f))
+        public AddPluginMenu(IEnumerable<PluginData> plugins, bool mods, HashSet<string> enabledPlugins) : base(size: new Vector2(0.8f, 0.9f))
         {
             this.plugins = plugins.Where(x => (x is ModPlugin) == mods).ToList();
             stats = Main.Instance.Stats ?? new PluginStats();
             this.mods = mods;
+            this.enabledPlugins = enabledPlugins;
             SortPlugins(SortingMethod.Name);
         }
 
@@ -243,13 +245,29 @@ namespace avaness.PluginLoader.GUI
             }
             layout.Add(new MyGuiControlLabel(text: plugin.Source), MyAlignH.Left, MyAlignV.Bottom, 4, 0);
 
-            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(position: contentTopLeft + new Vector2(contentSize.X, 0), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP)
+            MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(position: contentTopLeft + new Vector2(contentSize.X, 0), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, isChecked: enabledPlugins.Contains(plugin.Id))
             {
-                Name = "PluginEnabled"
+                Name = "PluginEnabled",
+                UserData = plugin,
             };
+            enabledCheckbox.IsCheckedChanged += OnEnabledChanged;
             contentArea.Controls.Add(enabledCheckbox);
 
             panel.Controls.Add(contentArea);
+        }
+
+        private void OnEnabledChanged(MyGuiControlCheckbox checkbox)
+        {
+            if(checkbox.UserData is PluginData plugin)
+            {
+                if (checkbox.IsChecked)
+                    enabledPlugins.Add(plugin.Id);
+                else
+                    enabledPlugins.Remove(plugin.Id);
+
+                if (plugin.UpdateEnabledPlugins(enabledPlugins, checkbox.IsChecked))
+                    RefreshPluginList();
+            }
         }
 
         private void OnPluginItemClicked(ParentButton btn)
@@ -260,8 +278,16 @@ namespace avaness.PluginLoader.GUI
             if (btn.UserData is PluginData plugin)
             {
                 MyGuiSoundManager.PlaySound(GuiSounds.MouseClick);
-                MyScreenManager.AddScreen(new PluginDetailMenu(plugin));
+                PluginDetailMenu screen = new PluginDetailMenu(plugin, enabledPlugins);
+                screen.Closed += DetailMenu_Closed;
+                MyScreenManager.AddScreen(screen);
             }
+        }
+
+        private void DetailMenu_Closed(MyGuiScreenBase source, bool isUnloading)
+        {
+            RefreshPluginList();
+            source.Closed -= DetailMenu_Closed;
         }
 
         private void CreateVotingPanel(MyGuiControlParent parent, PluginStat stats)

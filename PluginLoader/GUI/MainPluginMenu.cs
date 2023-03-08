@@ -15,6 +15,8 @@ namespace avaness.PluginLoader.GUI
         private PluginConfig config;
         private HashSet<string> enabledPlugins;
         private MyGuiControlCheckbox consentBox;
+        private MyGuiControlParent pluginsPanel;
+        private MyGuiControlParent modsPanel;
 
         public MainPluginMenu(IEnumerable<PluginData> plugins, PluginConfig config) : base(size: new Vector2(1, 0.9f))
         {
@@ -65,13 +67,13 @@ namespace avaness.PluginLoader.GUI
             
             // Column 1
             grid.Add(lblPlugins, MyAlignH.Center, MyAlignV.Bottom, 0, 0);
-            MyGuiControlParent pluginsPanel = new MyGuiControlParent();
+            pluginsPanel = new MyGuiControlParent();
             grid.AddWithSize(pluginsPanel, MyAlignH.Center, MyAlignV.Center, 1, 0);
             CreatePluginsPanel(pluginsPanel, false);
 
             // Column 2
             grid.Add(new MyGuiControlLabel(text: "Mods"), MyAlignH.Center, MyAlignV.Bottom, 0, 1);
-            MyGuiControlParent modsPanel = new MyGuiControlParent();
+            modsPanel = new MyGuiControlParent();
             grid.AddWithSize(modsPanel, MyAlignH.Center, MyAlignV.Center, 1, 1);
             CreatePluginsPanel(modsPanel, true);
 
@@ -131,7 +133,23 @@ namespace avaness.PluginLoader.GUI
 
         private void OpenAddPluginMenu(bool mods)
         {
-            MyGuiSandbox.AddScreen(new AddPluginMenu(plugins, mods));
+            AddPluginMenu screen = new AddPluginMenu(plugins, mods, enabledPlugins);
+            screen.Closed += Screen_Closed;
+            MyGuiSandbox.AddScreen(screen);
+        }
+
+        private void Screen_Closed(MyGuiScreenBase source, bool isUnloading)
+        {
+            RefreshPluginLists();
+            source.Closed -= Screen_Closed;
+        }
+
+        private void RefreshPluginLists()
+        {
+            pluginsPanel.Controls.Clear();
+            CreatePluginsPanel(pluginsPanel, false);
+            modsPanel.Controls.Clear();
+            CreatePluginsPanel(modsPanel, true);
         }
 
         private void OnListItemDoubleClicked(MyGuiControlTable list, MyGuiControlTable.EventArgs args)
@@ -162,7 +180,9 @@ namespace avaness.PluginLoader.GUI
 
         private void OpenPluginDetails(PluginData plugin)
         {
-            MyGuiSandbox.AddScreen(new PluginDetailMenu(plugin));
+            PluginDetailMenu screen = new PluginDetailMenu(plugin, enabledPlugins);
+            screen.Closed += Screen_Closed;
+            MyGuiSandbox.AddScreen(screen);
         }
 
         private bool TryGetListPlugin(MyGuiControlTable list, out PluginData plugin)
@@ -392,6 +412,10 @@ namespace avaness.PluginLoader.GUI
                 enabledPlugins.Add(plugin.Id);
             else
                 enabledPlugins.Remove(plugin.Id);
+
+            if(plugin.UpdateEnabledPlugins(enabledPlugins, enabled))
+                RefreshPluginLists();
+
         }
 
         private void OnCancelClick(MyGuiControlButton btn)
