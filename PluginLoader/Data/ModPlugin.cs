@@ -1,5 +1,6 @@
 ﻿using ProtoBuf;
 using Sandbox.Graphics.GUI;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -104,5 +105,21 @@ namespace avaness.PluginLoader.Data
             return modContext;
         }
 
+
+        public override bool UpdateEnabledPlugins(HashSet<string> enabledPlugins, bool enable)
+        {
+            bool changed = base.UpdateEnabledPlugins(enabledPlugins, enable);
+
+            if(enable)
+            {
+                foreach (ModPlugin other in Dependencies)
+                {
+                    if (enabledPlugins.Add(other.Id))
+                        changed = true;
+                }
+            }
+
+            return changed;
+        }
     }
 }

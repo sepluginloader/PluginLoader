@@ -235,5 +235,27 @@ namespace avaness.PluginLoader.Data
         {
 
         }
+
+        public virtual bool UpdateEnabledPlugins(HashSet<string> enabledPlugins, bool enable)
+        {
+            bool changed;
+
+            if (enable)
+            {
+                changed = enabledPlugins.Add(Id);
+
+                foreach (PluginData other in Group)
+                {
+                    if (!ReferenceEquals(other, this) && other.UpdateEnabledPlugins(enabledPlugins, false))
+                        changed = true;
+                }
+            }
+            else
+            {
+                changed = enabledPlugins.Remove(Id);
+            }
+
+            return changed;
+        }
     }
 }
