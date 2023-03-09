@@ -286,6 +286,7 @@ namespace avaness.PluginLoader.GUI
 
         private void DetailMenu_Closed(MyGuiScreenBase source, bool isUnloading)
         {
+            stats = Main.Instance.Stats ?? new PluginStats(); // Just in case it was null/empty before
             RefreshPluginList();
             source.Closed -= DetailMenu_Closed;
         }

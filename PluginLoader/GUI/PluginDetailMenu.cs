@@ -19,6 +19,7 @@ namespace avaness.PluginLoader.GUI
         private PluginData plugin;
         private PluginInstance pluginInstance;
         private PluginStat stats;
+        private MyGuiControlParent votingPanel;
 
         public PluginDetailMenu(PluginData plugin, HashSet<string> enabledPlugins) : base(size: new Vector2(0.5f, 0.8f))
         {
@@ -76,10 +77,12 @@ namespace avaness.PluginLoader.GUI
             enabledCheckbox.IsCheckedChanged += OnEnabledChanged;
             layout.Add(enabledCheckbox, MyAlignH.Right, MyAlignV.Top, 0, 1);
 
-            MyGuiControlParent votingPanel = new MyGuiControlParent();
-            layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
-            CreateVotingPanel(votingPanel);
-
+            if(!plugin.IsLocal)
+            {
+                votingPanel = new MyGuiControlParent();
+                layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
+                CreateVotingPanel(votingPanel);
+            }
         }
 
         private void OnEnabledChanged(MyGuiControlCheckbox checkbox)
@@ -89,9 +92,18 @@ namespace avaness.PluginLoader.GUI
 
         private void CreateVotingPanel(MyGuiControlParent parent)
         {
+            bool canVote = plugin.Enabled || stats.Tried;
+
             MyLayoutHorizontal layout = new MyLayoutHorizontal(parent, 0);
 
-            MyGuiControlButton btnVoteUp = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnRateUpClicked);
+            MyGuiControlButton btnVoteUp = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall)
+            {
+                Checked = stats.Vote > 0,
+            };
+            if (canVote)
+                btnVoteUp.ButtonClicked += OnRateUpClicked;
+            else
+                btnVoteUp.Enabled = false;
             AddImageToButton(btnVoteUp, @"Textures\GUI\Icons\Blueprints\like_test.png", 0.8f);
             layout.Add(btnVoteUp, MyAlignV.Bottom);
 
@@ -100,7 +112,14 @@ namespace avaness.PluginLoader.GUI
             AdvanceLayout(ref layout, lblVoteUp.Size.X + GuiSpacing);
             parent.Controls.Add(lblVoteUp);
 
-            MyGuiControlButton btnVoteDown = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnRateUpClicked);
+            MyGuiControlButton btnVoteDown = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall)
+            {
+                Checked = stats.Vote < 0,
+            };
+            if (canVote)
+                btnVoteDown.ButtonClicked += OnRateDownClicked;
+            else
+                btnVoteDown.Enabled = false;
             AddImageToButton(btnVoteDown, @"Textures\GUI\\Icons\Blueprints\dislike_test.png", 0.8f);
             layout.Add(btnVoteDown, MyAlignV.Bottom);
 
@@ -109,9 +128,50 @@ namespace avaness.PluginLoader.GUI
             parent.Controls.Add(lblVoteDown);
         }
 
+        private void OnRateDownClicked(MyGuiControlButton btn)
+        {
+            Vote(-1);
+        }
+
         private void OnRateUpClicked(MyGuiControlButton btn)
         {
+            Vote(1);
+        }
 
+        private void Vote(int vote)
+        {
+            if (PlayerConsent.ConsentGiven)
+                StoreVote(vote);
+            else
+                PlayerConsent.ShowDialog(() => StoreVote(vote));
+        }
+
+        private void StoreVote(int vote)
+        {
+            if (!PlayerConsent.ConsentGiven)
+                return;
+
+            if (stats.Vote == vote)
+                vote = 0;
+
+            PluginStat updatedStat = StatsClient.Vote(plugin.Id, vote);
+            if (updatedStat == null)
+                return;
+
+            PluginStats allStats = Main.Instance.Stats;
+            if (allStats != null)
+                allStats.Stats[plugin.Id] = updatedStat;
+
+            stats = updatedStat;
+            RefreshVotingPanel();
+        }
+
+        private void RefreshVotingPanel()
+        {
+            if (votingPanel == null)
+                return;
+            votingPanel.Controls.Clear();
+            CreateVotingPanel(votingPanel);
         }
 
         private void OnPluginSettingsClick(MyGuiControlButton btn)
@@ -121,16 +181,6 @@ namespace avaness.PluginLoader.GUI
         }
 
         private void OnPluginOpenClick(MyGuiControlButton btn)
-        {
-            plugin.Show();
-        }
-
-        private void SettingsClick(MyGuiControlButton btn)
-        {
-            pluginInstance.OpenConfig();
-        }
-
-        private void MoreInfoClick(MyGuiControlButton btn)
         {
             plugin.Show();
         }
