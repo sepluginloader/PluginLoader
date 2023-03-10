@@ -231,7 +231,7 @@ namespace avaness.PluginLoader.Data
             return false;
         }
 
-        public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        public virtual void ContextMenuClicked(MainPluginMenu screen, MyGuiControlContextMenu.EventArgs args)
         {
 
         }

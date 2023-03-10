@@ -9,7 +9,7 @@ using VRageMath;
 
 namespace avaness.PluginLoader.GUI
 {
-    class MainPluginMenu : PluginScreen
+    public class MainPluginMenu : PluginScreen
     {
         private List<PluginData> plugins;
         private PluginConfig config;

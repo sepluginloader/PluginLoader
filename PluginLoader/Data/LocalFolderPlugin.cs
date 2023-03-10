@@ -183,28 +183,35 @@ namespace avaness.PluginLoader.Data
             return true;
         }
 
-        public override void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        public override void ContextMenuClicked(MainPluginMenu screen, MyGuiControlContextMenu.EventArgs args)
         {
+            // TODO
             switch (args.ItemIndex)
             {
                 case 0:
                     Main.Instance.Config.PluginFolders.Remove(Id);
-                    screen.RemovePlugin(this);
-                    screen.RequireRestart();
+                    //screen.RemovePlugin(this);
+                    //screen.RequireRestart();
                     break;
                 case 1:
-                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
+                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, 
+                        (file) =>
+                        {
+                            DeserializeFile(file);
+                            //if (screen != null && screen.Visible && screen.IsOpened)
+                            //    screen.RefreshSidePanel();
+                        });
                     break;
                 case 2:
                     FolderSettings.DebugBuild = !FolderSettings.DebugBuild;
-                    screen.RequireRestart();
+                    //screen.RequireRestart();
                     break;
 
             }
         }
 
-        // Deserializes a file and refreshes the plugin screen
-        private void DeserializeFile(string file, MyGuiScreenPluginConfig screen = null)
+        // Deserializes a data file
+        private void DeserializeFile(string file)
         {
             if (!File.Exists(file))
                 return;
@@ -229,8 +236,6 @@ namespace avaness.PluginLoader.Data
                     Description = github.Description;
                     sourceDirectories = github.SourceDirectories;
                     FolderSettings.DataFile = file;
-                    if(screen != null && screen.Visible && screen.IsOpened)
-                        screen.RefreshSidePanel();
                 }
             }
             catch (Exception e)
