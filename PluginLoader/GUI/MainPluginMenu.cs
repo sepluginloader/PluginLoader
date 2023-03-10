@@ -32,7 +32,7 @@ namespace avaness.PluginLoader.GUI
 
         public override string GetFriendlyName()
         {
-            return nameof(MainPluginMenu);
+            return typeof(MainPluginMenu).FullName;
         }
 
         public override void UnloadContent()

@@ -33,7 +33,7 @@ namespace avaness.PluginLoader.GUI
 
         public override string GetFriendlyName()
         {
-            return nameof(PluginDetailMenu);
+            return typeof(PluginDetailMenu).FullName;
         }
 
         public override void RecreateControls(bool constructor)
