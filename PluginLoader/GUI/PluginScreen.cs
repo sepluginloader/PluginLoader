@@ -147,5 +147,11 @@ namespace avaness.PluginLoader.GUI
             icon.HasHighlight = button.HasHighlight;
             button.Elements.Add(icon);
         }
+
+        protected void SetTableHeight(MyGuiControlTable table, float height)
+        {
+            float numRows = height / table.RowHeight;
+            table.VisibleRowsCount = Math.Max((int)numRows - 1, 1);
+        }
     }
 }

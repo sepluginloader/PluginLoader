@@ -220,8 +220,7 @@ namespace avaness.PluginLoader.GUI
                 OriginAlign = VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
             };
 
-            float numRows = (parentSize.Y - bottomPadding) / list.RowHeight;
-            list.VisibleRowsCount = Math.Max((int)numRows - 1, 1);
+            SetTableHeight(list, parentSize.Y - bottomPadding);
 
             if (mods)
             {
