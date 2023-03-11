@@ -140,6 +140,58 @@ namespace avaness.PluginLoader.GUI
             newControl.Position = currentTopLeft;
         }
 
+        /// <summary>
+        /// Positions <paramref name="newControl"/> above <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
+        /// </summary>
+        protected void PositionAbove(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
+        {
+            Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
+            currentTopLeft.Y -= spacing;
+            switch (align)
+            {
+                case MyAlignH.Left:
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM;
+                    break;
+                case MyAlignH.Center:
+                    currentTopLeft.X += currentControl.Size.X / 2;
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM;
+                    break;
+                case MyAlignH.Right:
+                    currentTopLeft.X += currentControl.Size.X;
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM;
+                    break;
+                default:
+                    return;
+            }
+            newControl.Position = currentTopLeft;
+        }
+
+        /// <summary>
+        /// Positions <paramref name="newControl"/> below <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
+        /// </summary>
+        protected void PositionBelow(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
+        {
+            Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
+            currentTopLeft.Y += currentControl.Size.Y + spacing;
+            switch (align)
+            {
+                case MyAlignH.Left:
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+                    break;
+                case MyAlignH.Center:
+                    currentTopLeft.X += currentControl.Size.X / 2;
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP;
+                    break;
+                case MyAlignH.Right:
+                    currentTopLeft.X += currentControl.Size.X;
+                    newControl.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP;
+                    break;
+                default:
+                    return;
+            }
+            newControl.Position = currentTopLeft;
+        }
+
         protected void AddImageToButton(MyGuiControlButton button, string iconTexture, float iconSize = 1)
         {
             MyGuiControlImage icon = new MyGuiControlImage(size: button.Size * iconSize, textures: new[] { iconTexture });
