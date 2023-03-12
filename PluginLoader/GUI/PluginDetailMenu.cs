@@ -63,7 +63,6 @@ namespace avaness.PluginLoader.GUI
 
             layout.Add(new MyGuiControlLabel(text: plugin.FriendlyName, textScale: 0.9f), MyAlignH.Left, MyAlignV.Bottom, 0, 0);
             layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
-            layout.Add(new MyGuiControlLabel(text: stats.Players + " installs"), MyAlignH.Left, MyAlignV.Center, 2, 0);
 
             MyGuiControlMultilineText descriptionText = new MyGuiControlMultilineText(textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
             {
@@ -79,6 +78,8 @@ namespace avaness.PluginLoader.GUI
 
             if(!plugin.IsLocal)
             {
+                layout.Add(new MyGuiControlLabel(text: stats.Players + " users"), MyAlignH.Left, MyAlignV.Center, 2, 0);
+
                 votingPanel = new MyGuiControlParent();
                 layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
                 CreateVotingPanel(votingPanel);

@@ -273,29 +273,28 @@ namespace avaness.PluginLoader.GUI
             layout.SetRowHeightsNormalized(0.1f, 0.1f, 0.6f, 0.1f, 0.1f);
 
             layout.Add(new MyGuiControlLabel(text: plugin.FriendlyName, textScale: 0.9f), MyAlignH.Left, MyAlignV.Bottom, 0, 0);
-            if(!plugin.IsLocal)
+            layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
+
+            MyGuiControlMultilineText description = new MyGuiControlMultilineText(textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
             {
-                layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
-                
-                MyGuiControlMultilineText description = new MyGuiControlMultilineText(textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
-                {
-                    VisualStyle = MyGuiControlMultilineStyleEnum.Default,
-                    Visible = true,
-                    CanPlaySoundOnMouseOver = false,
-                };
-                layout.AddWithSize(description, MyAlignH.Left, MyAlignV.Top, 2, 0, 1, 2);
-                if (!string.IsNullOrEmpty(plugin.Tooltip))
-                    description.AppendText(plugin.Tooltip);
+                VisualStyle = MyGuiControlMultilineStyleEnum.Default,
+                Visible = true,
+                CanPlaySoundOnMouseOver = false,
+            };
+            layout.AddWithSize(description, MyAlignH.Left, MyAlignV.Top, 2, 0, 1, 2);
+            if (!string.IsNullOrEmpty(plugin.Tooltip))
+                description.AppendText(plugin.Tooltip);
 
-
+            if (!plugin.IsLocal)
+            {
                 PluginStat stat = stats.GetStatsForPlugin(plugin);
-                layout.Add(new MyGuiControlLabel(text: stat.Players + " installs"), MyAlignH.Left, MyAlignV.Bottom, 3, 0);
+                layout.Add(new MyGuiControlLabel(text: stat.Players + " users"), MyAlignH.Left, MyAlignV.Bottom, 3, 0);
 
                 MyGuiControlParent votingPanel = new MyGuiControlParent();
                 layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 3, 1, 2);
                 CreateVotingPanel(votingPanel, stat);
-
             }
+
             layout.Add(new MyGuiControlLabel(text: plugin.Source), MyAlignH.Left, MyAlignV.Bottom, 4, 0);
 
             MyGuiControlCheckbox enabledCheckbox = new MyGuiControlCheckbox(position: contentTopLeft + new Vector2(contentSize.X, 0), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, isChecked: enabledPlugins.Contains(plugin.Id))
