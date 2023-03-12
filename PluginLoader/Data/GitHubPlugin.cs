@@ -38,7 +38,7 @@ namespace avaness.PluginLoader.Data
         public void Init(string mainDirectory)
         {
             string[] nameArgs = Id.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            if (nameArgs.Length != 2)
+            if (nameArgs.Length < 2)
                 throw new Exception("Invalid GitHub name: " + Id);
 
             if(SourceDirectories != null)
