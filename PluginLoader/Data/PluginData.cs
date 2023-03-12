@@ -23,6 +23,7 @@ namespace avaness.PluginLoader.Data
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
+        public abstract bool IsLocal { get; }
 
         [XmlIgnore]
         public Version Version { get; protected set; }
@@ -48,8 +49,6 @@ namespace avaness.PluginLoader.Data
                 }
             }
         }
-
-        [XmlIgnore] public bool IsLocal => Source == MyTexts.GetString(MyCommonTexts.Local);
 
         [ProtoMember(1)]
         public virtual string Id { get; set; }

@@ -13,6 +13,7 @@ namespace avaness.PluginLoader.Data
     public class ModPlugin : PluginData, ISteamItem
     {
         public override string Source => "Mod";
+        public override bool IsLocal => false;
 
         [XmlIgnore]
         public ulong WorkshopId { get; private set; }

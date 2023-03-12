@@ -16,6 +16,7 @@ namespace avaness.PluginLoader.Data
     public class GitHubPlugin : PluginData
     {
         public override string Source => "GitHub";
+        public override bool IsLocal => false;
 
         [ProtoMember(1)]
         public string Commit { get; set; }

@@ -10,7 +10,8 @@ namespace avaness.PluginLoader.Data
     public class LocalPlugin : PluginData
     {
         public override string Source => MyTexts.GetString(MyCommonTexts.Local);
-        
+        public override bool IsLocal => true;
+
         public override string Id
         {
             get

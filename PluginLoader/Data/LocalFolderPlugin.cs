@@ -22,7 +22,8 @@ namespace avaness.PluginLoader.Data
         const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
         const int GitTimeout = 10000;
 
-        public override string Source => MyTexts.GetString(MyCommonTexts.Local);
+        public override string Source => "Development Folder";
+        public override bool IsLocal => true;
         private string[] sourceDirectories;
 
         public Config FolderSettings { get; }
