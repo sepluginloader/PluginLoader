@@ -65,7 +65,7 @@ namespace avaness.PluginLoader.GUI
             base.RecreateControls(constructor);
 
             // Top
-            MyGuiControlLabel caption = AddCaption("Plugin List", captionScale: 1);
+            MyGuiControlLabel caption = AddCaption(mods ? "Mod List" : "Plugin List", captionScale: 1);
             AddBarBelow(caption);
 
             // Center 
