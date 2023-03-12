@@ -201,10 +201,10 @@ namespace avaness.PluginLoader.GUI
                 Vector2 itemPosition = (itemSize * new Vector2(col, row)) + itemPositionOffset;
                 MyGuiControlParent itemPanel = new MyGuiControlParent(position: itemPosition, size: itemSize);
 
-                if(i < plugins.Length)
+                if (i < plugins.Length)
                     CreatePluginListItem(plugins[i], itemPanel);
                 else if (i < numPlugins - 1)
-                    CreatePluginListButton(itemPanel, "Add local file", "Add a dll to the " + Path.Combine("Bin64", "Plugins", "Local") + " folder", OnAddLocalFileClick);
+                    CreatePluginListButton(itemPanel, "Add local file", "Add a dll to the " + Path.Combine("Bin64", "Plugins", "Local") + " folder\nand restart the game", OnAddLocalFileClick);
                 else
                     CreatePluginListButton(itemPanel, "Add development folder", null, OnAddDevelopmentFolderClick);
 
@@ -215,7 +215,14 @@ namespace avaness.PluginLoader.GUI
         private void OnAddDevelopmentFolderClick(ParentButton btn)
         {
             btn.PlayClickSound();
-            // TODO
+            LocalFolderPlugin.CreateNew((plugin) =>
+            {
+                plugins.Add(plugin);
+                Main.Instance.Config.PluginFolders[plugin.Id] = plugin.FolderSettings;
+                Main.Instance.List.Add(plugin);
+                enabledPlugins.Add(plugin.Id);
+                RefreshPluginList();
+            });
         }
 
         private void OnAddLocalFileClick(ParentButton btn)
