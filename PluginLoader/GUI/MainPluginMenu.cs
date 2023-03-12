@@ -454,10 +454,9 @@ namespace avaness.PluginLoader.GUI
         private void OnApplyClick(MyGuiControlButton btn)
         {
             if(RequiresRestart())
-            {
                 MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Info, MyMessageBoxButtonsType.YES_NO_CANCEL, new StringBuilder("A restart is required to apply changes. Would you like to restart the game now?"), new StringBuilder("Apply Changes?"), callback: AskRestartResult));
-            }
-            CloseScreen();
+            else
+                CloseScreen();
         }
 
         private void AskRestartResult(MyGuiScreenMessageBox.ResultEnum result)
