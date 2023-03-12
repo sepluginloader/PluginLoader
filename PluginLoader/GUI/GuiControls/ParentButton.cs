@@ -69,5 +69,10 @@ namespace avaness.PluginLoader.GUI.GuiControls
             else
                 BackgroundTexture = MyGuiConstants.TEXTURE_RECTANGLE_DARK;
         }
+
+        public void PlayClickSound()
+        {
+            MyGuiSoundManager.PlaySound(GuiSounds.MouseClick);
+        }
     }
 }

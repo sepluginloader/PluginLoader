@@ -12,6 +12,8 @@ using VRage.Game;
 using avaness.PluginLoader.GUI.GuiControls;
 using VRage.Audio;
 using Sandbox;
+using System.Diagnostics;
+using System.IO;
 
 namespace avaness.PluginLoader.GUI
 {
@@ -184,22 +186,73 @@ namespace avaness.PluginLoader.GUI
             PluginData[] plugins = GetFilteredPlugins().ToArray();
 
             Vector2 itemSize = pluginListSize / new Vector2(ListItemsHorizontal, ListItemsVertical);
-            int totalRows = (int)Math.Ceiling(plugins.Length / (float)ListItemsHorizontal);
+            int numPlugins = plugins.Length;
+            if (!mods)
+                numPlugins += 2;
+            int totalRows = (int)Math.Ceiling(numPlugins / (float)ListItemsHorizontal);
             panel.Size = new Vector2(pluginListSize.X, itemSize.Y * totalRows);
 
             Vector2 itemPositionOffset = (itemSize / 2) - (panel.Size / 2);
 
-            for (int i = 0; i < plugins.Length; i++)
+            for (int i = 0; i < numPlugins; i++)
             {
-                PluginData plugin = plugins[i];
-                
                 int row = i / ListItemsHorizontal;
                 int col = i % ListItemsHorizontal;
                 Vector2 itemPosition = (itemSize * new Vector2(col, row)) + itemPositionOffset;
                 MyGuiControlParent itemPanel = new MyGuiControlParent(position: itemPosition, size: itemSize);
-                CreatePluginListItem(plugin, itemPanel);
+
+                if(i < plugins.Length)
+                    CreatePluginListItem(plugins[i], itemPanel);
+                else if (i < numPlugins - 1)
+                    CreatePluginListButton(itemPanel, "Add local file", "Add a dll to the " + Path.Combine("Bin64", "Plugins", "Local") + " folder", OnAddLocalFileClick);
+                else
+                    CreatePluginListButton(itemPanel, "Add development folder", null, OnAddDevelopmentFolderClick);
+
                 panel.Controls.Add(itemPanel);
             }
+        }
+
+        private void OnAddDevelopmentFolderClick(ParentButton btn)
+        {
+            btn.PlayClickSound();
+            // TODO
+        }
+
+        private void OnAddLocalFileClick(ParentButton btn)
+        {
+            try
+            {
+                string localPlugins = Path.Combine(LoaderTools.PluginsDir, "Local");
+                Directory.CreateDirectory(localPlugins);
+                Process.Start("explorer.exe", $"\"{localPlugins}\"");
+                btn.PlayClickSound();
+            }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("Error while opening local plugins folder: " + e);
+            }
+        }
+
+        private void CreatePluginListButton(MyGuiControlParent panel, string text, string subtext, Action<ParentButton> onClick)
+        {
+            float padding = GuiSpacing;
+
+            ParentButton contentArea = new ParentButton(size: panel.Size - padding);
+            MyGuiControlLabel mainText = new MyGuiControlLabel(text: text, textScale: 1.1f);
+            if(string.IsNullOrWhiteSpace(subtext))
+            {
+                mainText.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER;
+            }
+            else
+            {
+                mainText.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM;
+                MyGuiControlLabel subText = new MyGuiControlLabel(text: subtext);
+                PositionBelow(mainText, subText);
+                contentArea.Controls.Add(subText);
+            }
+            contentArea.Controls.Add(mainText);
+            contentArea.OnButtonClicked += onClick;
+            panel.Controls.Add(contentArea);
         }
 
         private void CreatePluginListItem(PluginData plugin, MyGuiControlParent panel)
@@ -277,7 +330,7 @@ namespace avaness.PluginLoader.GUI
                 return;
             if (btn.UserData is PluginData plugin)
             {
-                MyGuiSoundManager.PlaySound(GuiSounds.MouseClick);
+                btn.PlayClickSound();
                 PluginDetailMenu screen = new PluginDetailMenu(plugin, enabledPlugins);
                 screen.Closed += DetailMenu_Closed;
                 MyScreenManager.AddScreen(screen);
