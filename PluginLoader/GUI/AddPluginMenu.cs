@@ -126,7 +126,15 @@ namespace avaness.PluginLoader.GUI
             int selectedItem = (int)sortDropdown.GetSelectedKey();
             if(Enum.IsDefined(typeof(SortingMethod), selectedItem))
             {
-                sortDropdown.RemoveItem(-1);
+                if(sortDropdown.TryGetItemByKey(-1) != null)
+                {
+                    // In order to remove the placeholder without messing up the dropdown highlight, the selected item must be selected again
+                    sortDropdown.ItemSelected -= OnSortSelected;
+                    sortDropdown.SelectItemByKey(-1);
+                    sortDropdown.RemoveItem(-1);
+                    sortDropdown.SelectItemByKey(selectedItem);
+                    sortDropdown.ItemSelected += OnSortSelected;
+                }
                 SortPlugins((SortingMethod)selectedItem);
                 RefreshPluginList();
             }
