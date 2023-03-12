@@ -304,7 +304,9 @@ namespace avaness.PluginLoader.GUI
 
         private void OnProfilesClick(MyGuiControlButton btn)
         {
-            // TODO
+            ProfilesMenu screen = new ProfilesMenu(enabledPlugins);
+            screen.Closed += Screen_Closed; 
+            MyGuiSandbox.AddScreen(screen);
         }
         #endregion
 

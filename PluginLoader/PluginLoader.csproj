@@ -117,6 +117,8 @@
     <Compile Include="GUI\PluginDetailMenu.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
     <Compile Include="GUI\PluginScreen.cs" />
+    <Compile Include="GUI\ProfilesMenu.cs" />
+    <Compile Include="GUI\TextInputDialog.cs" />
     <Compile Include="GUI\SplashScreen.cs">
       <SubType>Form</SubType>
     </Compile>
