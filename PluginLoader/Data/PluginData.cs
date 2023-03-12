@@ -225,16 +225,6 @@ namespace avaness.PluginLoader.Data
             return s;
         }
 
-        public virtual bool OpenContextMenu(MyGuiControlContextMenu menu)
-        {
-            return false;
-        }
-
-        public virtual void ContextMenuClicked(MainPluginMenu screen, MyGuiControlContextMenu.EventArgs args)
-        {
-
-        }
-
         public virtual bool UpdateEnabledPlugins(HashSet<string> enabledPlugins, bool enable)
         {
             bool changed;

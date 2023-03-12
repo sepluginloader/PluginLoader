@@ -32,6 +32,18 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlParent pluginListGrid;
         private string filter;
 
+        /// <summary>
+        /// Called when a development folder plugin is added
+        /// </summary>
+        public event Action<PluginData> OnPluginAdded;
+
+        /// <summary>
+        /// Called when a development folder plugin is removed
+        /// </summary>
+        public event Action<PluginData> OnPluginRemoved;
+
+        public event Action OnRestartRequired;
+
         enum SortingMethod { Name, Usage, Rating }
 
         public AddPluginMenu(IEnumerable<PluginData> plugins, bool mods, HashSet<string> enabledPlugins) : base(size: new Vector2(0.8f, 0.9f))
@@ -217,10 +229,11 @@ namespace avaness.PluginLoader.GUI
             btn.PlayClickSound();
             LocalFolderPlugin.CreateNew((plugin) =>
             {
+                OnPluginAdded?.Invoke(plugin);
                 plugins.Add(plugin);
-                Main.Instance.Config.PluginFolders[plugin.Id] = plugin.FolderSettings;
-                Main.Instance.List.Add(plugin);
-                enabledPlugins.Add(plugin.Id);
+                PluginConfig config = Main.Instance.Config;
+                config.PluginFolders[plugin.Id] = plugin.FolderSettings;
+                config.Save();
                 RefreshPluginList();
             });
         }
@@ -338,9 +351,24 @@ namespace avaness.PluginLoader.GUI
             {
                 btn.PlayClickSound();
                 PluginDetailMenu screen = new PluginDetailMenu(plugin, enabledPlugins);
+                screen.OnRestartRequired += DetailMenu_OnRestartRequired;
+                screen.OnPluginRemoved += DetailMenu_OnPluginRemoved;
                 screen.Closed += DetailMenu_Closed;
                 MyScreenManager.AddScreen(screen);
             }
+        }
+
+        private void DetailMenu_OnRestartRequired()
+        {
+            OnRestartRequired?.Invoke();
+        }
+
+        private void DetailMenu_OnPluginRemoved(PluginData plugin)
+        {
+            OnPluginRemoved?.Invoke(plugin);
+            int index = plugins.FindIndex(x => x.Id == plugin.Id);
+            if (index >= 0)
+                plugins.RemoveAt(index);
         }
 
         private void DetailMenu_Closed(MyGuiScreenBase source, bool isUnloading)

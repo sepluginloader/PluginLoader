@@ -172,43 +172,14 @@ namespace avaness.PluginLoader.Data
                 Process.Start("explorer.exe", $"\"{folder}\"");
         }
 
-        public override bool OpenContextMenu(MyGuiControlContextMenu menu)
+        public void LoadNewDataFile(Action onComplete)
         {
-            menu.Clear();
-            menu.AddItem(new StringBuilder("Remove"));
-            menu.AddItem(new StringBuilder("Load data file"));
-            if(FolderSettings.DebugBuild)
-                menu.AddItem(new StringBuilder("Switch to release build"));
-            else
-                menu.AddItem(new StringBuilder("Switch to debug build"));
-            return true;
-        }
-
-        public override void ContextMenuClicked(MainPluginMenu screen, MyGuiControlContextMenu.EventArgs args)
-        {
-            // TODO
-            switch (args.ItemIndex)
-            {
-                case 0:
-                    Main.Instance.Config.PluginFolders.Remove(Id);
-                    //screen.RemovePlugin(this);
-                    //screen.RequireRestart();
-                    break;
-                case 1:
-                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, 
-                        (file) =>
-                        {
-                            DeserializeFile(file);
-                            //if (screen != null && screen.Visible && screen.IsOpened)
-                            //    screen.RefreshSidePanel();
-                        });
-                    break;
-                case 2:
-                    FolderSettings.DebugBuild = !FolderSettings.DebugBuild;
-                    //screen.RequireRestart();
-                    break;
-
-            }
+            LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType,
+                (file) =>
+                {
+                    DeserializeFile(file);
+                    onComplete.Invoke();
+                });
         }
 
         // Deserializes a data file
@@ -251,7 +222,7 @@ namespace avaness.PluginLoader.Data
             {
                 if (Main.Instance.List.Contains(folder))
                 {
-                    MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That folder already exists in the list!"));
+                    MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That development folder already exists!"), messageCaption: new StringBuilder("Plugin Loader")));
                     return;
                 }
 

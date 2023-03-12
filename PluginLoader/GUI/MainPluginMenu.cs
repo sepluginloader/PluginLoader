@@ -17,6 +17,7 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlCheckbox consentBox;
         private MyGuiControlParent pluginsPanel;
         private MyGuiControlParent modsPanel;
+        private bool requiresRestart = true;
 
         public MainPluginMenu(IEnumerable<PluginData> plugins, PluginConfig config) : base(size: new Vector2(1, 0.9f))
         {
@@ -134,8 +135,32 @@ namespace avaness.PluginLoader.GUI
         private void OpenAddPluginMenu(bool mods)
         {
             AddPluginMenu screen = new AddPluginMenu(plugins, mods, enabledPlugins);
+            screen.OnRestartRequired += OnRestartRequired;
+            screen.OnPluginAdded += OnPluginAdded;
+            screen.OnPluginRemoved += OnPluginRemoved;
             screen.Closed += Screen_Closed;
             MyGuiSandbox.AddScreen(screen);
+        }
+
+        private void OnRestartRequired()
+        {
+            requiresRestart = true;
+        }
+
+        private void OnPluginAdded(PluginData plugin)
+        {
+            Main.Instance.List.Add(plugin);
+            plugins.Add(plugin);
+            enabledPlugins.Add(plugin.Id);
+        }
+
+        private void OnPluginRemoved(PluginData plugin)
+        {
+            Main.Instance.List.Remove(plugin.Id);
+            enabledPlugins.Remove(plugin.Id);
+            int index = plugins.FindIndex(x => x.Id == plugin.Id);
+            if (index >= 0)
+                plugins.RemoveAt(index);
         }
 
         private void Screen_Closed(MyGuiScreenBase source, bool isUnloading)
@@ -181,6 +206,8 @@ namespace avaness.PluginLoader.GUI
         private void OpenPluginDetails(PluginData plugin)
         {
             PluginDetailMenu screen = new PluginDetailMenu(plugin, enabledPlugins);
+            screen.OnRestartRequired += OnRestartRequired;
+            screen.OnPluginRemoved += OnPluginRemoved;
             screen.Closed += Screen_Closed;
             MyGuiSandbox.AddScreen(screen);
         }
@@ -457,6 +484,8 @@ namespace avaness.PluginLoader.GUI
 
         private bool RequiresRestart()
         {
+            if (requiresRestart)
+                return true;
             HashSet<string> actualPlugins = config.EnabledPlugins;
             return enabledPlugins.Count != actualPlugins.Count || !enabledPlugins.SetEquals(actualPlugins);
         }

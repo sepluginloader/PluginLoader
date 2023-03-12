@@ -21,6 +21,13 @@ namespace avaness.PluginLoader.GUI
         private PluginStat stats;
         private MyGuiControlParent votingPanel;
 
+        /// <summary>
+        /// Called when a development folder plugin is removed
+        /// </summary>
+        public event Action<PluginData> OnPluginRemoved;
+        
+        public event Action OnRestartRequired;
+
         public PluginDetailMenu(PluginData plugin, HashSet<string> enabledPlugins) : base(size: new Vector2(0.5f, 0.8f))
         {
             this.plugin = plugin;
@@ -56,8 +63,50 @@ namespace avaness.PluginLoader.GUI
             Controls.Add(btnInfo);
             Controls.Add(btnSettings);
 
+            MyGuiControlBase bottomControl = btnInfo;
+            if (plugin is LocalFolderPlugin folderPlugin)
+            {
+                MyGuiControlButton btnRemove = new MyGuiControlButton(text: new StringBuilder("Remove"), onButtonClick: (btn) =>
+                {
+                    PluginConfig config = Main.Instance.Config;
+                    config.PluginFolders.Remove(folderPlugin.Id);
+                    config.Save();
+                    CloseScreen();
+                    OnPluginRemoved?.Invoke(folderPlugin);
+                    OnRestartRequired?.Invoke();
+                });
+                PositionAbove(btnInfo, btnRemove);
+                Controls.Add(btnRemove);
+
+                MyGuiControlButton btnLoadFile = new MyGuiControlButton(text: new StringBuilder("Load File"), onButtonClick: (btn) =>
+                {
+                    folderPlugin.LoadNewDataFile(() =>
+                    {
+                        Main.Instance.Config.Save();
+                        CloseScreen();
+                    });
+                });
+                PositionAbove(btnSettings, btnLoadFile);
+                Controls.Add(btnLoadFile);
+
+                MyGuiControlCombobox releaseDropdown = new MyGuiControlCombobox();
+                releaseDropdown.AddItem(0, "Release");
+                releaseDropdown.AddItem(1, "Debug");
+                releaseDropdown.SelectItemByKey(folderPlugin.FolderSettings.DebugBuild ? 1 : 0);
+                releaseDropdown.ItemSelected += () =>
+                {
+                    folderPlugin.FolderSettings.DebugBuild = releaseDropdown.GetSelectedKey() == 1;
+                    Main.Instance.Config.Save();
+                    OnRestartRequired?.Invoke();
+                };
+                PositionAbove(btnRemove, releaseDropdown, MyAlignH.Left);
+                Controls.Add(releaseDropdown);
+                bottomControl = releaseDropdown;
+
+            }
+
             // Center
-            MyLayoutTable layout = GetLayoutTableBetween(caption, btnInfo, verticalSpacing: GuiSpacing * 2);
+            MyLayoutTable layout = GetLayoutTableBetween(caption, bottomControl, verticalSpacing: GuiSpacing * 2);
             layout.SetColumnWidthsNormalized(0.5f, 0.5f);
             layout.SetRowHeightsNormalized(0.05f, 0.05f, 0.05f, 0.85f);
 
@@ -76,7 +125,7 @@ namespace avaness.PluginLoader.GUI
             enabledCheckbox.IsCheckedChanged += OnEnabledChanged;
             layout.Add(enabledCheckbox, MyAlignH.Right, MyAlignV.Top, 0, 1);
 
-            if(!plugin.IsLocal)
+            if (!plugin.IsLocal)
             {
                 layout.Add(new MyGuiControlLabel(text: stats.Players + " users"), MyAlignH.Left, MyAlignV.Center, 2, 0);
 
@@ -84,6 +133,7 @@ namespace avaness.PluginLoader.GUI
                 layout.AddWithSize(votingPanel, MyAlignH.Center, MyAlignV.Center, 1, 1, 2);
                 CreateVotingPanel(votingPanel);
             }
+
         }
 
         private void OnEnabledChanged(MyGuiControlCheckbox checkbox)
