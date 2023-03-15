@@ -300,7 +300,8 @@ namespace avaness.PluginLoader.GUI
             layout.SetColumnWidthsNormalized(0.5f, 0.5f);
             layout.SetRowHeightsNormalized(0.1f, 0.1f, 0.6f, 0.1f, 0.1f);
 
-            layout.Add(new MyGuiControlLabel(text: plugin.FriendlyName, textScale: 0.9f), MyAlignH.Left, MyAlignV.Bottom, 0, 0);
+            MyGuiControlLabel titleLabel = new MyGuiControlLabel(text: plugin.FriendlyName, textScale: 0.9f);
+            layout.Add(titleLabel, MyAlignH.Left, MyAlignV.Bottom, 0, 0);
             layout.Add(new MyGuiControlLabel(text: plugin.Author), MyAlignH.Left, MyAlignV.Top, 1, 0);
 
             MyGuiControlMultilineText description = new MyGuiControlMultilineText(textAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, textBoxAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP)
@@ -332,6 +333,11 @@ namespace avaness.PluginLoader.GUI
             };
             enabledCheckbox.IsCheckedChanged += OnEnabledChanged;
             contentArea.Controls.Add(enabledCheckbox);
+
+            float titleMaxWidth = Math.Abs(GetCoordTopLeftFromAligned(titleLabel).X - GetCoordTopLeftFromAligned(enabledCheckbox).X) - GuiSpacing;
+            titleLabel.IsAutoEllipsisEnabled = true;
+            titleLabel.SetMaxSize(new Vector2(titleMaxWidth, titleLabel.Size.Y));
+            titleLabel.DoEllipsisAndScaleAdjust();
 
             panel.Controls.Add(contentArea);
         }
