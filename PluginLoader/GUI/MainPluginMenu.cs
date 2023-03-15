@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage;
 using VRageMath;
 
 namespace avaness.PluginLoader.GUI
@@ -28,7 +29,15 @@ namespace avaness.PluginLoader.GUI
 
         public static void Open()
         {
-            MyGuiSandbox.AddScreen(new MainPluginMenu(Main.Instance.List, Main.Instance.Config));
+            MainPluginMenu menu = new MainPluginMenu(Main.Instance.List, Main.Instance.Config);
+            if (Main.Instance.List.HasError)
+            {
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK, messageText: new StringBuilder("An error occurred while downloading the plugin list.\nPlease send your game log to the developers of Plugin Loader."), messageCaption: MyTexts.Get(MyCommonTexts.MessageBoxCaptionError), callback: (x) => MyGuiSandbox.AddScreen(menu)));
+            }
+            else
+            {
+                MyGuiSandbox.AddScreen(menu);
+            }
         }
 
         public override string GetFriendlyName()
