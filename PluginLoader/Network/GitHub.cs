@@ -34,7 +34,11 @@ namespace avaness.PluginLoader.Network
                 }
             }
 
-            return response.GetResponseStream();
+            MemoryStream output = new MemoryStream();
+            using (Stream responseStream = response.GetResponseStream())
+                responseStream.CopyTo(output);
+            output.Position = 0;
+            return output;
         }
 
         public static Stream DownloadFile(string name, string commit, string path)
@@ -46,7 +50,11 @@ namespace avaness.PluginLoader.Network
             request.Timeout = Main.Instance.Config.NetworkTimeout;
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            return response.GetResponseStream();
+            MemoryStream output = new MemoryStream();
+            using (Stream responseStream = response.GetResponseStream())
+                responseStream.CopyTo(output);
+            output.Position = 0;
+            return output;
         }
 
     }
