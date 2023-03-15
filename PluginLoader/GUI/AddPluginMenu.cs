@@ -113,6 +113,8 @@ namespace avaness.PluginLoader.GUI
             CreatePluginList(gridArea);
             Controls.Add(scrollPanel);
             pluginListGrid = gridArea;
+
+            FocusedControl = searchBox.TextBox;
         }
 
         private void SearchBox_OnTextChanged(string newText)
