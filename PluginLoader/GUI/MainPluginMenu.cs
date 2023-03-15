@@ -21,7 +21,7 @@ namespace avaness.PluginLoader.GUI
 
         public MainPluginMenu(IEnumerable<PluginData> plugins, PluginConfig config) : base(size: new Vector2(1, 0.9f))
         {
-            this.plugins = plugins.ToList();
+            this.plugins = plugins.OrderBy(x => x.FriendlyName).ToList();
             this.config = config;
             this.enabledPlugins = new HashSet<string>(config.EnabledPlugins);
         }
