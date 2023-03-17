@@ -14,6 +14,7 @@ using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
 using System.Net;
+using System.Runtime.ExceptionServices;
 
 namespace avaness.PluginLoader
 {
@@ -67,6 +68,7 @@ namespace avaness.PluginLoader
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
+            AppDomain.CurrentDomain.FirstChanceException += OnException;
 
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
@@ -118,6 +120,22 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
+        }
+
+        private void OnException(object sender, FirstChanceExceptionEventArgs e)
+        {
+            try
+            {
+                if (e.Exception is MemberAccessException accessException)
+                {
+                    foreach (PluginInstance plugin in plugins)
+                    {
+                        if (plugin.ContainsExceptionSite(accessException))
+                            return;
+                    }
+                }
+            }
+            catch { } // Do NOT throw exceptions inside this method!
         }
 
         private void ClearGitHubCache(string pluginsDir)

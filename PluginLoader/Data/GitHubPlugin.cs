@@ -167,5 +167,17 @@ namespace avaness.PluginLoader.Data
         {
             MyGuiSandbox.OpenUrl("https://github.com/" + Id, UrlOpenMode.SteamOrExternalWithConfirm);
         }
+
+        public override void InvalidateCache()
+        {
+            try
+            {
+                string commitFile = Path.Combine(cacheDir, commitHashFile);
+                if (File.Exists(commitFile))
+                    File.Delete(commitFile);
+                LogFile.WriteLine($"Cache for GitHub plugin {Id} was invalidated, it will need to be compiled again at next game start");
+            }
+            catch { }
+        }
     }
 }

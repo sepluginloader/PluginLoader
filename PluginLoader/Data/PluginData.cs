@@ -115,8 +115,11 @@ namespace avaness.PluginLoader.Data
             {
                 string name = ToString();
                 LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
-                if (e is MissingMemberException)
+                if (e is MemberAccessException)
+                {
                     LogFile.WriteLine($"Is {name} up to date?");
+                    InvalidateCache();
+                }
 
                 if (e is NotSupportedException && e.Message.Contains("loadFromRemoteSources"))
                     Error($"The plugin {name} was blocked by windows. Please unblock the file in the dll file properties.");
@@ -232,6 +235,14 @@ namespace avaness.PluginLoader.Data
         }
 
         public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        {
+
+        }
+
+        /// <summary>
+        /// Invalidate any compiled assemblies on the disk
+        /// </summary>
+        public virtual void InvalidateCache()
         {
 
         }
