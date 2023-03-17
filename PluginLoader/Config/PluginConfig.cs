@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using VRage.Game;
 
-namespace avaness.PluginLoader
+namespace avaness.PluginLoader.Config
 {
     public class PluginConfig
     {
@@ -65,8 +65,8 @@ namespace avaness.PluginLoader
         public string DataHandlingConsentDate { get; set; }
 
         private int networkTimeout = 5000;
-        public int NetworkTimeout 
-        { 
+        public int NetworkTimeout
+        {
             get
             {
                 return networkTimeout;
@@ -125,14 +125,14 @@ namespace avaness.PluginLoader
         {
             int currentGameVersion = MyFinalBuildConstants.APP_VERSION?.Version ?? 0;
             int storedGameVersion = GameVersion;
-            if(currentGameVersion != 0)
+            if (currentGameVersion != 0)
             {
                 if (storedGameVersion == 0)
                 {
                     GameVersion = currentGameVersion;
                     Save();
                 }
-                else if(storedGameVersion != currentGameVersion)
+                else if (storedGameVersion != currentGameVersion)
                 {
                     GameVersion = currentGameVersion;
                     GameVersionChanged = true;

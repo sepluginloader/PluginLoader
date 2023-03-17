@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.GUI
 {

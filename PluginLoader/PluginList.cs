@@ -8,6 +8,7 @@ using ProtoBuf;
 using System.Linq;
 using avaness.PluginLoader.Network;
 using System.IO.Compression;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
 {

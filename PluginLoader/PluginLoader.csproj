@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
+    <Compile Include="Config\PluginConfig.cs" />
     <Compile Include="Data\ObsoletePlugin.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\ISteamItem.cs" />
@@ -130,7 +131,6 @@
     <Compile Include="Patch\Patch_IngameRestart.cs" />
     <Compile Include="Patch\Patch_MyDefinitionManager.cs" />
     <Compile Include="Patch\Patch_MyScriptManager.cs" />
-    <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Data\PluginData.cs" />

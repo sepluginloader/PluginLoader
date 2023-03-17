@@ -14,6 +14,7 @@ using VRage.Audio;
 using Sandbox;
 using System.Diagnostics;
 using System.IO;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.GUI
 {

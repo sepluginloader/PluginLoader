@@ -17,6 +17,7 @@ using System.Net;
 using System.Runtime.ExceptionServices;
 using avaness.PluginLoader.Stats.Model;
 using ParallelTasks;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
 {

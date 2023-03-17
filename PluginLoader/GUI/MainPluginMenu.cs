@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage;
 using VRageMath;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.GUI
 {
