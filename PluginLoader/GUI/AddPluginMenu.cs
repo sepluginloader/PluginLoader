@@ -209,7 +209,7 @@ namespace avaness.PluginLoader.GUI
 
             Vector2 itemSize = pluginListSize / new Vector2(ListItemsHorizontal, ListItemsVertical);
             int numPlugins = plugins.Length;
-            if (!mods)
+            if (!mods && string.IsNullOrWhiteSpace(filter))
                 numPlugins += 2;
             int totalRows = (int)Math.Ceiling(numPlugins / (float)ListItemsHorizontal);
             panel.Size = new Vector2(pluginListSize.X, itemSize.Y * totalRows);
