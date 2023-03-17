@@ -15,6 +15,8 @@ using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
 using System.Net;
 using System.Runtime.ExceptionServices;
+using avaness.PluginLoader.Stats.Model;
+using ParallelTasks;
 
 namespace avaness.PluginLoader
 {
@@ -27,6 +29,7 @@ namespace avaness.PluginLoader
         public PluginList List { get; }
         public PluginConfig Config { get; }
         public SplashScreen Splash { get; }
+        public PluginStats Stats {get; private set; }
 
         /// <summary>
         /// True if a local plugin was loaded
@@ -82,6 +85,8 @@ namespace avaness.PluginLoader
                 ClearGitHubCache(pluginsDir);
 
             StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
+            UpdatePlayerStats();
+            PlayerConsent.OnConsentChanged += OnConsentChanged;
 
             Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
@@ -136,6 +141,15 @@ namespace avaness.PluginLoader
                 }
             }
             catch { } // Do NOT throw exceptions inside this method!
+        }
+        
+        public void UpdatePlayerStats()
+        {
+            LogFile.WriteLine("Downloading user statistics", false);
+            Parallel.Start(() =>
+            {
+                Stats = StatsClient.DownloadStats();
+            });
         }
 
         private void ClearGitHubCache(string pluginsDir)
@@ -272,11 +286,16 @@ namespace avaness.PluginLoader
                 p.Dispose();
             plugins.Clear();
 
+            PlayerConsent.OnConsentChanged -= OnConsentChanged;
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
             LogFile.Dispose();
             Instance = null;
         }
 
+        private void OnConsentChanged()
+        {
+            UpdatePlayerStats();
+        }
 
         private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {

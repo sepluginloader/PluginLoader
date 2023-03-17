@@ -23,6 +23,7 @@ namespace avaness.PluginLoader.Data
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
+        public abstract bool IsLocal { get; }
 
         [XmlIgnore]
         public Version Version { get; protected set; }
@@ -48,8 +49,6 @@ namespace avaness.PluginLoader.Data
                 }
             }
         }
-
-        [XmlIgnore] public bool IsLocal => Source == MyTexts.GetString(MyCommonTexts.Local);
 
         [ProtoMember(1)]
         public virtual string Id { get; set; }
@@ -229,14 +228,26 @@ namespace avaness.PluginLoader.Data
             return s;
         }
 
-        public virtual bool OpenContextMenu(MyGuiControlContextMenu menu)
+        public virtual bool UpdateEnabledPlugins(HashSet<string> enabledPlugins, bool enable)
         {
-            return false;
-        }
+            bool changed;
 
-        public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
-        {
+            if (enable)
+            {
+                changed = enabledPlugins.Add(Id);
 
+                foreach (PluginData other in Group)
+                {
+                    if (!ReferenceEquals(other, this) && other.UpdateEnabledPlugins(enabledPlugins, false))
+                        changed = true;
+                }
+            }
+            else
+            {
+                changed = enabledPlugins.Remove(Id);
+            }
+
+            return changed;
         }
 
         /// <summary>

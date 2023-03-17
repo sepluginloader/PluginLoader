@@ -22,7 +22,8 @@ namespace avaness.PluginLoader.Data
         const string XmlDataType = "Xml files (*.xml)|*.xml|All files (*.*)|*.*";
         const int GitTimeout = 10000;
 
-        public override string Source => MyTexts.GetString(MyCommonTexts.Local);
+        public override string Source => "Development Folder";
+        public override bool IsLocal => true;
         private string[] sourceDirectories;
 
         public Config FolderSettings { get; }
@@ -171,40 +172,18 @@ namespace avaness.PluginLoader.Data
                 Process.Start("explorer.exe", $"\"{folder}\"");
         }
 
-        public override bool OpenContextMenu(MyGuiControlContextMenu menu)
+        public void LoadNewDataFile(Action onComplete)
         {
-            menu.Clear();
-            menu.AddItem(new StringBuilder("Remove"));
-            menu.AddItem(new StringBuilder("Load data file"));
-            if(FolderSettings.DebugBuild)
-                menu.AddItem(new StringBuilder("Switch to release build"));
-            else
-                menu.AddItem(new StringBuilder("Switch to debug build"));
-            return true;
+            LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType,
+                (file) =>
+                {
+                    DeserializeFile(file);
+                    onComplete.Invoke();
+                });
         }
 
-        public override void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
-        {
-            switch (args.ItemIndex)
-            {
-                case 0:
-                    Main.Instance.Config.PluginFolders.Remove(Id);
-                    screen.RemovePlugin(this);
-                    screen.RequireRestart();
-                    break;
-                case 1:
-                    LoaderTools.OpenFileDialog("Open an xml data file", Path.GetDirectoryName(FolderSettings.DataFile), XmlDataType, (file) => DeserializeFile(file, screen));
-                    break;
-                case 2:
-                    FolderSettings.DebugBuild = !FolderSettings.DebugBuild;
-                    screen.RequireRestart();
-                    break;
-
-            }
-        }
-
-        // Deserializes a file and refreshes the plugin screen
-        private void DeserializeFile(string file, MyGuiScreenPluginConfig screen = null)
+        // Deserializes a data file
+        private void DeserializeFile(string file)
         {
             if (!File.Exists(file))
                 return;
@@ -229,8 +208,6 @@ namespace avaness.PluginLoader.Data
                     Description = github.Description;
                     sourceDirectories = github.SourceDirectories;
                     FolderSettings.DataFile = file;
-                    if(screen != null && screen.Visible && screen.IsOpened)
-                        screen.RefreshSidePanel();
                 }
             }
             catch (Exception e)
@@ -245,7 +222,7 @@ namespace avaness.PluginLoader.Data
             {
                 if (Main.Instance.List.Contains(folder))
                 {
-                    MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That folder already exists in the list!"));
+                    MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(MyMessageBoxStyleEnum.Error, messageText: new StringBuilder("That development folder already exists!"), messageCaption: new StringBuilder("Plugin Loader")));
                     return;
                 }
 

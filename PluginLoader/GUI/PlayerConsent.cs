@@ -12,8 +12,7 @@ namespace avaness.PluginLoader.GUI
 
         public static void ShowDialog(Action continuation = null)
         {
-            MyGuiSandbox.AddScreen(
-                ConfirmationDialog.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO_CANCEL,
+            MyGuiScreenMessageBox dialog = MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO_CANCEL,
                     messageText: new StringBuilder(
                         "               Would you like to rate plugins and inform developers?\r\n" +
                         "\r\n" +
@@ -30,7 +29,12 @@ namespace avaness.PluginLoader.GUI
                         "         Plugin Loader will still connect to download the statistics shown.\r\n"),
                     size: new Vector2(0.6f, 0.6f),
                     messageCaption: new StringBuilder("Consent"),
-                    callback: result => GetConfirmation(result, continuation)));
+                    callback: result => GetConfirmation(result, continuation));
+
+            if (dialog.Controls.GetControlByName("MyGuiControlMultilineText") is MyGuiControlMultilineText text)
+                text.TextAlign = VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
+
+            MyGuiSandbox.AddScreen(dialog);
         }
 
         public static bool ConsentRequested => !string.IsNullOrEmpty(Main.Instance.Config.DataHandlingConsentDate);
