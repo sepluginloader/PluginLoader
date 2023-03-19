@@ -111,7 +111,7 @@ namespace avaness.PluginLoader.Data
         public byte[] CompileFromSource(Action<float> callback = null)
         {
             RoslynCompiler compiler = new RoslynCompiler();
-            using(Stream s = GitHub.DownloadRepo(Id, Commit, out string fileName))
+            using (Stream s = GitHub.DownloadRepo(Id, Commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
                 callback?.Invoke(0);

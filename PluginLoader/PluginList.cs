@@ -204,7 +204,7 @@ namespace avaness.PluginLoader
 
             try
             {
-                using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
+                using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit))
                 using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                 {
                     XmlSerializer xml = new XmlSerializer(typeof(PluginData));

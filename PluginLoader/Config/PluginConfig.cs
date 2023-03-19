@@ -84,6 +84,8 @@ namespace avaness.PluginLoader.Config
 
         public int Count => EnabledPlugins.Count;
 
+        public bool AllowIPv6 { get; set; } = true;
+
         public PluginConfig()
         {
         }
