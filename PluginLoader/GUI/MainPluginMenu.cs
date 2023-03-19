@@ -489,7 +489,7 @@ namespace avaness.PluginLoader.GUI
 
         private void Save()
         {
-            foreach (PluginData plugin in config.EnabledPlugins.Where(x => !enabledPlugins.Contains(x.Id)))
+            foreach (PluginData plugin in config.EnabledPlugins.Where(x => !enabledPlugins.Contains(x.Id)).ToArray())
                 config.SetEnabled(plugin, false);
             foreach (string id in enabledPlugins)
                 config.SetEnabled(id, true);
