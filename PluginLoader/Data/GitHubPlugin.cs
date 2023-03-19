@@ -233,7 +233,10 @@ namespace avaness.PluginLoader.Data
                     File.Delete(commitFile);
                 LogFile.WriteLine($"Cache for GitHub plugin {Id} was invalidated, it will need to be compiled again at next game start");
             }
-            catch { }
+            catch (Exception e)
+            {
+                LogFile.WriteLine("ERROR: Failed to invalidate github cache: " + e);
+            }
         }
 
         public override void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)

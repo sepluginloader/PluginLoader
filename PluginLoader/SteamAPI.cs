@@ -30,10 +30,9 @@ namespace avaness.PluginLoader
 
         public static void Update(IEnumerable<ulong> ids)
         {
-            if (!ids.Any())
-                return;
-
             var modItems = new List<MyObjectBuilder_Checkpoint.ModItem>(ids.Select(x => new MyObjectBuilder_Checkpoint.ModItem(x, "Steam")));
+            if (modItems.Count == 0)
+                return;
             LogFile.WriteLine($"Updating {modItems.Count} workshop items");
 
             // Source: MyWorkshop.DownloadWorldModsBlocking

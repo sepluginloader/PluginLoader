@@ -24,7 +24,7 @@ namespace avaness.PluginLoader.GUI
         const int ListItemsVertical = 3;
         const float PercentSearchBox = 0.8f;
 
-        private List<PluginData> plugins = new List<PluginData>();
+        private List<PluginData> plugins;
         private HashSet<string> enabledPlugins;
         private PluginStats stats;
         private bool mods;
