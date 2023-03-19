@@ -47,8 +47,7 @@ namespace avaness.PluginLoader.Data
         {
             if (enabled)
             {
-                if (config is GitHubPluginConfig githubConfig && 
-                    (string.IsNullOrWhiteSpace(githubConfig.SelectedVersion) || AlternateVersions.Any(x => x.Name.Equals(githubConfig.SelectedVersion, StringComparison.OrdinalIgnoreCase))))
+                if (config is GitHubPluginConfig githubConfig && IsValidConfig(githubConfig))
                 {
                     this.config = githubConfig;
                     return false;
@@ -69,6 +68,15 @@ namespace avaness.PluginLoader.Data
             }
 
             return false;
+        }
+
+        private bool IsValidConfig(GitHubPluginConfig githubConfig)
+        {
+            if (string.IsNullOrWhiteSpace(githubConfig.SelectedVersion))
+                return true;
+            if (AlternateVersions == null)
+                return false;
+            return AlternateVersions.Any(x => x.Name.Equals(githubConfig.SelectedVersion, StringComparison.OrdinalIgnoreCase));
         }
 
         public void InitPaths()
@@ -147,7 +155,7 @@ namespace avaness.PluginLoader.Data
 
         private string GetSelectedCommit()
         {
-            if (string.IsNullOrWhiteSpace(config.SelectedVersion))
+            if (config == null || string.IsNullOrWhiteSpace(config.SelectedVersion) || AlternateVersions == null)
                 return Commit;
             Branch branch = AlternateVersions.FirstOrDefault(x => x.Name.Equals(config.SelectedVersion, StringComparison.OrdinalIgnoreCase));
             if (branch == null)
