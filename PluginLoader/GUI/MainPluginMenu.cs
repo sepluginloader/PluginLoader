@@ -25,7 +25,7 @@ namespace avaness.PluginLoader.GUI
         {
             this.plugins = plugins.OrderBy(x => x.FriendlyName).ToList();
             this.config = config;
-            this.enabledPlugins = new HashSet<string>(config.EnabledPlugins);
+            this.enabledPlugins = new HashSet<string>(config.EnabledPlugins.Select(x => x.Id));
         }
 
         public static void Open()
@@ -485,7 +485,8 @@ namespace avaness.PluginLoader.GUI
 
         private void Save()
         {
-            config.EnabledPlugins.Clear();
+            foreach (PluginData plugin in config.EnabledPlugins.Where(x => !enabledPlugins.Contains(x.Id)))
+                config.SetEnabled(plugin, false);
             foreach (string id in enabledPlugins)
                 config.SetEnabled(id, true);
             config.Save();
@@ -495,7 +496,7 @@ namespace avaness.PluginLoader.GUI
         {
             if (requiresRestart)
                 return true;
-            HashSet<string> actualPlugins = config.EnabledPlugins;
+            HashSet<string> actualPlugins = new HashSet<string>(config.EnabledPlugins.Select(x => x.Id));
             return enabledPlugins.Count != actualPlugins.Count || !enabledPlugins.SetEquals(actualPlugins);
         }
 

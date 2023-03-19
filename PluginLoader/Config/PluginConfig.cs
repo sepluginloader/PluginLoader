@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 using System.Linq;
 using System.Text;
 using VRage.Game;
+using avaness.PluginLoader.Data;
 
 namespace avaness.PluginLoader.Config
 {
@@ -13,16 +14,22 @@ namespace avaness.PluginLoader.Config
         private const string fileName = "config.xml";
 
         private string filePath;
+        private PluginList list;
 
         [XmlArray]
         [XmlArrayItem("Id")]
         public string[] Plugins
         {
-            get { return EnabledPlugins.ToArray(); }
-            set { EnabledPlugins = new HashSet<string>(value); }
+            get { return enabledPlugins.Keys.ToArray(); }
+            set
+            {
+                enabledPlugins.Clear();
+                foreach (string id in value)
+                    enabledPlugins[id] = null;
+            }
         }
-
-        [XmlIgnore] public HashSet<string> EnabledPlugins { get; private set; } = new();
+        public IEnumerable<PluginData> EnabledPlugins => enabledPlugins.Values;
+        private readonly Dictionary<string, PluginData> enabledPlugins = new Dictionary<string, PluginData>();
 
         [XmlArray]
         [XmlArrayItem("Plugin")]
@@ -82,7 +89,7 @@ namespace avaness.PluginLoader.Config
             }
         }
 
-        public int Count => EnabledPlugins.Count;
+        public int Count => enabledPlugins.Count;
 
         public bool AllowIPv6 { get; set; } = true;
 
@@ -92,34 +99,34 @@ namespace avaness.PluginLoader.Config
 
         public void Init(PluginList plugins)
         {
-            // Remove plugins from config that no longer exist
-            List<string> toRemove = new List<string>();
+            list = plugins;
 
+            bool save = false;
+
+            // Remove plugins from config that no longer exist
             StringBuilder sb = new StringBuilder("Enabled plugins: ");
-            foreach (string id in EnabledPlugins)
+            foreach (string id in enabledPlugins.Keys.ToArray())
             {
-                if (!plugins.Contains(id))
+                if (plugins.TryGetPlugin(id, out PluginData plugin))
                 {
-                    LogFile.WriteLine($"{id} was in the config but is no longer available");
-                    toRemove.Add(id);
+                    enabledPlugins[id] = plugin;
+                    sb.Append(id).Append(", ");
                 }
                 else
                 {
-                    sb.Append(id).Append(", ");
+                    LogFile.WriteLine($"{id} was in the config but is no longer available");
+                    enabledPlugins.Remove(id);
+                    save = true;
                 }
             }
 
-            if (EnabledPlugins.Count > 0)
+            if (enabledPlugins.Count > 0)
                 sb.Length -= 2;
             else
                 sb.Append("None");
             LogFile.WriteLine(sb.ToString());
 
-
-            foreach (string id in toRemove)
-                EnabledPlugins.Remove(id);
-
-            if (toRemove.Count > 0)
+            if (save)
                 Save();
         }
 
@@ -145,7 +152,7 @@ namespace avaness.PluginLoader.Config
 
         public void Disable()
         {
-            EnabledPlugins.Clear();
+            enabledPlugins.Clear();
         }
 
 
@@ -194,30 +201,45 @@ namespace avaness.PluginLoader.Config
             };
         }
 
-        public IEnumerator<string> GetEnumerator()
-        {
-            return EnabledPlugins.GetEnumerator();
-        }
-
         public bool IsEnabled(string id)
         {
-            return EnabledPlugins.Contains(id);
+            return enabledPlugins.ContainsKey(id);
         }
 
         public void SetEnabled(string id, bool enabled)
         {
-            if (EnabledPlugins.Contains(id) == enabled)
+            if (IsEnabled(id) == enabled)
                 return;
 
             if (enabled)
-            {
-                EnabledPlugins.Add(id);
-                Main.Instance.List.SubscribeToItem(id);
-            }
+                Enable(list[id]);
             else
-            {
-                EnabledPlugins.Remove(id);
-            }
+                Disable(id);
         }
+
+        public void SetEnabled(PluginData plugin, bool enabled)
+        {
+            string id = plugin.Id;
+            if (IsEnabled(id) == enabled)
+                return;
+
+            if (enabled)
+                Enable(plugin);
+            else
+                Disable(id);
+        }
+
+        private void Enable(PluginData plugin)
+        {
+            string id = plugin.Id;
+            enabledPlugins[id] = plugin;
+            list.SubscribeToItem(id);
+        }
+
+        private void Disable(string id)
+        {
+            enabledPlugins.Remove(id);
+        }
+
     }
 }

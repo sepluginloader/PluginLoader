@@ -94,9 +94,8 @@ namespace avaness.PluginLoader
 
             Splash.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
-            foreach (string id in Config)
+            foreach (PluginData data in Config.EnabledPlugins)
             {
-                PluginData data = List[id];
                 if (data is GitHubPlugin github)
                     github.Init(pluginsDir);
                 if (PluginInstance.TryGet(data, out PluginInstance p))
@@ -151,15 +150,7 @@ namespace avaness.PluginLoader
             if (!Directory.Exists(pluginCache))
                 return;
 
-            bool hasGitHub = false;
-            foreach(string id in Config.EnabledPlugins)
-            {
-                if(List.TryGetPlugin(id, out PluginData pluginData) && pluginData is GitHubPlugin)
-                {
-                    hasGitHub = true;
-                    break;
-                }
-            }
+            bool hasGitHub = Config.EnabledPlugins.Any(x => x is GitHubPlugin);
 
             if(hasGitHub)
             {
@@ -208,7 +199,7 @@ namespace avaness.PluginLoader
         }
 
         // Skip local plugins, keep only enabled ones
-        public string[] TrackablePluginIds => Config.EnabledPlugins.Where(id => !List[id].IsLocal).ToArray();
+        public string[] TrackablePluginIds => Config.EnabledPlugins.Where(x => !x.IsLocal).Select(x => x.Id).ToArray();
 
         public void RegisterComponents()
         {
