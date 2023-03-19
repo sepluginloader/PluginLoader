@@ -14,7 +14,7 @@ using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.GUI
 {
-    class PluginDetailMenu : PluginScreen
+    public class PluginDetailMenu : PluginScreen
     {
         private HashSet<string> enabledPlugins;
         private PluginData plugin;
@@ -58,53 +58,17 @@ namespace avaness.PluginLoader.GUI
             Controls.Add(lblSource);
 
             Vector2 buttonPos = new Vector2(0, halfSize.Y - (lblSource.Size.Y + GuiSpacing));
-            MyGuiControlButton btnInfo = new MyGuiControlButton(position: new Vector2(buttonPos.X - GuiSpacing, buttonPos.Y - GuiSpacing), text: new StringBuilder("More Info"), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM, onButtonClick: OnPluginOpenClick);
-            MyGuiControlButton btnSettings = new MyGuiControlButton(position: new Vector2(buttonPos.X + GuiSpacing, buttonPos.Y - GuiSpacing), text: new StringBuilder("Settings"), originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM, onButtonClick: OnPluginSettingsClick);
-            btnSettings.Enabled = pluginInstance != null && pluginInstance.HasConfigDialog;
+            MyGuiControlButton btnInfo = new MyGuiControlButton(position: new Vector2(buttonPos.X - (GuiSpacing / 2), buttonPos.Y - GuiSpacing), text: new StringBuilder("More Info"), originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM, onButtonClick: OnPluginOpenClick);
             Controls.Add(btnInfo);
+
+            MyGuiControlButton btnSettings = new MyGuiControlButton(text: new StringBuilder("Settings"), onButtonClick: OnPluginSettingsClick);
+            btnSettings.Enabled = pluginInstance != null && pluginInstance.HasConfigDialog;
+            PositionToRight(btnInfo, btnSettings);
             Controls.Add(btnSettings);
 
-            MyGuiControlBase bottomControl = btnInfo;
-            if (plugin is LocalFolderPlugin folderPlugin)
-            {
-                MyGuiControlButton btnRemove = new MyGuiControlButton(text: new StringBuilder("Remove"), onButtonClick: (btn) =>
-                {
-                    PluginConfig config = Main.Instance.Config;
-                    config.RemoveDevelopmentFolder(folderPlugin.Id);
-                    config.Save();
-                    CloseScreen();
-                    OnPluginRemoved?.Invoke(folderPlugin);
-                    OnRestartRequired?.Invoke();
-                });
-                PositionAbove(btnInfo, btnRemove);
-                Controls.Add(btnRemove);
-
-                MyGuiControlButton btnLoadFile = new MyGuiControlButton(text: new StringBuilder("Load File"), onButtonClick: (btn) =>
-                {
-                    folderPlugin.LoadNewDataFile(() =>
-                    {
-                        Main.Instance.Config.Save();
-                        CloseScreen();
-                    });
-                });
-                PositionAbove(btnSettings, btnLoadFile);
-                Controls.Add(btnLoadFile);
-
-                MyGuiControlCombobox releaseDropdown = new MyGuiControlCombobox();
-                releaseDropdown.AddItem(0, "Release");
-                releaseDropdown.AddItem(1, "Debug");
-                releaseDropdown.SelectItemByKey(folderPlugin.FolderSettings.DebugBuild ? 1 : 0);
-                releaseDropdown.ItemSelected += () =>
-                {
-                    folderPlugin.FolderSettings.DebugBuild = releaseDropdown.GetSelectedKey() == 1;
-                    Main.Instance.Config.Save();
-                    OnRestartRequired?.Invoke();
-                };
-                PositionAbove(btnRemove, releaseDropdown, MyAlignH.Left);
-                Controls.Add(releaseDropdown);
-                bottomControl = releaseDropdown;
-
-            }
+            plugin.AddDetailControls(this, btnInfo, out MyGuiControlBase bottomControl);
+            if (bottomControl == null)
+                bottomControl = btnInfo;
 
             // Center
             MyLayoutTable layout = GetLayoutTableBetween(caption, bottomControl, verticalSpacing: GuiSpacing * 2);
@@ -235,6 +199,16 @@ namespace avaness.PluginLoader.GUI
         private void OnPluginOpenClick(MyGuiControlButton btn)
         {
             plugin.Show();
+        }
+
+        public void InvokeOnPluginRemoved(PluginData plugin)
+        {
+            OnPluginRemoved?.Invoke(plugin);
+        }
+
+        public void InvokeOnRestartRequired()
+        {
+            OnRestartRequired?.Invoke();
         }
     }
 }

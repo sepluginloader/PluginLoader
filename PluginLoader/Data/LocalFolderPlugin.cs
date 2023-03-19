@@ -239,5 +239,45 @@ namespace avaness.PluginLoader.Data
                 });
             });
         }
+
+        public override void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)
+        {
+            MyGuiControlButton btnRemove = new MyGuiControlButton(text: new StringBuilder("Remove"), onButtonClick: (btn) =>
+            {
+                PluginConfig config = Main.Instance.Config;
+                config.RemoveDevelopmentFolder(Id);
+                config.Save();
+                screen.CloseScreen();
+                screen.InvokeOnPluginRemoved(this);
+                screen.InvokeOnRestartRequired();
+            });
+            screen.PositionAbove(bottomControl, btnRemove);
+            screen.Controls.Add(btnRemove);
+
+            MyGuiControlButton btnLoadFile = new MyGuiControlButton(text: new StringBuilder("Load File"), onButtonClick: (btn) =>
+            {
+                LoadNewDataFile(() =>
+                {
+                    Main.Instance.Config.Save();
+                    screen.CloseScreen();
+                });
+            });
+            screen.PositionToRight(btnRemove, btnLoadFile);
+            screen.Controls.Add(btnLoadFile);
+
+            MyGuiControlCombobox releaseDropdown = new MyGuiControlCombobox();
+            releaseDropdown.AddItem(0, "Release");
+            releaseDropdown.AddItem(1, "Debug");
+            releaseDropdown.SelectItemByKey(FolderSettings.DebugBuild ? 1 : 0);
+            releaseDropdown.ItemSelected += () =>
+            {
+                FolderSettings.DebugBuild = releaseDropdown.GetSelectedKey() == 1;
+                Main.Instance.Config.Save();
+                screen.InvokeOnRestartRequired();
+            };
+            screen.PositionAbove(btnRemove, releaseDropdown, MyAlignH.Left);
+            screen.Controls.Add(releaseDropdown);
+            topControl = releaseDropdown;
+        }
     }
 }

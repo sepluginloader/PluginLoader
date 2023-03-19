@@ -266,5 +266,10 @@ namespace avaness.PluginLoader.Data
         {
 
         }
+
+        public virtual void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)
+        {
+            topControl = null;
+        }
     }
 }

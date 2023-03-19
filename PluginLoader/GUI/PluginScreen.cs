@@ -12,7 +12,7 @@ namespace avaness.PluginLoader.GUI
 {
     public abstract class PluginScreen : MyGuiScreenBase
     {
-        protected const float GuiSpacing = 0.0175f;
+        public const float GuiSpacing = 0.0175f;
 
         public PluginScreen(Vector2? position = null, Vector2? size = null) : 
             base(position ?? new Vector2(0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, size ?? new Vector2(0.5f), 
@@ -91,7 +91,7 @@ namespace avaness.PluginLoader.GUI
         /// <summary>
         /// Positions <paramref name="newControl"/> to the right of <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
         /// </summary>
-        protected void PositionToRight(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignV align = MyAlignV.Center, float spacing = GuiSpacing)
+        public void PositionToRight(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignV align = MyAlignV.Center, float spacing = GuiSpacing)
         {
             Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
             currentTopLeft.X += currentControl.Size.X + spacing;
@@ -117,7 +117,7 @@ namespace avaness.PluginLoader.GUI
         /// <summary>
         /// Positions <paramref name="newControl"/> to the left of <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
         /// </summary>
-        protected void PositionToLeft(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignV align = MyAlignV.Center, float spacing = GuiSpacing)
+        public void PositionToLeft(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignV align = MyAlignV.Center, float spacing = GuiSpacing)
         {
             Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
             currentTopLeft.X -= spacing;
@@ -143,7 +143,7 @@ namespace avaness.PluginLoader.GUI
         /// <summary>
         /// Positions <paramref name="newControl"/> above <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
         /// </summary>
-        protected void PositionAbove(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
+        public void PositionAbove(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
         {
             Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
             currentTopLeft.Y -= spacing;
@@ -169,7 +169,7 @@ namespace avaness.PluginLoader.GUI
         /// <summary>
         /// Positions <paramref name="newControl"/> below <paramref name="currentControl"/> with a spacing of <paramref name="spacing"/>.
         /// </summary>
-        protected void PositionBelow(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
+        public void PositionBelow(MyGuiControlBase currentControl, MyGuiControlBase newControl, MyAlignH align = MyAlignH.Center, float spacing = GuiSpacing)
         {
             Vector2 currentTopLeft = GetCoordTopLeftFromAligned(currentControl);
             currentTopLeft.Y += currentControl.Size.Y + spacing;
