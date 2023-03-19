@@ -206,7 +206,7 @@ namespace avaness.PluginLoader.Data
                     }
 
                     GitHubPlugin github = (GitHubPlugin)resultObj;
-                    github.Init(LoaderTools.PluginsDir);
+                    github.InitPaths();
                     FriendlyName = github.FriendlyName;
                     Tooltip = github.Tooltip;
                     Author = github.Author;

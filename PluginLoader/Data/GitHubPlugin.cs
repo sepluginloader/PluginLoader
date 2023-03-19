@@ -1,4 +1,5 @@
 ﻿using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.Config;
 using avaness.PluginLoader.Network;
 using ProtoBuf;
 using Sandbox.Graphics.GUI;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
@@ -26,16 +28,46 @@ namespace avaness.PluginLoader.Data
         [XmlArrayItem("Directory")]
         public string[] SourceDirectories { get; set; }
 
+        [ProtoMember(3)]
+        [XmlArray]
+        [XmlArrayItem("Version")]
+        public Branch[] AlternateVersions { get; set; }
+
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
         private string cacheDir, assemblyName;
+        private GitHubPluginConfig config = new GitHubPluginConfig();
 
         public GitHubPlugin()
         {
             Status = PluginStatus.None;
         }
 
-        public void Init(string mainDirectory)
+        public override bool LoadData(ref PluginDataConfig config, bool enabled)
+        {
+            if (enabled)
+            {
+                if (config is GitHubPluginConfig githubConfig && 
+                    (string.IsNullOrWhiteSpace(githubConfig.SelectedVersion) || AlternateVersions.Any(x => x.Name.Equals(githubConfig.SelectedVersion, StringComparison.OrdinalIgnoreCase))))
+                {
+                    this.config = githubConfig;
+                    return false;
+                }
+
+                config = this.config;
+                return true;
+            }
+
+            if (config != null)
+            {
+                config = null;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void InitPaths()
         {
             string[] nameArgs = Id.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
             if (nameArgs.Length < 2)
@@ -61,7 +93,7 @@ namespace avaness.PluginLoader.Data
             }
 
             assemblyName = MakeSafeString(nameArgs[1]);
-            cacheDir = Path.Combine(mainDirectory, "GitHub", nameArgs[0], nameArgs[1]);
+            cacheDir = Path.Combine(LoaderTools.PluginsDir, "GitHub", nameArgs[0], nameArgs[1]);
         }
 
         private string MakeSafeString(string s)
@@ -79,6 +111,8 @@ namespace avaness.PluginLoader.Data
 
         public override Assembly GetAssembly()
         {
+            InitPaths();
+
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
@@ -86,13 +120,14 @@ namespace avaness.PluginLoader.Data
 
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
-            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != Commit || Main.Instance.Config.GameVersionChanged)
+            string selectedCommit = GetSelectedCommit();
+            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != selectedCommit || Main.Instance.Config.GameVersionChanged)
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
-                byte[] data = CompileFromSource(x => lbl.SetBarValue(x));
+                byte[] data = CompileFromSource(selectedCommit, x => lbl.SetBarValue(x));
                 File.WriteAllBytes(dllFile, data);
-                File.WriteAllText(commitFile, Commit);
+                File.WriteAllText(commitFile, selectedCommit);
                 Status = PluginStatus.Updated;
                 lbl.SetText($"Compiled '{FriendlyName}'");
                 a = Assembly.Load(data);
@@ -106,12 +141,20 @@ namespace avaness.PluginLoader.Data
             return a;
         }
 
+        private string GetSelectedCommit()
+        {
+            if (string.IsNullOrWhiteSpace(config.SelectedVersion))
+                return Commit;
+            Branch branch = AlternateVersions.FirstOrDefault(x => x.Name.Equals(config.SelectedVersion, StringComparison.OrdinalIgnoreCase));
+            if (branch == null)
+                return Commit;
+            return branch.Commit;
+        }
 
-
-        public byte[] CompileFromSource(Action<float> callback = null)
+        public byte[] CompileFromSource(string commit, Action<float> callback = null)
         {
             RoslynCompiler compiler = new RoslynCompiler();
-            using (Stream s = GitHub.DownloadRepo(Id, Commit))
+            using (Stream s = GitHub.DownloadRepo(Id, commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
                 callback?.Invoke(0);
@@ -179,6 +222,17 @@ namespace avaness.PluginLoader.Data
                 LogFile.WriteLine($"Cache for GitHub plugin {Id} was invalidated, it will need to be compiled again at next game start");
             }
             catch { }
+        }
+
+        [ProtoContract]
+        public class Branch
+        {
+            [ProtoMember(1)]
+            public string Name { get; set; }
+
+            [ProtoMember(2)]
+            public string Commit { get; set; }
+
         }
     }
 }

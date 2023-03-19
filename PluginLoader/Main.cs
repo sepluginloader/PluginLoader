@@ -96,8 +96,6 @@ namespace avaness.PluginLoader
             LogFile.WriteLine("Instantiating plugins");
             foreach (PluginData data in Config.EnabledPlugins)
             {
-                if (data is GitHubPlugin github)
-                    github.Init(pluginsDir);
                 if (PluginInstance.TryGet(data, out PluginInstance p))
                 {
                     plugins.Add(p);
