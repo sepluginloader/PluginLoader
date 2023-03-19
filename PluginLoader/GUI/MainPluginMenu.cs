@@ -19,7 +19,7 @@ namespace avaness.PluginLoader.GUI
         private MyGuiControlCheckbox consentBox;
         private MyGuiControlParent pluginsPanel;
         private MyGuiControlParent modsPanel;
-        private bool requiresRestart = true;
+        private bool requiresRestart = false;
 
         public MainPluginMenu(IEnumerable<PluginData> plugins, PluginConfig config) : base(size: new Vector2(1, 0.9f))
         {
