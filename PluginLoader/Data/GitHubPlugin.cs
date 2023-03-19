@@ -1,5 +1,6 @@
 ﻿using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.Config;
+using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Network;
 using ProtoBuf;
 using Sandbox.Graphics.GUI;
@@ -60,6 +61,8 @@ namespace avaness.PluginLoader.Data
                 config = this.config;
                 return true;
             }
+
+            this.config = null;
 
             if (config != null)
             {
@@ -132,7 +135,7 @@ namespace avaness.PluginLoader.Data
 
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
-            string selectedCommit = GetSelectedCommit();
+            string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
             if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != selectedCommit || Main.Instance.Config.GameVersionChanged)
             {
                 var lbl = Main.Instance.Splash;
@@ -153,14 +156,11 @@ namespace avaness.PluginLoader.Data
             return a;
         }
 
-        private string GetSelectedCommit()
+        private Branch GetSelectedVersion()
         {
-            if (config == null || string.IsNullOrWhiteSpace(config.SelectedVersion) || AlternateVersions == null)
-                return Commit;
-            Branch branch = AlternateVersions.FirstOrDefault(x => x.Name.Equals(config.SelectedVersion, StringComparison.OrdinalIgnoreCase));
-            if (branch == null)
-                return Commit;
-            return branch.Commit;
+            if (config == null || string.IsNullOrWhiteSpace(config.SelectedVersion))
+                return null;
+            return AlternateVersions?.FirstOrDefault(x => x.Name.Equals(config.SelectedVersion, StringComparison.OrdinalIgnoreCase));
         }
 
         public byte[] CompileFromSource(string commit, Action<float> callback = null)
@@ -234,6 +234,61 @@ namespace avaness.PluginLoader.Data
                 LogFile.WriteLine($"Cache for GitHub plugin {Id} was invalidated, it will need to be compiled again at next game start");
             }
             catch { }
+        }
+
+        public override void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)
+        {
+            if(AlternateVersions == null || AlternateVersions.Length == 0)
+            {
+                topControl = null;
+                return;
+            }
+
+            string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
+            MyGuiControlCombobox versionDropdown = new MyGuiControlCombobox();
+            versionDropdown.AddItem(-1, "Default");
+            int selectedKey = -1;
+            for (int i = 0; i < AlternateVersions.Length; i++)
+            {
+                Branch version = AlternateVersions[i];
+                versionDropdown.AddItem(i, version.Name);
+                if (version.Commit == selectedCommit)
+                    selectedKey = i;
+            }
+            versionDropdown.SelectItemByKey(selectedKey);
+            versionDropdown.ItemSelected += () =>
+            {
+                PluginConfig mainConfig = Main.Instance.Config;
+
+                int selectedKey = (int)versionDropdown.GetSelectedKey();
+                string newVersion = selectedKey >= 0 ? AlternateVersions[selectedKey].Name : null;
+                string currentVersion = GetSelectedVersion()?.Name;
+                if (currentVersion == newVersion)
+                    return;
+
+                if (config == null)
+                {
+                    config = new GitHubPluginConfig()
+                    {
+                        Id = Id,
+                    };
+
+                    mainConfig.SavePluginData(config);
+                }
+
+                config.SelectedVersion = newVersion;
+                mainConfig.Save();
+                if(mainConfig.IsEnabled(Id))
+                    screen.InvokeOnRestartRequired();
+            };
+
+            screen.PositionAbove(bottomControl, versionDropdown, MyAlignH.Left);
+            screen.Controls.Add(versionDropdown);
+
+            MyGuiControlLabel lblVersion = new MyGuiControlLabel(text: "Installed Version");
+            screen.PositionAbove(versionDropdown, lblVersion, align: MyAlignH.Left, spacing: 0);
+            screen.Controls.Add(lblVersion);
+            topControl = lblVersion;
         }
 
         [ProtoContract]

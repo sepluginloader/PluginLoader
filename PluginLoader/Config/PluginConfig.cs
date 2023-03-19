@@ -295,6 +295,10 @@ namespace avaness.PluginLoader.Config
             return pluginSettings.Remove(id);
         }
 
+        public void SavePluginData(GitHubPluginConfig settings)
+        {
+            pluginSettings[settings.Id] = settings;
+        }
 
         public void AddDevelopmentFolder(string folder)
         {
