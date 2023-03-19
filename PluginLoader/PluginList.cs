@@ -304,11 +304,11 @@ namespace avaness.PluginLoader
                 }
             }
 
-            foreach(var folderConfig in config.PluginFolders.Values)
+            foreach (string folder in config.LocalFolderPlugins)
             {
-                if(folderConfig.Valid)
+                if (Directory.Exists(folder))
                 {
-                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig);
+                    LocalFolderPlugin local = new LocalFolderPlugin(folder);
                     plugins[local.Id] = local;
                 }
             }

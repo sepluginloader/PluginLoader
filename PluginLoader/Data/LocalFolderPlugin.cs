@@ -1,4 +1,5 @@
 ﻿using avaness.PluginLoader.Compiler;
+using avaness.PluginLoader.Config;
 using avaness.PluginLoader.GUI;
 using Sandbox;
 using Sandbox.Graphics.GUI;
@@ -26,25 +27,29 @@ namespace avaness.PluginLoader.Data
         public override bool IsLocal => true;
         private string[] sourceDirectories;
 
-        public Config FolderSettings { get; }
+        public LocalFolderConfig FolderSettings { get; private set; }
 
-        public LocalFolderPlugin(Config settings)
-        {
-            Id = settings.Folder;
-            FriendlyName = Path.GetFileName(Id);
-            Status = PluginStatus.None;
-            FolderSettings = settings;
-            DeserializeFile(settings.DataFile);
-        }
-
-        private LocalFolderPlugin(string folder)
+        public LocalFolderPlugin(string folder)
         {
             Id = folder;
             Status = PluginStatus.None;
-            FolderSettings = new Config()
+            FolderSettings = new LocalFolderConfig()
             {
-                Folder = folder
+                Id = folder
             };
+        }
+
+        public override bool LoadData(ref PluginDataConfig config, bool enabled)
+        {
+            if (config is LocalFolderConfig folderConfig && folderConfig.DataFile != null && File.Exists(folderConfig.DataFile))
+            {
+                FolderSettings = folderConfig;
+                DeserializeFile(folderConfig.DataFile);
+                return false;
+            }
+
+            config = FolderSettings;
+            return true;
         }
 
         public override Assembly GetAssembly()
@@ -233,23 +238,6 @@ namespace avaness.PluginLoader.Data
                     onComplete(plugin);
                 });
             });
-        }
-
-
-        public class Config
-        {
-            public Config() { }
-
-            public Config(string folder, string dataFile)
-            {
-                Folder = folder;
-                DataFile = dataFile;
-            }
-
-            public string Folder { get; set; }
-            public string DataFile { get; set; }
-            public bool DebugBuild { get; set; } = true;
-            public bool Valid => Directory.Exists(Folder) && File.Exists(DataFile);
         }
     }
 }

@@ -32,14 +32,18 @@ namespace avaness.PluginLoader.Config
         private readonly Dictionary<string, PluginData> enabledPlugins = new Dictionary<string, PluginData>();
 
         [XmlArray]
-        [XmlArrayItem("Plugin")]
-        public Data.LocalFolderPlugin.Config[] LocalFolderPlugins
+        [XmlArrayItem("Id")]
+        public string[] LocalFolderPlugins
         {
-            get { return PluginFolders.Values.ToArray(); }
-            set { PluginFolders = value.ToDictionary(x => x.Folder); }
+            get { return pluginFolders.ToArray(); }
+            set
+            {
+                pluginFolders.Clear();
+                foreach (string folder in value)
+                    pluginFolders.Add(folder);
+            }
         }
-
-        [XmlIgnore] public Dictionary<string, Data.LocalFolderPlugin.Config> PluginFolders { get; private set; } = new();
+        private readonly HashSet<string> pluginFolders = new HashSet<string>();
 
         [XmlArray]
         [XmlArrayItem("Profile")]
@@ -289,6 +293,17 @@ namespace avaness.PluginLoader.Config
         public bool RemovePluginData(string id)
         {
             return pluginSettings.Remove(id);
+        }
+
+
+        public void AddDevelopmentFolder(string folder)
+        {
+            pluginFolders.Add(folder);
+        }
+
+        public void RemoveDevelopmentFolder(string folder)
+        {
+            pluginFolders.Remove(folder);
         }
     }
 }

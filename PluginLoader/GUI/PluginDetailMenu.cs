@@ -70,7 +70,7 @@ namespace avaness.PluginLoader.GUI
                 MyGuiControlButton btnRemove = new MyGuiControlButton(text: new StringBuilder("Remove"), onButtonClick: (btn) =>
                 {
                     PluginConfig config = Main.Instance.Config;
-                    config.PluginFolders.Remove(folderPlugin.Id);
+                    config.RemoveDevelopmentFolder(folderPlugin.Id);
                     config.Save();
                     CloseScreen();
                     OnPluginRemoved?.Invoke(folderPlugin);

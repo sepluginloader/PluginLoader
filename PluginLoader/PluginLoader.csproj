@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
+    <Compile Include="Config\LocalFolderConfig.cs" />
     <Compile Include="Config\PluginConfig.cs" />
     <Compile Include="Config\PluginDataConfig.cs" />
     <Compile Include="Data\ObsoletePlugin.cs" />

@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Config
 {
+    [XmlInclude(typeof(LocalFolderConfig))]
     public abstract class PluginDataConfig
     {
         public string Id { get; set; }

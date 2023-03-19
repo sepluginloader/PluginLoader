@@ -240,11 +240,11 @@ namespace avaness.PluginLoader.GUI
             btn.PlayClickSound();
             LocalFolderPlugin.CreateNew((plugin) =>
             {
+                PluginConfig config = Main.Instance.Config;
+                config.AddDevelopmentFolder(plugin.Id);
+                config.Save();
                 OnPluginAdded?.Invoke(plugin);
                 plugins.Add(plugin);
-                PluginConfig config = Main.Instance.Config;
-                config.PluginFolders[plugin.Id] = plugin.FolderSettings;
-                config.Save();
                 RefreshPluginList();
             });
         }
