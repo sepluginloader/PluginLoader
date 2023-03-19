@@ -36,7 +36,7 @@ namespace avaness.PluginLoader.Data
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
         private string cacheDir, assemblyName;
-        private GitHubPluginConfig config = new GitHubPluginConfig();
+        private GitHubPluginConfig config;
 
         public GitHubPlugin()
         {
@@ -54,6 +54,10 @@ namespace avaness.PluginLoader.Data
                     return false;
                 }
 
+                this.config = new GitHubPluginConfig()
+                {
+                    Id = Id,
+                };
                 config = this.config;
                 return true;
             }

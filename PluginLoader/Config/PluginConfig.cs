@@ -53,7 +53,7 @@ namespace avaness.PluginLoader.Config
             set
             {
                 ProfileMap.Clear();
-                foreach (var profile in value)
+                foreach (var profile in value.Where(x => x?.Key != null))
                     ProfileMap[profile.Key] = profile;
             }
         }
@@ -69,8 +69,8 @@ namespace avaness.PluginLoader.Config
             set
             {
                 pluginSettings.Clear();
-                foreach (PluginDataConfig profile in value)
-                    pluginSettings[profile.Id] = profile;
+                foreach (PluginDataConfig config in value.Where(x => x?.Id != null))
+                    pluginSettings[config.Id] = config;
             }
         }
         private readonly Dictionary<string, PluginDataConfig> pluginSettings = new Dictionary<string, PluginDataConfig>();
