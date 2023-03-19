@@ -105,6 +105,7 @@
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
     <Compile Include="Config\PluginConfig.cs" />
+    <Compile Include="Config\PluginDataConfig.cs" />
     <Compile Include="Data\ObsoletePlugin.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\ISteamItem.cs" />

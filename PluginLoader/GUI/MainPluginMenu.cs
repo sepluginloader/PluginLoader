@@ -160,6 +160,8 @@ namespace avaness.PluginLoader.GUI
         private void OnPluginAdded(PluginData plugin)
         {
             Main.Instance.List.Add(plugin);
+            if (config.LoadPluginData(plugin))
+                config.Save();
             plugins.Add(plugin);
             enabledPlugins.Add(plugin.Id);
         }
@@ -167,6 +169,8 @@ namespace avaness.PluginLoader.GUI
         private void OnPluginRemoved(PluginData plugin)
         {
             Main.Instance.List.Remove(plugin.Id);
+            if (config.RemovePluginData(plugin.Id))
+                config.Save();
             enabledPlugins.Remove(plugin.Id);
             int index = plugins.FindIndex(x => x.Id == plugin.Id);
             if (index >= 0)

@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage.Utils;
 using VRage;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.Data
 {
@@ -79,6 +80,14 @@ namespace avaness.PluginLoader.Data
 
         protected PluginData()
         {
+        }
+
+        /// <summary>
+        /// Loads the user settings into the plugin. Returns true if the config was modified.
+        /// </summary>
+        public virtual bool LoadData(ref PluginDataConfig config, bool enabled)
+        {
+            return false;
         }
 
         public abstract Assembly GetAssembly();

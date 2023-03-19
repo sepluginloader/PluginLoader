@@ -57,6 +57,20 @@ namespace avaness.PluginLoader.Config
         [XmlIgnore]
         public readonly Dictionary<string, Profile> ProfileMap = new();
 
+        [XmlArray]
+        [XmlArrayItem("Config")]
+        public PluginDataConfig[] PluginSettings
+        {
+            get { return pluginSettings.Values.ToArray(); }
+            set
+            {
+                pluginSettings.Clear();
+                foreach (PluginDataConfig profile in value)
+                    pluginSettings[profile.Id] = profile;
+            }
+        }
+        private readonly Dictionary<string, PluginDataConfig> pluginSettings = new Dictionary<string, PluginDataConfig>();
+
         public string ListHash { get; set; }
 
         public int GameVersion { get; set; }
@@ -102,22 +116,21 @@ namespace avaness.PluginLoader.Config
             list = plugins;
 
             bool save = false;
-
-            // Remove plugins from config that no longer exist
             StringBuilder sb = new StringBuilder("Enabled plugins: ");
-            foreach (string id in enabledPlugins.Keys.ToArray())
+
+            foreach(PluginData plugin in plugins)
             {
-                if (plugins.TryGetPlugin(id, out PluginData plugin))
+                string id = plugin.Id;
+                bool enabled = IsEnabled(id);
+
+                if (enabled)
                 {
-                    enabledPlugins[id] = plugin;
                     sb.Append(id).Append(", ");
+                    enabledPlugins[id] = plugin;
                 }
-                else
-                {
-                    LogFile.WriteLine($"{id} was in the config but is no longer available");
-                    enabledPlugins.Remove(id);
+
+                if (LoadPluginData(plugin))
                     save = true;
-                }
             }
 
             if (enabledPlugins.Count > 0)
@@ -125,6 +138,20 @@ namespace avaness.PluginLoader.Config
             else
                 sb.Append("None");
             LogFile.WriteLine(sb.ToString());
+
+            foreach (KeyValuePair<string, PluginData> kv in enabledPlugins.Where(x => x.Value == null).ToArray())
+            {
+                LogFile.WriteLine($"{kv.Key} was in the config but is no longer available");
+                enabledPlugins.Remove(kv.Key);
+                save = true;
+            }
+
+            foreach (string id in pluginSettings.Keys.Where(x => !plugins.Contains(x)).ToArray())
+            {
+                LogFile.WriteLine($"{id} had settings in the config but is no longer available");
+                pluginSettings.Remove(id);
+                save = true;
+            }
 
             if (save)
                 Save();
@@ -208,13 +235,7 @@ namespace avaness.PluginLoader.Config
 
         public void SetEnabled(string id, bool enabled)
         {
-            if (IsEnabled(id) == enabled)
-                return;
-
-            if (enabled)
-                Enable(list[id]);
-            else
-                Disable(id);
+            SetEnabled(list[id], enabled);
         }
 
         public void SetEnabled(PluginData plugin, bool enabled)
@@ -227,6 +248,8 @@ namespace avaness.PluginLoader.Config
                 Enable(plugin);
             else
                 Disable(id);
+
+            LoadPluginData(plugin); // Must be called because the enabled state has changed
         }
 
         private void Enable(PluginData plugin)
@@ -241,5 +264,31 @@ namespace avaness.PluginLoader.Config
             enabledPlugins.Remove(id);
         }
 
+        /// <summary>
+        /// Loads the stored user data into the plugin. Returns true if the config was modified.
+        /// </summary>
+        public bool LoadPluginData(PluginData plugin)
+        {
+            PluginDataConfig settings;
+            if (!pluginSettings.TryGetValue(plugin.Id, out settings))
+                settings = null;
+            if (plugin.LoadData(ref settings, IsEnabled(plugin.Id)))
+            {
+                if (settings == null)
+                    pluginSettings.Remove(plugin.Id);
+                else
+                    pluginSettings[plugin.Id] = settings;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the stored user data for the plugin. Returns true if the config was modified.
+        /// </summary>
+        public bool RemovePluginData(string id)
+        {
+            return pluginSettings.Remove(id);
+        }
     }
 }
