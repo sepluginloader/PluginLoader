@@ -214,9 +214,9 @@ namespace avaness.PluginLoader.Config
                 try
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(PluginConfig));
-                    FileStream fs = File.OpenRead(path);
-                    PluginConfig config = (PluginConfig)serializer.Deserialize(fs);
-                    fs.Close();
+                    PluginConfig config;
+                    using (FileStream fs = File.OpenRead(path))
+                        config = (PluginConfig)serializer.Deserialize(fs);
                     config.filePath = path;
                     return config;
                 }
