@@ -8,6 +8,7 @@ using ProtoBuf;
 using System.Linq;
 using avaness.PluginLoader.Network;
 using System.IO.Compression;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
 {
@@ -203,11 +204,11 @@ namespace avaness.PluginLoader
 
             try
             {
-                using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit, out _))
+                using (Stream zipFileStream = GitHub.DownloadRepo(GitHub.listRepoName, GitHub.listRepoCommit))
                 using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                 {
                     XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-                    foreach (var entry in zipFile.Entries)
+                    foreach (ZipArchiveEntry entry in zipFile.Entries)
                     {
                         if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
                             continue;
@@ -222,7 +223,7 @@ namespace avaness.PluginLoader
                             }
                             catch (InvalidOperationException e)
                             {
-                                LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
+                                LogFile.WriteLine("An error occurred while reading " + entry.FullName + ": " + (e.InnerException ?? e));
                             }
                         }
                     }
@@ -303,11 +304,11 @@ namespace avaness.PluginLoader
                 }
             }
 
-            foreach(var folderConfig in config.PluginFolders.Values)
+            foreach (string folder in config.LocalFolderPlugins)
             {
-                if(folderConfig.Valid)
+                if (Directory.Exists(folder))
                 {
-                    LocalFolderPlugin local = new LocalFolderPlugin(folderConfig);
+                    LocalFolderPlugin local = new LocalFolderPlugin(folder);
                     plugins[local.Id] = local;
                 }
             }

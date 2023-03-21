@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage.Utils;
 using VRage;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.Data
 {
@@ -23,6 +24,7 @@ namespace avaness.PluginLoader.Data
     public abstract class PluginData : IEquatable<PluginData>
     {
         public abstract string Source { get; }
+        public abstract bool IsLocal { get; }
 
         [XmlIgnore]
         public Version Version { get; protected set; }
@@ -48,8 +50,6 @@ namespace avaness.PluginLoader.Data
                 }
             }
         }
-
-        [XmlIgnore] public bool IsLocal => Source == MyTexts.GetString(MyCommonTexts.Local);
 
         [ProtoMember(1)]
         public virtual string Id { get; set; }
@@ -80,6 +80,14 @@ namespace avaness.PluginLoader.Data
 
         protected PluginData()
         {
+        }
+
+        /// <summary>
+        /// Loads the user settings into the plugin. Returns true if the config was modified.
+        /// </summary>
+        public virtual bool LoadData(ref PluginDataConfig config, bool enabled)
+        {
+            return false;
         }
 
         public abstract Assembly GetAssembly();
@@ -115,8 +123,11 @@ namespace avaness.PluginLoader.Data
             {
                 string name = ToString();
                 LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
-                if (e is MissingMemberException)
+                if (e is MemberAccessException)
+                {
                     LogFile.WriteLine($"Is {name} up to date?");
+                    InvalidateCache();
+                }
 
                 if (e is NotSupportedException && e.Message.Contains("loadFromRemoteSources"))
                     Error($"The plugin {name} was blocked by windows. Please unblock the file in the dll file properties.");
@@ -226,14 +237,39 @@ namespace avaness.PluginLoader.Data
             return s;
         }
 
-        public virtual bool OpenContextMenu(MyGuiControlContextMenu menu)
+        public virtual bool UpdateEnabledPlugins(HashSet<string> enabledPlugins, bool enable)
         {
-            return false;
+            bool changed;
+
+            if (enable)
+            {
+                changed = enabledPlugins.Add(Id);
+
+                foreach (PluginData other in Group)
+                {
+                    if (!ReferenceEquals(other, this) && other.UpdateEnabledPlugins(enabledPlugins, false))
+                        changed = true;
+                }
+            }
+            else
+            {
+                changed = enabledPlugins.Remove(Id);
+            }
+
+            return changed;
         }
 
-        public virtual void ContextMenuClicked(MyGuiScreenPluginConfig screen, MyGuiControlContextMenu.EventArgs args)
+        /// <summary>
+        /// Invalidate any compiled assemblies on the disk
+        /// </summary>
+        public virtual void InvalidateCache()
         {
 
+        }
+
+        public virtual void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)
+        {
+            topControl = null;
         }
     }
 }

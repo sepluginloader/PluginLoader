@@ -14,6 +14,10 @@ using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
 using System.Net;
+using System.Runtime.ExceptionServices;
+using avaness.PluginLoader.Stats.Model;
+using ParallelTasks;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
 {
@@ -26,6 +30,7 @@ namespace avaness.PluginLoader
         public PluginList List { get; }
         public PluginConfig Config { get; }
         public SplashScreen Splash { get; }
+        public PluginStats Stats {get; private set; }
 
         /// <summary>
         /// True if a local plugin was loaded
@@ -52,21 +57,14 @@ namespace avaness.PluginLoader
 
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
-            
-            // Fix tls 1.2 not supported on Windows 7 - github.com is tls 1.2 only
-            try
-            {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-            }
-            catch (NotSupportedException e)
-            {
-                LogFile.WriteLine("An error occurred while setting up networking, web requests will probably fail: " + e);
-            }
+
+            Network.GitHub.Init();
 
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
+            AppDomain.CurrentDomain.FirstChanceException += OnException;
 
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
@@ -80,6 +78,8 @@ namespace avaness.PluginLoader
                 ClearGitHubCache(pluginsDir);
 
             StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
+            UpdatePlayerStats();
+            PlayerConsent.OnConsentChanged += OnConsentChanged;
 
             Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
@@ -94,11 +94,8 @@ namespace avaness.PluginLoader
 
             Splash.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
-            foreach (string id in Config)
+            foreach (PluginData data in Config.EnabledPlugins)
             {
-                PluginData data = List[id];
-                if (data is GitHubPlugin github)
-                    github.Init(pluginsDir);
                 if (PluginInstance.TryGet(data, out PluginInstance p))
                 {
                     plugins.Add(p);
@@ -120,21 +117,38 @@ namespace avaness.PluginLoader
             Splash = null;
         }
 
+        private void OnException(object sender, FirstChanceExceptionEventArgs e)
+        {
+            try
+            {
+                if (e.Exception is MemberAccessException accessException)
+                {
+                    foreach (PluginInstance plugin in plugins)
+                    {
+                        if (plugin.ContainsExceptionSite(accessException))
+                            return;
+                    }
+                }
+            }
+            catch { } // Do NOT throw exceptions inside this method!
+        }
+        
+        public void UpdatePlayerStats()
+        {
+            LogFile.WriteLine("Downloading user statistics", false);
+            Parallel.Start(() =>
+            {
+                Stats = StatsClient.DownloadStats();
+            });
+        }
+
         private void ClearGitHubCache(string pluginsDir)
         {
             string pluginCache = Path.Combine(pluginsDir, "GitHub");
             if (!Directory.Exists(pluginCache))
                 return;
 
-            bool hasGitHub = false;
-            foreach(string id in Config.EnabledPlugins)
-            {
-                if(List.TryGetPlugin(id, out PluginData pluginData) && pluginData is GitHubPlugin)
-                {
-                    hasGitHub = true;
-                    break;
-                }
-            }
+            bool hasGitHub = Config.EnabledPlugins.Any(x => x is GitHubPlugin);
 
             if(hasGitHub)
             {
@@ -183,7 +197,7 @@ namespace avaness.PluginLoader
         }
 
         // Skip local plugins, keep only enabled ones
-        public string[] TrackablePluginIds => Config.EnabledPlugins.Where(id => !List[id].IsLocal).ToArray();
+        public string[] TrackablePluginIds => Config.EnabledPlugins.Where(x => !x.IsLocal).Select(x => x.Id).ToArray();
 
         public void RegisterComponents()
         {
@@ -254,11 +268,16 @@ namespace avaness.PluginLoader
                 p.Dispose();
             plugins.Clear();
 
+            PlayerConsent.OnConsentChanged -= OnConsentChanged;
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
             LogFile.Dispose();
             Instance = null;
         }
 
+        private void OnConsentChanged()
+        {
+            UpdatePlayerStats();
+        }
 
         private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {

@@ -360,3 +360,5 @@ MigrationBackup/
 
 # JetBrains Rider project files
 .idea/
+
+.editorconfig

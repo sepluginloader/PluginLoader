@@ -28,6 +28,22 @@ namespace avaness.PluginLoader
             this.mainType = mainType;
         }
 
+        /// <summary>
+        /// To be called when a <see langword="MemberAccessException"/> is thrown. Returns true if the exception was thrown from this plugin.
+        /// </summary>
+        public bool ContainsExceptionSite(MemberAccessException exception)
+        {
+            // Note: this wont find exceptions thrown within transpiled methods or some kinds of patches
+            Assembly a = exception.TargetSite?.DeclaringType?.Assembly;
+            if (a != null && a == mainAssembly)
+            {
+                data.InvalidateCache();
+                ThrowError($"ERROR: Plugin {data} threw an exception: {exception}");
+                return true;
+            }
+            return false;
+        }
+
         public bool Instantiate()
         {
             try
