@@ -314,8 +314,27 @@ namespace avaness.PluginLoader.GUI
                 CanPlaySoundOnMouseOver = false,
             };
             layout.AddWithSize(description, MyAlignH.Left, MyAlignV.Top, 2, 0, 1, 2);
-            if (!string.IsNullOrEmpty(plugin.Tooltip))
+            if (string.IsNullOrEmpty(plugin.Tooltip))
+            {
+                string shortDescription = plugin.Description;
+                if(!string.IsNullOrEmpty(shortDescription))
+                {
+                    shortDescription = shortDescription.TrimStart();
+                    int firstEnter = shortDescription.IndexOf('\n');
+                    if (firstEnter < 0)
+                        firstEnter = shortDescription.Length - 1;
+                    if (firstEnter > 120)
+                        shortDescription = shortDescription.Substring(0, 117) + "...";
+                    else
+                        shortDescription = shortDescription.Substring(0, firstEnter + 1);
+                    description.AppendText(shortDescription);
+                }
+            }
+            else
+            {
                 description.AppendText(plugin.Tooltip);
+            }
+
 
             if (!plugin.IsLocal)
             {
