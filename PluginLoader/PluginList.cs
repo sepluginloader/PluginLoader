@@ -208,7 +208,7 @@ namespace avaness.PluginLoader
                 using (ZipArchive zipFile = new ZipArchive(zipFileStream))
                 {
                     XmlSerializer xml = new XmlSerializer(typeof(PluginData));
-                    foreach (var entry in zipFile.Entries)
+                    foreach (ZipArchiveEntry entry in zipFile.Entries)
                     {
                         if (!entry.FullName.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
                             continue;
@@ -223,7 +223,7 @@ namespace avaness.PluginLoader
                             }
                             catch (InvalidOperationException e)
                             {
-                                LogFile.WriteLine("An error occurred while reading the plugin xml: " + (e.InnerException ?? e));
+                                LogFile.WriteLine("An error occurred while reading " + entry.FullName + ": " + (e.InnerException ?? e));
                             }
                         }
                     }
