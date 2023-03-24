@@ -2,6 +2,7 @@
 using Sandbox;
 using System.Windows.Forms;
 using VRage.Input;
+using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.Patch
 {

@@ -20,10 +20,8 @@ namespace avaness.PluginLoader.Patch
                 HashSet<ulong> currentMods = new HashSet<ulong>(mods.Select(x => x.PublishedFileId));
                 List<MyObjectBuilder_Checkpoint.ModItem> newMods = new List<MyObjectBuilder_Checkpoint.ModItem>(mods);
 
-                PluginList list = Main.Instance.List;
-                foreach (string id in Main.Instance.Config.EnabledPlugins)
+                foreach (PluginData data in Main.Instance.Config.EnabledPlugins)
                 {
-                    PluginData data = list[id];
                     if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)
                     {
                         LogFile.WriteLine("Loading client mod definitions for " + mod.WorkshopId);

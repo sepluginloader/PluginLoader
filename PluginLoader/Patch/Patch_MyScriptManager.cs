@@ -29,10 +29,8 @@ namespace avaness.PluginLoader.Patch
                 else
                     currentMods = new HashSet<ulong>();
 
-                PluginList list = Main.Instance.List;
-                foreach (string id in Main.Instance.Config.EnabledPlugins)
+                foreach (PluginData data in Main.Instance.Config.EnabledPlugins)
                 {
-                    PluginData data = list[id];
                     if (data is ModPlugin mod && !currentMods.Contains(mod.WorkshopId) && mod.Exists)
                     {
                         LogFile.WriteLine("Loading client mod scripts for " + mod.WorkshopId);

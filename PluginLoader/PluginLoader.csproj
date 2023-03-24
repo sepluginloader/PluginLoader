@@ -128,16 +128,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\RoslynReferences.cs" />
+    <Compile Include="Config\GitHubPluginConfig.cs" />
+    <Compile Include="Config\LocalFolderConfig.cs" />
+    <Compile Include="Config\PluginConfig.cs" />
+    <Compile Include="Config\PluginDataConfig.cs" />
+    <Compile Include="Data\ObsoletePlugin.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\ISteamItem.cs" />
     <Compile Include="Data\LocalFolderPlugin.cs" />
     <Compile Include="Data\LocalPlugin.cs" />
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\ModPlugin.cs" />
-    <Compile Include="GUI\PluginDetails.cs" />
-    <Compile Include="GUI\GuiControls\RatingControl.cs" />
+    <Compile Include="GUI\AddPluginMenu.cs" />
+    <Compile Include="GUI\GuiControls\ParentButton.cs" />
+    <Compile Include="GUI\MainPluginMenu.cs" />
+    <Compile Include="GUI\PluginDetailMenu.cs" />
     <Compile Include="GUI\PlayerConsent.cs" />
-    <Compile Include="GUI\ProfilesDialog.cs" />
+    <Compile Include="GUI\PluginScreen.cs" />
+    <Compile Include="GUI\ProfilesMenu.cs" />
+    <Compile Include="GUI\TextInputDialog.cs" />
     <Compile Include="GUI\SplashScreen.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -151,10 +160,8 @@
     <Compile Include="Patch\Patch_IngameRestart.cs" />
     <Compile Include="Patch\Patch_MyDefinitionManager.cs" />
     <Compile Include="Patch\Patch_MyScriptManager.cs" />
-    <Compile Include="PluginConfig.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Main.cs" />
-    <Compile Include="GUI\MyGuiScreenPluginConfig.cs" />
     <Compile Include="Data\PluginData.cs" />
     <Compile Include="PluginInstance.cs" />
     <Compile Include="Profile.cs" />
@@ -168,10 +175,6 @@
     <Compile Include="Stats\Model\VoteRequest.cs" />
     <Compile Include="Stats\StatsClient.cs" />
     <Compile Include="SteamAPI.cs" />
-    <Compile Include="GUI\ConfirmationDialog.cs" />
-    <Compile Include="GUI\ItemView.cs" />
-    <Compile Include="GUI\TableDialogBase.cs" />
-    <Compile Include="GUI\NameDialog.cs" />
     <Compile Include="Tools\SimpleHttpClient.cs" />
     <Compile Include="Tools\Tools.cs" />
   </ItemGroup>
