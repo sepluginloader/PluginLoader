@@ -18,7 +18,6 @@ using avaness.PluginLoader.Network;
 using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using avaness.PluginLoader.Stats.Model;
-using ParallelTasks;
 using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
@@ -126,9 +125,10 @@ namespace avaness.PluginLoader
 
         private async Task DownloadNuGetPackages()
         {
+            LogFile.WriteLine("Installing NuGet packages");
             NuGetClient client = NuGet;
             client.Init();
-            //await client.InstallPackage("OVRSharp", "1.2.0");
+            await client.InstallPackage("OVRSharp", "1.2.0");
             // TODO: Install packages needed by enabled plugins
         }
         
@@ -151,7 +151,7 @@ namespace avaness.PluginLoader
         public void UpdatePlayerStats()
         {
             LogFile.WriteLine("Downloading user statistics", false);
-            Parallel.Start(() =>
+            ParallelTasks.Parallel.Start(() =>
             {
                 Stats = StatsClient.DownloadStats();
             });

@@ -56,6 +56,7 @@ namespace avaness.PluginLoader.Network
 
         public Task InstallPackage(string id, string version, string framework = "net48")
         {
+            LogFile.WriteLine("Installing " + id + " " + version);
             return InstallPackage(new PackageIdentity(id, NuGetVersion.Parse(version)), framework);
         }
 
@@ -160,14 +161,7 @@ namespace avaness.PluginLoader.Network
                 string inputFile = Path.Combine(packagePath, item);
                 string outputFile = Path.Combine(destination, Path.GetFileName(item));
                 if (!File.Exists(outputFile) || !FilesAreEqual_Hash(inputFile, outputFile))
-                {
                     File.Copy(inputFile, outputFile, true);
-                    Console.WriteLine("Copied " + item);
-                }
-                else
-                {
-                    Console.WriteLine("Skipped " + item);
-                }
             }
         }
 
