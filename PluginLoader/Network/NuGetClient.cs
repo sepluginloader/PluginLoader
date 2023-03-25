@@ -56,7 +56,7 @@ namespace avaness.PluginLoader.Network
 
         public Task InstallPackage(string id, string version, string framework = "net48")
         {
-            LogFile.WriteLine("Installing " + id + " " + version);
+            LogFile.WriteGameLog("Installing " + id + " " + version);
             return InstallPackage(new PackageIdentity(id, NuGetVersion.Parse(version)), framework);
         }
 
