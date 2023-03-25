@@ -41,7 +41,8 @@ namespace avaness.PluginLoader.Compiler
                 references: RoslynReferences.EnumerateAllReferences(),
                 options: new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary, 
-                    optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release));
+                    optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release,
+                    allowUnsafe: true));
 
             using (MemoryStream pdb = new MemoryStream())
             using (MemoryStream ms = new MemoryStream())
