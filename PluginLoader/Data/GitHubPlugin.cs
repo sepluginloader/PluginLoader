@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Data
@@ -33,6 +34,16 @@ namespace avaness.PluginLoader.Data
         [XmlArray]
         [XmlArrayItem("Version")]
         public Branch[] AlternateVersions { get; set; }
+
+        [ProtoMember(4)]
+        [XmlArray]
+        [XmlArrayItem("Directory")]
+        public string[] AssetFolders { get; set; }
+
+        [ProtoMember(5)]
+        [XmlArray]
+        [XmlArrayItem("Package")]
+        public NuGetPackage[] NuGetReferences { get; set; }
 
         private const string pluginFile = "plugin.dll";
         private const string commitHashFile = "commit.sha1";
@@ -88,27 +99,30 @@ namespace avaness.PluginLoader.Data
             if (nameArgs.Length < 2)
                 throw new Exception("Invalid GitHub name: " + Id);
 
-            if(SourceDirectories != null)
+            CleanPaths(SourceDirectories);
+            CleanPaths(AssetFolders);
+
+            assemblyName = MakeSafeString(nameArgs[1]);
+            cacheDir = Path.Combine(LoaderTools.PluginsDir, "GitHub", nameArgs[0], nameArgs[1]);
+        }
+
+        private void CleanPaths(string[] paths)
+        {
+            if (paths != null)
             {
-                for (int i = SourceDirectories.Length - 1; i >= 0; i--)
+                for (int i = paths.Length - 1; i >= 0; i--)
                 {
-                    string path = SourceDirectories[i].Replace('\\', '/').TrimStart('/');
-                    
-                    if(path.Length == 0)
-                    {
-                        SourceDirectories.RemoveAtFast(i);
+                    string path = paths[i].Replace('\\', '/').TrimStart('/');
+
+                    if (path.Length == 0)
                         continue;
-                    }
 
                     if (path[path.Length - 1] != '/')
                         path += '/';
 
-                    SourceDirectories[i] = path;
+                    paths[i] = path;
                 }
             }
-
-            assemblyName = MakeSafeString(nameArgs[1]);
-            cacheDir = Path.Combine(LoaderTools.PluginsDir, "GitHub", nameArgs[0], nameArgs[1]);
         }
 
         private string MakeSafeString(string s)
@@ -131,12 +145,14 @@ namespace avaness.PluginLoader.Data
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
+            InstallReferences();
+
             Assembly a;
 
             string dllFile = Path.Combine(cacheDir, pluginFile);
             string commitFile = Path.Combine(cacheDir, commitHashFile);
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
-            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != selectedCommit || Main.Instance.Config.GameVersionChanged)
+            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != selectedCommit || Main.Instance.Config.GameVersionChanged || !HasAssetFolders())
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
@@ -154,6 +170,32 @@ namespace avaness.PluginLoader.Data
 
             Version = a.GetName().Version;
             return a;
+        }
+
+        private void InstallReferences()
+        {
+            if (NuGetReferences == null || NuGetReferences.Length == 0)
+                return;
+
+            Task.Run(InstallReferencesAsync).GetAwaiter().GetResult();
+        }
+
+        private async Task InstallReferencesAsync()
+        {
+            foreach (NuGetPackage reference in NuGetReferences)
+                await Main.Instance.NuGet.InstallPackage(reference.Name, reference.Version);
+        }
+
+        private bool HasAssetFolders()
+        {
+            if (AssetFolders == null || AssetFolders.Length == 0)
+                return true;
+            return AssetFolders.All(x => Directory.Exists(GetAssetFolderPath(x)));
+        }
+
+        private string GetAssetFolderPath(string assetFolder)
+        {
+            return Path.Combine(cacheDir, Path.GetFileName(Path.GetDirectoryName(assetFolder)));
         }
 
         private Branch GetSelectedVersion()
@@ -183,13 +225,42 @@ namespace avaness.PluginLoader.Data
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)
         {
-            if (AllowedZipPath(entry.FullName))
+            string path = RemoveRoot(entry.FullName);
+            if (AllowedZipPath(path))
             {
                 using (Stream entryStream = entry.Open())
                 {
                     compiler.Load(entryStream, entry.FullName);
                 }
             }
+            if (IsAssetZipPath(path, out string assetFilePath))
+            {
+                string newFile = Path.Combine(cacheDir, assetFilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
+                using (Stream entryStream = entry.Open())
+                using (FileStream file = File.Create(newFile))
+                {
+                    entryStream.CopyTo(file);
+                }
+            }
+        }
+
+        private bool IsAssetZipPath(string path, out string assetFilePath)
+        {
+            assetFilePath = null;
+
+            if (AssetFolders == null || AssetFolders.Length == 0 || path.EndsWith("/"))
+                return false;
+
+            foreach (string dir in AssetFolders)
+            {
+                if (path.StartsWith(dir, StringComparison.Ordinal) && path.Length > (dir.Length + 1))
+                {
+                    assetFilePath = Path.Combine(GetAssetFolderPath(dir), path.Substring(dir.Length).TrimStart('/'));
+                    return true;
+                }
+            }
+            return false;
         }
 
         private bool AllowedZipPath(string path)
@@ -199,8 +270,6 @@ namespace avaness.PluginLoader.Data
 
             if (SourceDirectories == null || SourceDirectories.Length == 0)
                 return true;
-
-            path = RemoveRoot(path); // Make the base of the path the root of the repository
 
             foreach(string dir in SourceDirectories)
             {
@@ -303,6 +372,17 @@ namespace avaness.PluginLoader.Data
             [ProtoMember(2)]
             public string Commit { get; set; }
 
+        }
+
+        [ProtoContract]
+        public class NuGetPackage
+        {
+
+            [ProtoMember(1)]
+            public string Name { get; set; }
+
+            [ProtoMember(2)]
+            public string Version { get; set; }
         }
     }
 }

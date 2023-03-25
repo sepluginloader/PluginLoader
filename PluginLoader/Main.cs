@@ -61,7 +61,8 @@ namespace avaness.PluginLoader
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
 
-            Network.GitHub.Init();
+            NuGet.Init();
+            GitHub.Init();
 
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
@@ -69,8 +70,6 @@ namespace avaness.PluginLoader
             AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
             AppDomain.CurrentDomain.FirstChanceException += OnException;
 
-            Splash.SetText("Downloading NuGet packages...");
-            Task.Run(DownloadNuGetPackages).GetAwaiter().GetResult();
 
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
@@ -121,15 +120,7 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
-        }
 
-        private async Task DownloadNuGetPackages()
-        {
-            LogFile.WriteLine("Installing NuGet packages");
-            NuGetClient client = NuGet;
-            client.Init();
-            await client.InstallPackage("OVRSharp", "1.2.0");
-            // TODO: Install packages needed by enabled plugins
         }
         
         private void OnException(object sender, FirstChanceExceptionEventArgs e)
