@@ -6,6 +6,7 @@ using System.Reflection;
 using HarmonyLib;
 using VRage.Game.Components;
 using VRage.Plugins;
+using System.IO;
 
 namespace avaness.PluginLoader
 {
@@ -50,12 +51,14 @@ namespace avaness.PluginLoader
             {
                 plugin = (IPlugin)Activator.CreateInstance(mainType);
                 inputPlugin = plugin as IHandleInputPlugin;
+                LoadAssets();
             }
             catch (Exception e) 
             {
                 ThrowError($"Failed to instantiate {data} because of an error: {e}");
                 return false;
             }
+
 
             try
             {
@@ -67,6 +70,18 @@ namespace avaness.PluginLoader
                 openConfigDialog = null;
             }
             return true;
+        }
+
+        private void LoadAssets()
+        {
+            string assetFolder = data.GetAssetPath();
+            if (string.IsNullOrEmpty(assetFolder) || !Directory.Exists(assetFolder))
+                return;
+
+            LogFile.WriteLine($"Loading assets for {data} from {assetFolder}");
+            MethodInfo loadAssets = AccessTools.DeclaredMethod(mainType, "LoadAssets", new[] { typeof(string) });
+            if (loadAssets != null)
+                loadAssets.Invoke(plugin, new[] { assetFolder });
         }
 
         public void OpenConfig()

@@ -17,7 +17,7 @@ using System.Xml.Serialization;
 namespace avaness.PluginLoader.Data
 {
     [ProtoContract]
-    public class GitHubPlugin : PluginData
+    public partial class GitHubPlugin : PluginData
     {
         public override string Source => "GitHub";
         public override bool IsLocal => false;
@@ -36,19 +36,16 @@ namespace avaness.PluginLoader.Data
         public Branch[] AlternateVersions { get; set; }
 
         [ProtoMember(4)]
-        [XmlArray]
-        [XmlArrayItem("Directory")]
-        public string[] AssetFolders { get; set; }
+        public string AssetFolder { get; set; }
 
         [ProtoMember(5)]
         [XmlArray]
         [XmlArrayItem("Package")]
         public NuGetPackage[] NuGetReferences { get; set; }
 
-        private const string pluginFile = "plugin.dll";
-        private const string commitHashFile = "commit.sha1";
-        private string cacheDir, assemblyName;
+        private string assemblyName;
         private GitHubPluginConfig config;
+        private CacheManifest manifest;
 
         public GitHubPlugin()
         {
@@ -100,10 +97,16 @@ namespace avaness.PluginLoader.Data
                 throw new Exception("Invalid GitHub name: " + Id);
 
             CleanPaths(SourceDirectories);
-            CleanPaths(AssetFolders);
+
+            if(!string.IsNullOrWhiteSpace(AssetFolder))
+            {
+                AssetFolder = AssetFolder.Replace('\\', '/').TrimStart('/');
+                if (AssetFolder.Length > 0 && AssetFolder[AssetFolder.Length - 1] != '/')
+                    AssetFolder += '/';
+            }
 
             assemblyName = MakeSafeString(nameArgs[1]);
-            cacheDir = Path.Combine(LoaderTools.PluginsDir, "GitHub", nameArgs[0], nameArgs[1]);
+            manifest = CacheManifest.Load(nameArgs[0], nameArgs[1]);
         }
 
         private void CleanPaths(string[] paths)
@@ -142,61 +145,48 @@ namespace avaness.PluginLoader.Data
         {
             InitPaths();
 
-            if (!Directory.Exists(cacheDir))
-                Directory.CreateDirectory(cacheDir);
-
-            InstallReferences();
+            //InstallReferences();
 
             Assembly a;
 
-            string dllFile = Path.Combine(cacheDir, pluginFile);
-            string commitFile = Path.Combine(cacheDir, commitHashFile);
+            int gameVersion = Main.Instance.Config.GameVersion;
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
-            if (!File.Exists(dllFile) || !File.Exists(commitFile) || File.ReadAllText(commitFile) != selectedCommit || Main.Instance.Config.GameVersionChanged || !HasAssetFolders())
+            if (!manifest.IsCacheValid(selectedCommit, gameVersion))
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
+
+                manifest.GameVersion = gameVersion;
+                manifest.Commit = selectedCommit;
+                manifest.ClearAssets();
                 byte[] data = CompileFromSource(selectedCommit, x => lbl.SetBarValue(x));
-                File.WriteAllBytes(dllFile, data);
-                File.WriteAllText(commitFile, selectedCommit);
+                File.WriteAllBytes(manifest.DllFile, data);
+                manifest.DeleteUnknownFiles();
+                manifest.Save();
+
                 Status = PluginStatus.Updated;
                 lbl.SetText($"Compiled '{FriendlyName}'");
                 a = Assembly.Load(data);
             }
             else
             {
-                a = Assembly.LoadFile(dllFile);
+                manifest.DeleteUnknownFiles();
+                a = Assembly.LoadFile(manifest.DllFile);
             }
 
             Version = a.GetName().Version;
             return a;
         }
 
-        private void InstallReferences()
+        public void InstallReferences()
         {
             if (NuGetReferences == null || NuGetReferences.Length == 0)
                 return;
 
-            Task.Run(InstallReferencesAsync).GetAwaiter().GetResult();
-        }
-
-        private async Task InstallReferencesAsync()
-        {
             foreach (NuGetPackage reference in NuGetReferences)
-                await Main.Instance.NuGet.InstallPackage(reference.Name, reference.Version);
+                reference.Install();
         }
 
-        private bool HasAssetFolders()
-        {
-            if (AssetFolders == null || AssetFolders.Length == 0)
-                return true;
-            return AssetFolders.All(x => Directory.Exists(GetAssetFolderPath(x)));
-        }
-
-        private string GetAssetFolderPath(string assetFolder)
-        {
-            return Path.Combine(cacheDir, Path.GetFileName(Path.GetDirectoryName(assetFolder)));
-        }
 
         private Branch GetSelectedVersion()
         {
@@ -235,12 +225,13 @@ namespace avaness.PluginLoader.Data
             }
             if (IsAssetZipPath(path, out string assetFilePath))
             {
-                string newFile = Path.Combine(cacheDir, assetFilePath);
-                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
-                using (Stream entryStream = entry.Open())
-                using (FileStream file = File.Create(newFile))
+                AssetFile newFile = manifest.CreateAsset(assetFilePath);
+                if(!manifest.IsAssetValid(newFile))
                 {
-                    entryStream.CopyTo(file);
+                    using (Stream entryStream = entry.Open())
+                    {
+                        manifest.SaveAsset(newFile, entryStream);
+                    }
                 }
             }
         }
@@ -249,16 +240,13 @@ namespace avaness.PluginLoader.Data
         {
             assetFilePath = null;
 
-            if (AssetFolders == null || AssetFolders.Length == 0 || path.EndsWith("/"))
+            if (path.EndsWith("/") || string.IsNullOrEmpty(AssetFolder))
                 return false;
 
-            foreach (string dir in AssetFolders)
+            if (path.StartsWith(AssetFolder, StringComparison.Ordinal) && path.Length > (AssetFolder.Length + 1))
             {
-                if (path.StartsWith(dir, StringComparison.Ordinal) && path.Length > (dir.Length + 1))
-                {
-                    assetFilePath = Path.Combine(GetAssetFolderPath(dir), path.Substring(dir.Length).TrimStart('/'));
-                    return true;
-                }
+                assetFilePath = path.Substring(AssetFolder.Length).TrimStart('/');
+                return true;
             }
             return false;
         }
@@ -297,9 +285,7 @@ namespace avaness.PluginLoader.Data
         {
             try
             {
-                string commitFile = Path.Combine(cacheDir, commitHashFile);
-                if (File.Exists(commitFile))
-                    File.Delete(commitFile);
+                manifest.Invalidate();
                 LogFile.WriteLine($"Cache for GitHub plugin {Id} was invalidated, it will need to be compiled again at next game start");
             }
             catch (Exception e)
@@ -363,6 +349,13 @@ namespace avaness.PluginLoader.Data
             topControl = lblVersion;
         }
 
+        public override string GetAssetPath()
+        {
+            if (string.IsNullOrEmpty(AssetFolder))
+                return null;
+            return manifest.AssetFolder;
+        }
+
         [ProtoContract]
         public class Branch
         {
@@ -372,17 +365,10 @@ namespace avaness.PluginLoader.Data
             [ProtoMember(2)]
             public string Commit { get; set; }
 
-        }
+            public Branch()
+            {
 
-        [ProtoContract]
-        public class NuGetPackage
-        {
-
-            [ProtoMember(1)]
-            public string Name { get; set; }
-
-            [ProtoMember(2)]
-            public string Version { get; set; }
+            }
         }
     }
 }

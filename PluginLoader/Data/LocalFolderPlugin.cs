@@ -26,6 +26,7 @@ namespace avaness.PluginLoader.Data
         public override string Source => "Development Folder";
         public override bool IsLocal => true;
         private string[] sourceDirectories;
+        private GitHubPlugin github;
 
         public LocalFolderConfig FolderSettings { get; private set; }
 
@@ -213,6 +214,7 @@ namespace avaness.PluginLoader.Data
                     Description = github.Description;
                     sourceDirectories = github.SourceDirectories;
                     FolderSettings.DataFile = file;
+                    this.github = github;
                 }
             }
             catch (Exception e)
@@ -278,6 +280,13 @@ namespace avaness.PluginLoader.Data
             screen.PositionAbove(btnRemove, releaseDropdown, MyAlignH.Left);
             screen.Controls.Add(releaseDropdown);
             topControl = releaseDropdown;
+        }
+
+        public override string GetAssetPath()
+        {
+            if (string.IsNullOrEmpty(github.AssetFolder))
+                return null;
+            return Path.Combine(Id, github.AssetFolder);
         }
     }
 }

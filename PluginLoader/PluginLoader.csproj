@@ -132,6 +132,8 @@
     <Compile Include="Config\LocalFolderConfig.cs" />
     <Compile Include="Config\PluginConfig.cs" />
     <Compile Include="Config\PluginDataConfig.cs" />
+    <Compile Include="Data\GitHubPlugin.AssetFile.cs" />
+    <Compile Include="Data\GitHubPlugin.CacheManifest.cs" />
     <Compile Include="Data\ObsoletePlugin.cs" />
     <Compile Include="Data\GitHubPlugin.cs" />
     <Compile Include="Data\ISteamItem.cs" />
@@ -154,6 +156,7 @@
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Network\NuGetClient.cs" />
     <Compile Include="Network\NuGetLogger.cs" />
+    <Compile Include="Network\NuGetPackage.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />

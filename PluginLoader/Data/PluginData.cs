@@ -271,5 +271,10 @@ namespace avaness.PluginLoader.Data
         {
             topControl = null;
         }
+
+        public virtual string GetAssetPath()
+        {
+            return null;
+        }
     }
 }
