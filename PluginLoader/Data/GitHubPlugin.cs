@@ -151,7 +151,7 @@ namespace avaness.PluginLoader.Data
 
             int gameVersion = Main.Instance.Config.GameVersion;
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
-            if (!manifest.IsCacheValid(selectedCommit, gameVersion))
+            if (!manifest.IsCacheValid(selectedCommit, gameVersion, !string.IsNullOrWhiteSpace(AssetFolder)))
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");

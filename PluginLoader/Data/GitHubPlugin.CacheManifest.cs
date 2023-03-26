@@ -13,6 +13,7 @@ namespace avaness.PluginLoader.Data
         {
             private const string pluginFile = "plugin.dll";
             private const string manifestFile = "manifest.xml";
+            private const string commitFile = "commit.sha1";
 
             private string cacheDir;
             private string assetDir;
@@ -48,6 +49,22 @@ namespace avaness.PluginLoader.Data
                 this.cacheDir = cacheDir;
                 assetDir = Path.Combine(cacheDir, "Assets");
                 DllFile = Path.Combine(cacheDir, pluginFile);
+
+                // Backwards compatibility
+                string oldCommitFile = Path.Combine(cacheDir, commitFile);
+                if(File.Exists(oldCommitFile))
+                {
+                    try
+                    {
+                        Commit = File.ReadAllText(oldCommitFile).Trim();
+                        File.Delete(oldCommitFile);
+                        Save();
+                    }
+                    catch (Exception e)
+                    {
+                        LogFile.WriteLine("Error while reading old commit file: " + e);
+                    }
+                }
             }
 
             public static CacheManifest Load (string userName, string repoName)
@@ -81,12 +98,15 @@ namespace avaness.PluginLoader.Data
                 return manifest;
             }
 
-            public bool IsCacheValid(string currentCommit, int currentGameVersion)
+            public bool IsCacheValid(string currentCommit, int currentGameVersion, bool requiresAssets)
             {
-                if(!File.Exists(DllFile) || Commit != currentCommit || GameVersion == 0)
+                if(!File.Exists(DllFile) || Commit != currentCommit)
                     return false;
 
-                if (currentGameVersion != 0 && GameVersion != currentGameVersion)
+                if (GameVersion != 0 && currentGameVersion != 0 && GameVersion != currentGameVersion)
+                    return false;
+
+                if (requiresAssets && assetFiles.Count == 0)
                     return false;
 
                 foreach (AssetFile file in assetFiles.Values)
@@ -139,7 +159,7 @@ namespace avaness.PluginLoader.Data
 
             public void DeleteUnknownFiles()
             {
-                if (!Directory.Exists(cacheDir))
+                if (!Directory.Exists(assetDir))
                     return;
 
                 foreach(string file in Directory.EnumerateFiles(assetDir, "*", SearchOption.AllDirectories))

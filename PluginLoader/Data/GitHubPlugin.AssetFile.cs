@@ -59,6 +59,8 @@ namespace avaness.PluginLoader.Data
                 {
                     stream.CopyTo(file);
                 }
+
+                GetFileInfo(assetFolder);
             }
 
         }
