@@ -8,4 +8,4 @@ A tool to load plugins for Space Engineers automatically.
 3. Add the Plugin Loader to the [game launch options](https://support.steampowered.com/kb_article.php?ref=1040-JWMT-2947) using the following string: `-plugin PluginLoader.dll`
 
 #### Game Version 1.202 and above
-Install the ]game launcher](https://github.com/sepluginloader/SpaceEngineersLauncher)
+Install the [game launcher](https://github.com/sepluginloader/SpaceEngineersLauncher)
