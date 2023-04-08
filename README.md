@@ -9,4 +9,4 @@ It is recommended to wait to install Plugin Loader until after the Automatons up
 3. The extracted files can now be placed in the game Bin64 folder. You can find the Bin64 folder by right clicking on Space Engineers and selecting Properties. Then under the Local Files tab, select Browse and navigate to the Bin64 folder. 
 4. Add the Plugin Loader to the [game launch options](https://support.steampowered.com/kb_article.php?ref=1040-JWMT-2947) using the following string: `-plugin PluginLoader.dll`
 
-After the game is released, the new [game launcher](https://github.com/sepluginloader/SpaceEngineersLauncher) will be needed instead of any game launch options.
+After the Automatons update is released, the new [game launcher](https://github.com/sepluginloader/SpaceEngineersLauncher) will be needed instead of any game launch options.
