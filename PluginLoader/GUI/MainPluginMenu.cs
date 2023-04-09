@@ -282,8 +282,8 @@ namespace avaness.PluginLoader.GUI
                 {
                     0.45f,
                     0.2f,
-                    0.2f,
-                    0.15f,
+                    0.175f,
+                    0.175f,
                 });
                 list.SetColumnName(0, new StringBuilder("Name"));
                 list.SetColumnComparison(0, CellTextComparison);
