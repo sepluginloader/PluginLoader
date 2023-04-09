@@ -145,8 +145,6 @@ namespace avaness.PluginLoader.Data
         {
             InitPaths();
 
-            //InstallReferences();
-
             Assembly a;
 
             int gameVersion = Main.Instance.Config.GameVersion;
@@ -178,16 +176,6 @@ namespace avaness.PluginLoader.Data
             return a;
         }
 
-        public void InstallReferences()
-        {
-            if (NuGetReferences == null || NuGetReferences.Length == 0)
-                return;
-
-            foreach (NuGetPackage reference in NuGetReferences)
-                reference.Install();
-        }
-
-
         private Branch GetSelectedVersion()
         {
             if (config == null || string.IsNullOrWhiteSpace(config.SelectedVersion))
@@ -197,7 +185,7 @@ namespace avaness.PluginLoader.Data
 
         public byte[] CompileFromSource(string commit, Action<float> callback = null)
         {
-            RoslynCompiler compiler = new RoslynCompiler();
+            RoslynCompiler compiler = new RoslynCompiler(nuGetReferences: GetRequiredPackages());
             using (Stream s = GitHub.DownloadRepo(Id, commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
@@ -354,6 +342,13 @@ namespace avaness.PluginLoader.Data
             if (string.IsNullOrEmpty(AssetFolder))
                 return null;
             return manifest.AssetFolder;
+        }
+
+        public override IEnumerable<NuGetPackage> GetRequiredPackages()
+        {
+            if (NuGetReferences == null)
+                return Enumerable.Empty<NuGetPackage>();
+            return NuGetReferences;
         }
 
         [ProtoContract]

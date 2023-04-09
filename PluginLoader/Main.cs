@@ -86,6 +86,9 @@ namespace avaness.PluginLoader
             UpdatePlayerStats();
             PlayerConsent.OnConsentChanged += OnConsentChanged;
 
+            Splash.SetText("Installing 3rd party references...");
+            InstallNuGetReferences();
+
             Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
 
@@ -122,7 +125,18 @@ namespace avaness.PluginLoader
             Splash = null;
 
         }
-        
+
+        private void InstallNuGetReferences()
+        {
+            foreach (PluginData data in Config.EnabledPlugins)
+            {
+                // TODO: Merge lists of required packages into one list and resolve conflicts (duplicates or duplicate dependencies), then update the list of nuget references used by the compiler
+                foreach (NuGetPackage package in data.GetRequiredPackages())
+                {
+                }
+            }
+        }
+
         private void OnException(object sender, FirstChanceExceptionEventArgs e)
         {
             try

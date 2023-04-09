@@ -1,5 +1,11 @@
-﻿using ProtoBuf;
+﻿using Microsoft.CodeAnalysis;
+using ProtoBuf;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Network
 {
@@ -12,6 +18,8 @@ namespace avaness.PluginLoader.Network
 
         [ProtoMember(2)]
         public string Version { get; set; }
+
+        public List<MetadataReference> RoslynReferences { get; } = new List<MetadataReference>();
 
         public NuGetPackage()
         {
@@ -26,7 +34,34 @@ namespace avaness.PluginLoader.Network
 
         private async Task InstallAsync()
         {
-            await Main.Instance.NuGet.InstallPackage(Name, Version);
+            string[] assemblies = await Main.Instance.NuGet.InstallPackage(Name, Version);
+            RoslynReferences.Clear();
+            foreach (string dll in assemblies)
+            {
+                if (IsValidDllReference(dll) && TryLoadDllReference(dll, out MetadataReference reference))
+                    RoslynReferences.Add(reference);
+            }
+        }
+
+        private bool TryLoadDllReference(string dll, out MetadataReference reference)
+        {
+            try
+            {
+                reference = MetadataReference.CreateFromFile(dll);
+                return true;
+            }
+            catch
+            {
+                reference = null;
+                return false;
+            }
+        }
+
+        private bool IsValidDllReference(string dll)
+        {
+            return Path.HasExtension(dll) 
+                && Path.GetExtension(dll).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                && File.Exists(dll);
         }
     }
 }

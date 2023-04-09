@@ -1,6 +1,7 @@
 ﻿using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.Config;
 using avaness.PluginLoader.GUI;
+using avaness.PluginLoader.Network;
 using Sandbox;
 using Sandbox.Graphics.GUI;
 using System;
@@ -57,7 +58,7 @@ namespace avaness.PluginLoader.Data
         {
             if (Directory.Exists(Id))
             {
-                RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild);
+                RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild, GetRequiredPackages());
                 bool hasFile = false;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Compiling files from ").Append(Id).Append(":").AppendLine();
@@ -287,6 +288,11 @@ namespace avaness.PluginLoader.Data
             if (string.IsNullOrEmpty(github.AssetFolder))
                 return null;
             return Path.Combine(Id, github.AssetFolder);
+        }
+
+        public override IEnumerable<NuGetPackage> GetRequiredPackages()
+        {
+            return github.GetRequiredPackages();
         }
     }
 }

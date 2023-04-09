@@ -54,13 +54,13 @@ namespace avaness.PluginLoader.Network
             return null;
         }
 
-        public Task InstallPackage(string id, string version, string framework = "net48")
+        public Task<string[]> InstallPackage(string id, string version, string framework = "net48")
         {
             LogFile.WriteGameLog("Installing " + id + " " + version);
             return InstallPackage(new PackageIdentity(id, NuGetVersion.Parse(version)), framework);
         }
 
-        public async Task InstallPackage(PackageIdentity package, string framework = "net48")
+        public async Task<string[]> InstallPackage(PackageIdentity package, string framework = "net48")
         {
             ISettings settings = Settings.LoadDefaultSettings(root: null);
             SourceRepository sourceRepository = Repository.Factory.GetCoreV3(NugetServiceIndex);
@@ -92,6 +92,7 @@ namespace avaness.PluginLoader.Network
                 ClientPolicyContext clientPolicyContext = ClientPolicyContext.GetClientPolicy(settings, logger);
                 PackageExtractionContext packageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv3, XmlDocFileSaveMode.Skip, clientPolicyContext, logger);
 
+                string[] resultLibFiles = Array.Empty<string>();
 
                 // Install packages
                 foreach (SourcePackageDependencyInfo packageToInstall in packagesToInstall)
@@ -121,14 +122,18 @@ namespace avaness.PluginLoader.Network
                         // We want to use the PackageFolderReader instead of downloadResult.PackageReader because it wont have any xml files
                         installedPath = packagePathResolver.GetInstalledPath(packageToInstall);
                         if (installedPath == null)
-                            return; // Error
+                            return Array.Empty<string>(); // Error
                     }
 
                     // Get files
-                    CopyFiles(nuGetFramework, installedPath);
+                    CopyFiles(nuGetFramework, installedPath, out string[] libFiles);
+                    if (PackageIdentity.Comparer.Equals(packageToInstall, package))
+                        resultLibFiles = libFiles;
 
                     logger.LogInformation($"Package installed: {packageToInstall.Id}");
                 }
+
+                return resultLibFiles;
             }
         }
 
@@ -137,7 +142,7 @@ namespace avaness.PluginLoader.Network
             return id.StartsWith("System.");
         }
 
-        private void CopyFiles(NuGetFramework targetFramework, string packagePath)
+        private void CopyFiles(NuGetFramework targetFramework, string packagePath, out string[] files)
         {
             PackageFolderReader packageReader = new PackageFolderReader(packagePath);
             FrameworkReducer frameworkReducer = new FrameworkReducer();
@@ -145,13 +150,19 @@ namespace avaness.PluginLoader.Network
             IEnumerable<FrameworkSpecificGroup> items = packageReader.GetLibItems();
             NuGetFramework nearest = frameworkReducer.GetNearest(targetFramework, items.Select(x => x.TargetFramework));
             if (nearest != null)
-                CopyFiles(packagePath, binFolder, items.Where(x => x.TargetFramework.Equals(nearest)).SelectMany(x => x.Items));
+            {
+                files = items.Where(x => x.TargetFramework.Equals(nearest)).SelectMany(x => x.Items).ToArray();
+                CopyFiles(packagePath, binFolder, files);
+            }
+            else
+            {
+                files = Array.Empty<string>();
+            }    
 
             items = packageReader.GetContentItems();
             nearest = frameworkReducer.GetNearest(targetFramework, items.Select(x => x.TargetFramework));
             if (nearest != null)
                 CopyFiles(packagePath, binFolder, items.Where(x => x.TargetFramework.Equals(nearest)).SelectMany(x => x.Items));
-            
         }
 
         private void CopyFiles(string packagePath, string destination, IEnumerable<string> files)

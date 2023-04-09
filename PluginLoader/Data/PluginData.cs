@@ -12,6 +12,8 @@ using System.Xml.Serialization;
 using VRage.Utils;
 using VRage;
 using avaness.PluginLoader.Config;
+using avaness.PluginLoader.Network;
+using System.Linq;
 
 namespace avaness.PluginLoader.Data
 {
@@ -275,6 +277,11 @@ namespace avaness.PluginLoader.Data
         public virtual string GetAssetPath()
         {
             return null;
+        }
+
+        public virtual IEnumerable<NuGetPackage> GetRequiredPackages()
+        {
+            return Enumerable.Empty<NuGetPackage>();
         }
     }
 }
