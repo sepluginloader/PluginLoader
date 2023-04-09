@@ -8,10 +8,17 @@ namespace avaness.StatsServer.Controllers
     [Route("[controller]")]
     public class ConsentController : ControllerBase
     {
+        private readonly IStatsDatabase statsDatabase;
+
+        public ConsentController(IStatsDatabase statsDatabase)
+        {
+            this.statsDatabase = statsDatabase;
+        }
+        
         [HttpPost]
         public void Post(ConsentRequest request)
         {
-            StatsDatabase.Instance?.Consent(request);
+            statsDatabase.Consent(request);
         }
     }
 }

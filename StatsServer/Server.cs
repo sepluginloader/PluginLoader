@@ -33,6 +33,7 @@ namespace avaness.StatsServer
                 }))
                 .ConfigureServices(services =>
                 {
+                    services.AddSingleton<IStatsDatabase, StatsDatabase>();
                     services.AddHostedService<PersistenceService>();
                     services.AddMvc().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
                 });

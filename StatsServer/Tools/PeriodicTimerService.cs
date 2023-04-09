@@ -18,7 +18,7 @@ namespace avaness.StatsServer.Tools
 
         protected PeriodicTimerService(ILogger<PeriodicTimerService> logger)
         {
-            this.Logger = logger;
+            Logger = logger;
         }
 
 #pragma warning disable CA1816

@@ -6,38 +6,16 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using avaness.StatsServer.Model;
-using Microsoft.AspNetCore.Builder;
 
 namespace avaness.StatsServer.Persistence
 {
-    public class StatsDatabase : IDisposable
+    public class StatsDatabase : IStatsDatabase
     {
         private const int VotingTokenExpiration = 1; // Hours
         private const int VotingTokenCleanupPeriod = 600; // Seconds
 
-#pragma warning disable CA2211
-        public static StatsDatabase Instance;
-#pragma warning restore CA2211
-
-        public static string PluginStatsDir => Path.Combine(Config.DataDir, "PluginStats");
-        private static string PluginMapPath => Path.Combine(Config.DataDir, "Plugins.json");
-        private static string CanaryPath => Path.Combine(Config.DataDir, "Canary.txt");
-
         private readonly PlayerConsents playerConsents = new();
-
         private readonly Dictionary<string, PluginStatData> pluginStatsData = new();
-
-        private class VotingToken
-        {
-            public readonly DateTime Created;
-            public readonly Guid Guid;
-
-            public VotingToken()
-            {
-                Created = DateTime.Now;
-                Guid = Guid.NewGuid();
-            }
-        }
 
         private readonly Dictionary<string, VotingToken> votingTokens = new();
 
@@ -46,21 +24,17 @@ namespace avaness.StatsServer.Persistence
         public StatsDatabase()
         {
             Load();
-            Instance = this;
         }
 
-#pragma warning disable CA1816
         public void Dispose()
         {
-            Instance = null;
             Save();
         }
-#pragma warning restore CA1816
 
         [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public void Canary()
         {
-            using var log = new StreamWriter(CanaryPath);
+            using var log = new StreamWriter(Config.CanaryPath);
 
             log.Write($"{DateTime.Now:O}: Canary request received{Environment.NewLine}");
             log.Flush();
@@ -71,7 +45,7 @@ namespace avaness.StatsServer.Persistence
 
         private static void TimeAcquiringLock(StreamWriter log, object obj, string name)
         {
-            var duration = 0.0;
+            double duration;
 
             log.Write($"{DateTime.Now:O}: lock ({name}) acquiring...{Environment.NewLine}");
 
@@ -86,7 +60,7 @@ namespace avaness.StatsServer.Persistence
 
         public void Save()
         {
-            Directory.CreateDirectory(PluginStatsDir);
+            Directory.CreateDirectory(Config.PluginStatsDir);
 
             lock (pluginStatsData)
             {
@@ -107,9 +81,9 @@ namespace avaness.StatsServer.Persistence
 
             var json = JsonSerializer.Serialize(pluginMap, Tools.Tools.JsonOptions);
 
-            var newPath = PluginMapPath + ".new";
+            var newPath = Config.PluginMapPath + ".new";
             File.WriteAllText(newPath, json);
-            File.Move(newPath, PluginMapPath, true);
+            File.Move(newPath, Config.PluginMapPath, true);
         }
 
         private void CleanupExpiredVotingTokens()
@@ -157,10 +131,10 @@ namespace avaness.StatsServer.Persistence
 
         private static Dictionary<string, string> LoadPluginMap()
         {
-            var json = File.Exists(PluginMapPath) ? File.ReadAllText(PluginMapPath) : "{}";
+            var json = File.Exists(Config.PluginMapPath) ? File.ReadAllText(Config.PluginMapPath) : "{}";
             var pluginMap = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
             if (pluginMap == null)
-                throw new InvalidDataException($"Could not deserialize plugin map JSON loaded from: {PluginMapPath}");
+                throw new InvalidDataException($"Could not deserialize plugin map JSON loaded from: {Config.PluginMapPath}");
 
             return pluginMap;
         }

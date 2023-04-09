@@ -53,7 +53,7 @@ namespace avaness.StatsServer.Persistence
 
         public static string FormatPath(string fileName)
         {
-            return Path.Combine(StatsDatabase.PluginStatsDir, fileName);
+            return Path.Combine(Config.PluginStatsDir, fileName);
         }
 
         public void MarkModified()

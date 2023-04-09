@@ -11,10 +11,14 @@ namespace avaness.StatsServer
         public static readonly string DataDir;
         public static readonly int SavePeriod;
 
+        public static string PluginStatsDir => Path.Combine(Config.DataDir, "PluginStats");
+        public static string PluginMapPath => Path.Combine(Config.DataDir, "Plugins.json");
+        public static string CanaryPath => Path.Combine(Config.DataDir, "Canary.txt");
+        
         static Config()
         {
             BackupDir = Environment.GetEnvironmentVariable("PL_BACKUP_DIR")
-                      ?? Path.Combine(UserDir, ".StatsServer", "Backup");
+                        ?? Path.Combine(UserDir, ".StatsServer", "Backup");
 
             DataDir = Environment.GetEnvironmentVariable("PL_DATA_DIR")
                       ?? Path.Combine(UserDir, ".StatsServer", "Data");
