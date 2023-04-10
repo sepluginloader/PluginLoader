@@ -8,10 +8,18 @@ namespace avaness.StatsServer.Controllers
     [Route("[controller]")]
     public class TrackController : ControllerBase
     {
+        private readonly IStatsDatabase statsDatabase;
+
+        public TrackController(IStatsDatabase statsDatabase)
+        {
+            this.statsDatabase = statsDatabase;
+        }
+
+        
         [HttpPost]
         public void Post(TrackRequest request)
         {
-            StatsDatabase.Instance?.Track(request);
+            statsDatabase.Track(request);
         }
     }
 }

@@ -8,10 +8,18 @@ namespace avaness.StatsServer.Controllers
     [Route("[controller]")]
     public class StatsController : ControllerBase
     {
+        private readonly IStatsDatabase statsDatabase;
+
+        public StatsController(IStatsDatabase statsDatabase)
+        {
+            this.statsDatabase = statsDatabase;
+        }
+
+        
         [HttpGet]
         public PluginStats Get(string playerHash)
         {
-            return StatsDatabase.Instance?.GetStats(playerHash);
+            return statsDatabase.GetStats(playerHash);
         }
     }
 }

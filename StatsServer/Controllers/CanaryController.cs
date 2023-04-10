@@ -7,11 +7,18 @@ namespace avaness.StatsServer.Controllers
     [Route("[controller]")]
     public class CanaryController : ControllerBase
     {
+        private readonly IStatsDatabase statsDatabase;
+
+        public CanaryController(IStatsDatabase statsDatabase)
+        {
+            this.statsDatabase = statsDatabase;
+        }
+
         [HttpGet]
         public string Get()
         {
             // Make sure the server is not deadlocked
-            StatsDatabase.Instance.Canary();
+            statsDatabase.Canary();
 
             return "OK";
         }

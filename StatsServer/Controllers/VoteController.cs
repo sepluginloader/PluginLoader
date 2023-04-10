@@ -8,10 +8,17 @@ namespace avaness.StatsServer.Controllers
     [Route("[controller]")]
     public class VoteController : ControllerBase
     {
+        private readonly IStatsDatabase statsDatabase;
+
+        public VoteController(IStatsDatabase statsDatabase)
+        {
+            this.statsDatabase = statsDatabase;
+        }
+        
         [HttpPost]
         public PluginStat Post(VoteRequest request)
         {
-            return StatsDatabase.Instance?.Vote(request);
+            return statsDatabase.Vote(request);
         }
     }
 }
