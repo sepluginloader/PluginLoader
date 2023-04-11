@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.33423.256
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginLoader", "PluginLoader\PluginLoader.csproj", "{A7C22A74-56EA-4DC2-89AA-A1134BFB8497}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatsServer", "StatsServer\StatsServer.csproj", "{DA1F90F4-9F9C-48AE-92B9-E8E8F9E6C372}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -17,10 +15,6 @@ Global
 		{A7C22A74-56EA-4DC2-89AA-A1134BFB8497}.Debug|x64.Build.0 = Debug|Any CPU
 		{A7C22A74-56EA-4DC2-89AA-A1134BFB8497}.Release|x64.ActiveCfg = Release|Any CPU
 		{A7C22A74-56EA-4DC2-89AA-A1134BFB8497}.Release|x64.Build.0 = Release|Any CPU
-		{DA1F90F4-9F9C-48AE-92B9-E8E8F9E6C372}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{DA1F90F4-9F9C-48AE-92B9-E8E8F9E6C372}.Debug|x64.Build.0 = Debug|Any CPU
-		{DA1F90F4-9F9C-48AE-92B9-E8E8F9E6C372}.Release|x64.ActiveCfg = Release|Any CPU
-		{DA1F90F4-9F9C-48AE-92B9-E8E8F9E6C372}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
