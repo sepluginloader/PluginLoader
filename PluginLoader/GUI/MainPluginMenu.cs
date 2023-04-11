@@ -505,5 +505,12 @@ namespace avaness.PluginLoader.GUI
         }
 
         #endregion
+        
+        public override void HandleUnhandledInput(bool receivedFocusInThisUpdate)
+        {
+            var input = VRage.Input.MyInput.Static;
+            if (input.IsNewKeyPressed(VRage.Input.MyKeys.F5) && input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
+                Patch.Patch_IngameRestart.ShowRestartMenu();
+        }
     }
 }
