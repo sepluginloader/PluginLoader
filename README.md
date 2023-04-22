@@ -1,3 +1,5 @@
+[![Discord](https://img.shields.io/discord/816445932693487678)](https://discord.gg/VJGjzdgnjf)
+
 # PluginLoader
 A tool to load plugins for Space Engineers automatically.
 
