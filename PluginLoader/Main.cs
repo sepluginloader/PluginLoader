@@ -121,7 +121,10 @@ namespace avaness.PluginLoader
         {
             try
             {
-                if (e.Exception is MemberAccessException accessException)
+                MemberAccessException accessException = e.Exception as MemberAccessException;
+                if (accessException == null)
+                    accessException = e.Exception?.InnerException as MemberAccessException;
+                if (accessException != null)
                 {
                     foreach (PluginInstance plugin in plugins)
                     {
