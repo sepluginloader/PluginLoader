@@ -71,7 +71,8 @@ namespace avaness.PluginLoader.Compiler
                     {
                         Location location = diagnostic.Location;
                         Source source = this.source.FirstOrDefault(x => x.Tree == location.SourceTree);
-                        LogFile.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} in file:\n{source?.Name ?? "null"} ({location.GetLineSpan().StartLinePosition})");
+                        LinePosition pos = location.GetLineSpan().StartLinePosition;
+                        LogFile.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} in file:\n{source?.Name ?? "null"} ({pos.Line + 1},{pos.Character + 1})");
                     }
                     throw new Exception("Compilation failed!");
                 }
