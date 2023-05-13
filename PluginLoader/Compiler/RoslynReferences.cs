@@ -45,6 +45,11 @@ namespace avaness.PluginLoader.Compiler
                     AddAssemblyReference(a);
                     sb.AppendLine(a.FullName);
                 }
+                foreach(Assembly a in GetOtherReferences())
+                {
+                    AddAssemblyReference(a);
+                    sb.AppendLine(a.FullName);
+                }
                 sb.AppendLine(line);
                 while (loadedAssemblies.Count > 0)
                 {
@@ -75,6 +80,14 @@ namespace avaness.PluginLoader.Compiler
             }
 
             LogFile.WriteLine(sb.ToString(), false);
+        }
+
+        /// <summary>
+        /// This method is used to load references that otherwise would not exist or be optimized out
+        /// </summary>
+        private static IEnumerable<Assembly> GetOtherReferences()
+        {
+            yield return typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly;
         }
 
         private static bool ContainsReference(AssemblyName name)

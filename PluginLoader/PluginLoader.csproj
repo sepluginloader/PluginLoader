@@ -43,6 +43,7 @@
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
       <HintPath>..\Bin64\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\Bin64\ProtoBuf.Net.dll</HintPath>
     </Reference>
