@@ -98,7 +98,7 @@ namespace avaness.PluginLoader.GUI
         {
             Vector2 topLeft = parent.Size * -0.5f;
 
-            MyGuiControlButton btnAdd = new MyGuiControlButton(visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.Increase, 
+            MyGuiControlButton btnAdd = new MyGuiControlButton(visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.Increase, toolTip: mods ? "Add mod" : "Add plugin",
                 originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, onButtonClick: (x) => OpenAddPluginMenu(mods));
 
             MyGuiControlTable list = CreatePluginTable(parent.Size, btnAdd.Size.Y, mods);
@@ -107,7 +107,7 @@ namespace avaness.PluginLoader.GUI
             btnAdd.Position = new Vector2(-topLeft.X, topLeft.Y + list.Size.Y);
             parent.Controls.Add(btnAdd);
 
-            MyGuiControlButton btnOpen = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnPluginOpenClick)
+            MyGuiControlButton btnOpen = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, toolTip: "Show details", onButtonClick: OnPluginOpenClick)
             {
                 UserData = list,
                 Enabled = false,
@@ -122,7 +122,7 @@ namespace avaness.PluginLoader.GUI
 
             if (!mods)
             {
-                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, onButtonClick: OnPluginSettingsClick)
+                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, toolTip: "Open plugin settings", onButtonClick: OnPluginSettingsClick)
                 {
                     UserData = list,
                     Enabled = false
@@ -282,8 +282,8 @@ namespace avaness.PluginLoader.GUI
                 {
                     0.45f,
                     0.2f,
-                    0.2f,
-                    0.15f,
+                    0.175f,
+                    0.175f,
                 });
                 list.SetColumnName(0, new StringBuilder("Name"));
                 list.SetColumnComparison(0, CellTextComparison);
@@ -505,5 +505,12 @@ namespace avaness.PluginLoader.GUI
         }
 
         #endregion
+        
+        public override void HandleUnhandledInput(bool receivedFocusInThisUpdate)
+        {
+            var input = VRage.Input.MyInput.Static;
+            if (input.IsNewKeyPressed(VRage.Input.MyKeys.F5) && input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
+                Patch.Patch_IngameRestart.ShowRestartMenu();
+        }
     }
 }
