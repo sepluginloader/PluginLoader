@@ -47,7 +47,7 @@ namespace avaness.PluginLoader
                 Thread.Sleep(10);
             }
 
-            if (!result.Success)
+            if (result.Result != VRage.GameServices.MyGameServiceCallResult.OK)
             {
                 Exception[] exceptions = task.Exceptions;
                 if(exceptions != null && exceptions.Length > 0)
@@ -60,7 +60,7 @@ namespace avaness.PluginLoader
                 }
                 else
                 {
-                    LogFile.WriteLine("Unable to update workshop items");
+                    LogFile.WriteLine("Unable to update workshop items. Result: " + result.Result);
                 }
 
             }
@@ -78,7 +78,7 @@ namespace avaness.PluginLoader
                 DownloadModsBlocking = AccessTools.Method(typeof(MyWorkshop), "DownloadModsBlocking");
 
             MyWorkshop.ResultData resultData = (MyWorkshop.ResultData)DownloadModsBlocking.Invoke(mods, new object[] { 
-                mods, new MyWorkshop.ResultData() { Success = true }, list, new MyWorkshop.CancelToken() 
+                mods, new MyWorkshop.ResultData(), list, new MyWorkshop.CancelToken() 
             });
 
             MyLog.Default.DecreaseIndent();
