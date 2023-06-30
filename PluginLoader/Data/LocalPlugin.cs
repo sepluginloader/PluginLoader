@@ -64,6 +64,9 @@ namespace avaness.PluginLoader.Data
 
         private Assembly LoadFromSameFolder(object sender, ResolveEventArgs args)
         {
+            if (args.RequestingAssembly == null)
+                return null;
+
             if (args.RequestingAssembly.IsDynamic)
                 return null;
 
