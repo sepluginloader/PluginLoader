@@ -33,8 +33,6 @@ namespace avaness.PluginLoader
         public SplashScreen Splash { get; }
         public PluginStats Stats {get; private set; }
 
-        public NuGetClient NuGet { get; } = new NuGetClient();
-
         /// <summary>
         /// True if a local plugin was loaded
         /// </summary>
@@ -61,7 +59,6 @@ namespace avaness.PluginLoader
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
 
-            NuGet.Init();
             GitHub.Init();
 
             Splash.SetText("Finding references...");
@@ -85,9 +82,6 @@ namespace avaness.PluginLoader
             StatsClient.OverrideBaseUrl(Config.StatsServerBaseUrl);
             UpdatePlayerStats();
             PlayerConsent.OnConsentChanged += OnConsentChanged;
-
-            Splash.SetText("Installing 3rd party references...");
-            InstallNuGetReferences();
 
             Splash.SetText("Patching...");
             LogFile.WriteLine("Patching");
@@ -124,17 +118,6 @@ namespace avaness.PluginLoader
             Splash.Delete();
             Splash = null;
 
-        }
-
-        private void InstallNuGetReferences()
-        {
-            foreach (PluginData data in Config.EnabledPlugins)
-            {
-                // TODO: Merge lists of required packages into one list and resolve conflicts (duplicates or duplicate dependencies), then update the list of nuget references used by the compiler
-                foreach (NuGetPackage package in data.GetRequiredPackages())
-                {
-                }
-            }
         }
 
         private void OnException(object sender, FirstChanceExceptionEventArgs e)

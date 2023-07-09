@@ -278,10 +278,5 @@ namespace avaness.PluginLoader.Data
         {
             return null;
         }
-
-        public virtual IEnumerable<NuGetPackage> GetRequiredPackages()
-        {
-            return Enumerable.Empty<NuGetPackage>();
-        }
     }
 }

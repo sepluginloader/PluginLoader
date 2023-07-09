@@ -15,14 +15,12 @@ namespace avaness.PluginLoader.Compiler
     public class RoslynCompiler
     {
         private readonly List<Source> source = new List<Source>();
-        private readonly List<MetadataReference> customReferences;
+        private readonly List<MetadataReference> customReferences = new List<MetadataReference>();
         private bool debugBuild;
 
-        public RoslynCompiler(bool debugBuild = false, IEnumerable<NuGetPackage> nuGetReferences = null)
+        public RoslynCompiler(bool debugBuild = false)
         {
             this.debugBuild = debugBuild;
-            if(nuGetReferences != null)
-                customReferences = nuGetReferences.SelectMany(x => x.RoslynReferences).ToList();
         }
 
         public void Load(Stream s, string name)
@@ -93,6 +91,26 @@ namespace avaness.PluginLoader.Compiler
                 }
             }
 
+        }
+
+        public void TryAddDependency(string dll)
+        {
+            if(Path.HasExtension(dll)
+                && Path.GetExtension(dll).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                && File.Exists(dll))
+            {
+                try
+                {
+                    MetadataReference reference = MetadataReference.CreateFromFile(dll);
+                    if (reference != null)
+                    {
+                        LogFile.WriteTrace("Custom compiler reference: " + (reference.Display ?? dll));
+                        customReferences.Add(reference);
+                    }
+                }
+                catch
+                { }
+            }
         }
 
         private class Source

@@ -14,14 +14,18 @@ namespace avaness.PluginLoader.Data
             private const string pluginFile = "plugin.dll";
             private const string manifestFile = "manifest.xml";
             private const string commitFile = "commit.sha1";
+            private const string assetFolder = "Assets";
+            private const string libFolder = "Bin";
 
             private string cacheDir;
             private string assetDir;
+            private string libDir;
             private Dictionary<string, AssetFile> assetFiles = new Dictionary<string, AssetFile>();
 
             [XmlIgnore]
             public string DllFile { get; private set; }
             public string AssetFolder => assetDir;
+            public string LibDir => libDir;
 
             public string Commit { get; set; }
             public int GameVersion { get; set; }
@@ -35,7 +39,7 @@ namespace avaness.PluginLoader.Data
                 }
                 set
                 {
-                    assetFiles = value.ToDictionary(x => x.NormalizedFileName);
+                    assetFiles = value.ToDictionary(GetAssetKey);
                 }
             }
 
@@ -47,8 +51,12 @@ namespace avaness.PluginLoader.Data
             private void Init(string cacheDir)
             {
                 this.cacheDir = cacheDir;
-                assetDir = Path.Combine(cacheDir, "Assets");
+                assetDir = Path.Combine(cacheDir, assetFolder);
+                libDir = Path.Combine(cacheDir, libFolder);
                 DllFile = Path.Combine(cacheDir, pluginFile);
+
+                foreach (AssetFile file in assetFiles.Values)
+                    SetBaseDir(file);
 
                 // Backwards compatibility
                 string oldCommitFile = Path.Combine(cacheDir, commitFile);
@@ -98,7 +106,7 @@ namespace avaness.PluginLoader.Data
                 return manifest;
             }
 
-            public bool IsCacheValid(string currentCommit, int currentGameVersion, bool requiresAssets)
+            public bool IsCacheValid(string currentCommit, int currentGameVersion, bool requiresAssets, bool requiresPackages)
             {
                 if(!File.Exists(DllFile) || Commit != currentCommit)
                     return false;
@@ -106,12 +114,15 @@ namespace avaness.PluginLoader.Data
                 if (GameVersion != 0 && currentGameVersion != 0 && GameVersion != currentGameVersion)
                     return false;
 
-                if (requiresAssets && assetFiles.Count == 0)
+                if (requiresAssets && !assetFiles.Values.Any(x => x.Type == AssetFile.AssetType.Asset))
+                    return false;
+
+                if (requiresPackages && !assetFiles.Values.Any(x => x.Type != AssetFile.AssetType.Asset))
                     return false;
 
                 foreach (AssetFile file in assetFiles.Values)
                 {
-                    if (!file.IsValid(assetDir))
+                    if (!file.IsValid())
                         return false;
                 }
 
@@ -123,23 +134,36 @@ namespace avaness.PluginLoader.Data
                 assetFiles.Clear();
             }
 
-            public AssetFile CreateAsset(string file)
+            public AssetFile CreateAsset(string file, AssetFile.AssetType type = AssetFile.AssetType.Asset)
             {
                 file = file.Replace('\\', '/').TrimStart('/');
-                AssetFile asset = new AssetFile(file);
-                asset.GetFileInfo(assetDir);
-                assetFiles[file] = asset;
+                AssetFile asset = new AssetFile(file, type);
+                SetBaseDir(asset);
+                asset.GetFileInfo();
+                assetFiles[GetAssetKey(asset)] = asset;
                 return asset;
+            }
+
+            private string GetAssetKey(AssetFile asset)
+            {
+                if (asset.Type == AssetFile.AssetType.Asset)
+                    return assetFolder + "/" + asset.NormalizedFileName;
+                return libFolder + "/" + asset.NormalizedFileName;
+            }
+
+            private void SetBaseDir(AssetFile asset)
+            {
+                asset.BaseDir = asset.Type == AssetFile.AssetType.Asset ? assetDir : libDir;
             }
 
             public bool IsAssetValid(AssetFile asset)
             {
-                return asset.IsValid(assetDir);
+                return asset.IsValid();
             }
 
             public void SaveAsset(AssetFile asset, Stream stream)
             {
-                asset.Save(stream, assetDir);
+                asset.Save(stream);
             }
 
             public void Save()
@@ -159,12 +183,18 @@ namespace avaness.PluginLoader.Data
 
             public void DeleteUnknownFiles()
             {
+                DeleteUnknownFiles(assetDir);
+                DeleteUnknownFiles(libDir);
+            }
+
+            public void DeleteUnknownFiles(string assetDir)
+            {
                 if (!Directory.Exists(assetDir))
                     return;
 
                 foreach(string file in Directory.EnumerateFiles(assetDir, "*", SearchOption.AllDirectories))
                 {
-                    string relativePath = file.Substring(assetDir.Length).Replace('\\', '/').TrimStart('/');
+                    string relativePath = file.Substring(cacheDir.Length).Replace('\\', '/').TrimStart('/');
                     if (!assetFiles.ContainsKey(relativePath))
                         File.Delete(file);
                 }

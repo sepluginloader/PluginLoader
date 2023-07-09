@@ -7,25 +7,33 @@ namespace avaness.PluginLoader.Data
     {
         public class AssetFile
         {
+            public enum AssetType { Asset, Lib, LibContent }
+
             public string Name { get; set; }
             public string Hash { get; set; }
             public long Length { get; set; }
+            public AssetType Type { get; set; }
+            [XmlIgnore]
+            public string BaseDir { get; set; }
 
             public string NormalizedFileName => Name.Replace('\\', '/').TrimStart('/');
+
+            public string FullPath => Path.GetFullPath(Path.Combine(BaseDir, Name));
 
             public AssetFile()
             {
 
             }
 
-            public AssetFile(string file)
+            public AssetFile(string file, AssetType type)
             {
                 Name = file;
+                Type = type;
             }
 
-            public void GetFileInfo(string assetFolder)
+            public void GetFileInfo()
             {
-                string file = Path.Combine(assetFolder, Name);
+                string file = FullPath;
                 if (!File.Exists(file))
                     return;
 
@@ -34,9 +42,9 @@ namespace avaness.PluginLoader.Data
                 Hash = LoaderTools.GetHash256(file);
             }
 
-            public bool IsValid(string assetFolder)
+            public bool IsValid()
             {
-                string file = Path.Combine(assetFolder, Name);
+                string file = FullPath;
                 if (!File.Exists(file))
                     return false;
 
@@ -51,16 +59,16 @@ namespace avaness.PluginLoader.Data
                 return true;
             }
 
-            public void Save(Stream stream, string assetFolder)
+            public void Save(Stream stream)
             {
-                string newFile = Path.Combine(assetFolder, Name);
+                string newFile = FullPath;
                 Directory.CreateDirectory(Path.GetDirectoryName(newFile));
                 using (FileStream file = File.Create(newFile))
                 {
                     stream.CopyTo(file);
                 }
 
-                GetFileInfo(assetFolder);
+                GetFileInfo();
             }
 
         }

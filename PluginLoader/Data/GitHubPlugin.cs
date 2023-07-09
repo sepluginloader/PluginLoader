@@ -39,13 +39,12 @@ namespace avaness.PluginLoader.Data
         public string AssetFolder { get; set; }
 
         [ProtoMember(5)]
-        [XmlArray]
-        [XmlArrayItem("Package")]
-        public NuGetPackage[] NuGetReferences { get; set; }
+        public string NuGetReferences { get; set; }
 
         private string assemblyName;
         private GitHubPluginConfig config;
         private CacheManifest manifest;
+        private NuGetClient nuget;
 
         public GitHubPlugin()
         {
@@ -105,6 +104,9 @@ namespace avaness.PluginLoader.Data
                     AssetFolder += '/';
             }
 
+            if(!string.IsNullOrWhiteSpace(NuGetReferences))
+                NuGetReferences = NuGetReferences.Replace('\\', '/').TrimStart('/');
+
             assemblyName = MakeSafeString(nameArgs[1]);
             manifest = CacheManifest.Load(nameArgs[0], nameArgs[1]);
         }
@@ -147,9 +149,11 @@ namespace avaness.PluginLoader.Data
 
             Assembly a;
 
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveNuGetPackages;
+
             int gameVersion = Main.Instance.Config.GameVersion;
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
-            if (!manifest.IsCacheValid(selectedCommit, gameVersion, !string.IsNullOrWhiteSpace(AssetFolder)))
+            if (!manifest.IsCacheValid(selectedCommit, gameVersion, !string.IsNullOrWhiteSpace(AssetFolder), !string.IsNullOrWhiteSpace(NuGetReferences)))
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
@@ -176,6 +180,23 @@ namespace avaness.PluginLoader.Data
             return a;
         }
 
+        private Assembly ResolveNuGetPackages(object sender, ResolveEventArgs args)
+        {
+            string requestingAssembly = args.RequestingAssembly?.GetName().ToString();
+            AssemblyName targetAssembly = new AssemblyName(args.Name);
+            string targetPath = Path.Combine(manifest.LibDir, targetAssembly.Name + ".dll");
+            if (File.Exists(targetPath))
+            {
+                Assembly a = Assembly.LoadFile(targetPath);
+                if (requestingAssembly != null)
+                    LogFile.WriteLine("Resolved " + args.Name + " for " + requestingAssembly);
+                else
+                    LogFile.WriteLine("Resolved " + args.Name);
+                return a;
+            }
+            return null;
+        }
+
         private Branch GetSelectedVersion()
         {
             if (config == null || string.IsNullOrWhiteSpace(config.SelectedVersion))
@@ -185,7 +206,7 @@ namespace avaness.PluginLoader.Data
 
         public byte[] CompileFromSource(string commit, Action<float> callback = null)
         {
-            RoslynCompiler compiler = new RoslynCompiler(nuGetReferences: GetRequiredPackages());
+            RoslynCompiler compiler = new RoslynCompiler();
             using (Stream s = GitHub.DownloadRepo(Id, commit))
             using (ZipArchive zip = new ZipArchive(s))
             {
@@ -204,6 +225,17 @@ namespace avaness.PluginLoader.Data
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)
         {
             string path = RemoveRoot(entry.FullName);
+            if (path == NuGetReferences)
+            {
+                NuGetPackage[] packages;
+                using (Stream entryStream = entry.Open())
+                {
+                    nuget = new NuGetClient();
+                    packages = nuget.DownloadFromConfig(entryStream);
+                }
+                foreach (NuGetPackage package in packages)
+                    InstallPackage(package, compiler);
+            }
             if (AllowedZipPath(path))
             {
                 using (Stream entryStream = entry.Open())
@@ -217,6 +249,35 @@ namespace avaness.PluginLoader.Data
                 if(!manifest.IsAssetValid(newFile))
                 {
                     using (Stream entryStream = entry.Open())
+                    {
+                        manifest.SaveAsset(newFile, entryStream);
+                    }
+                }
+            }
+        }
+
+        private void InstallPackage(NuGetPackage package, RoslynCompiler compiler)
+        {
+            foreach(NuGetPackage.Item file in package.LibFiles)
+            {
+                AssetFile newFile = manifest.CreateAsset(file.FilePath, AssetFile.AssetType.Lib);
+                if (!manifest.IsAssetValid(newFile))
+                {
+                    using (Stream entryStream = File.OpenRead(file.FullPath))
+                    {
+                        manifest.SaveAsset(newFile, entryStream);
+                    }
+                }
+
+                compiler.TryAddDependency(newFile.FullPath);
+            }
+
+            foreach(NuGetPackage.Item file in package.ContentFiles)
+            {
+                AssetFile newFile = manifest.CreateAsset(file.FilePath, AssetFile.AssetType.LibContent);
+                if (!manifest.IsAssetValid(newFile))
+                {
+                    using (Stream entryStream = File.OpenRead(file.FullPath))
                     {
                         manifest.SaveAsset(newFile, entryStream);
                     }
@@ -342,13 +403,6 @@ namespace avaness.PluginLoader.Data
             if (string.IsNullOrEmpty(AssetFolder))
                 return null;
             return manifest.AssetFolder;
-        }
-
-        public override IEnumerable<NuGetPackage> GetRequiredPackages()
-        {
-            if (NuGetReferences == null)
-                return Enumerable.Empty<NuGetPackage>();
-            return NuGetReferences;
         }
 
         [ProtoContract]
