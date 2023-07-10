@@ -259,7 +259,8 @@ namespace avaness.PluginLoader.Data
                     }
                 }
 
-                compiler.TryAddDependency(newFile.FullPath);
+                if(Path.GetDirectoryName(newFile.FullPath) == newFile.BaseDir)
+                    compiler.TryAddDependency(newFile.FullPath);
             }
 
             foreach(NuGetPackage.Item file in package.ContentFiles)

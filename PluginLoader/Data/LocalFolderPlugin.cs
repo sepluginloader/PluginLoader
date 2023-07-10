@@ -129,7 +129,8 @@ namespace avaness.PluginLoader.Data
                 string newFile = Path.Combine(binDir, file.FilePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(newFile));
                 File.Copy(file.FullPath, newFile);
-                compiler.TryAddDependency(newFile);
+                if (Path.GetDirectoryName(newFile) == binDir)
+                    compiler.TryAddDependency(newFile);
             }
 
             foreach (NuGetPackage.Item file in package.ContentFiles)
