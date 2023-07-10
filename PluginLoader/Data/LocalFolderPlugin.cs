@@ -335,7 +335,7 @@ namespace avaness.PluginLoader.Data
         {
             if (string.IsNullOrEmpty(github.AssetFolder))
                 return null;
-            return Path.Combine(Id, github.AssetFolder);
+            return Path.GetFullPath(Path.Combine(Id, github.AssetFolder));
         }
     }
 }

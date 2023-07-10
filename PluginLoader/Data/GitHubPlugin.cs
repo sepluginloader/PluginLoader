@@ -392,7 +392,7 @@ namespace avaness.PluginLoader.Data
         {
             if (string.IsNullOrEmpty(AssetFolder))
                 return null;
-            return manifest.AssetFolder;
+            return Path.GetFullPath(manifest.AssetFolder);
         }
 
         [ProtoContract]
