@@ -15,6 +15,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage;
+using VRage.FileSystem;
 using VRage.Utils;
 
 namespace avaness.PluginLoader.Data
@@ -28,6 +29,7 @@ namespace avaness.PluginLoader.Data
         public override bool IsLocal => true;
         private string[] sourceDirectories;
         private GitHubPlugin github;
+        private string binDir;
 
         public LocalFolderConfig FolderSettings { get; private set; }
 
@@ -60,6 +62,10 @@ namespace avaness.PluginLoader.Data
             {
                 RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild);
                 bool hasFile = false;
+
+                if (!string.IsNullOrWhiteSpace(github.NuGetReferences))
+                    InstallDependencies(compiler);
+
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Compiling files from ").Append(Id).Append(":").AppendLine();
                 foreach(var file in GetProjectFiles(Id))
@@ -90,6 +96,62 @@ namespace avaness.PluginLoader.Data
             }
 
             throw new DirectoryNotFoundException("Unable to find directory '" + Id + "'");
+        }
+
+        private void InstallDependencies(RoslynCompiler compiler)
+        {
+            string nugetFile = Path.Combine(Id, github.NuGetReferences);
+            if (File.Exists(nugetFile))
+            {
+                NuGetClient nuget = new NuGetClient();
+                NuGetPackage[] packages;
+                using (FileStream fileStream = File.OpenRead(nugetFile))
+                {
+                    packages = nuget.DownloadFromConfig(fileStream);
+                }
+                binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHash256(Path.GetFullPath(nugetFile).Replace('\\', '/')));
+                if(Directory.Exists(binDir))
+                    Directory.Delete(binDir, true);
+                Directory.CreateDirectory(binDir);
+                foreach (NuGetPackage package in packages)
+                    InstallPackage(package, compiler);
+                AppDomain.CurrentDomain.AssemblyResolve += ResolveNuGetPackages;
+            }
+        }
+
+        private void InstallPackage(NuGetPackage package, RoslynCompiler compiler)
+        {
+            foreach (NuGetPackage.Item file in package.LibFiles)
+            {
+                string newFile = Path.Combine(binDir, file.FilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
+                File.Copy(file.FullPath, newFile);
+                compiler.TryAddDependency(newFile);
+            }
+
+            foreach (NuGetPackage.Item file in package.ContentFiles)
+            {
+                string newFile = Path.Combine(binDir, file.FilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
+                File.Copy(file.FullPath, newFile);
+            }
+        }
+
+        private Assembly ResolveNuGetPackages(object sender, ResolveEventArgs args)
+        {
+            string requestingAssembly = args.RequestingAssembly?.GetName().ToString();
+            AssemblyName targetAssembly = new AssemblyName(args.Name);
+            string targetPath = Path.Combine(binDir, targetAssembly.Name + ".dll");
+            if (File.Exists(targetPath))
+            {
+                Assembly a = Assembly.LoadFile(targetPath);
+                if (requestingAssembly != null)
+                    LogFile.WriteLine("Resolved " + args.Name + " for " + requestingAssembly);
+                else
+                    LogFile.WriteLine("Resolved " + args.Name);
+                return a;
+            }
+            return null;
         }
 
         private IEnumerable<string> GetProjectFiles(string folder)
