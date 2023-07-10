@@ -64,7 +64,6 @@ namespace avaness.PluginLoader
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
             AppDomain.CurrentDomain.FirstChanceException += OnException;
 
 
@@ -275,7 +274,6 @@ namespace avaness.PluginLoader
             plugins.Clear();
 
             PlayerConsent.OnConsentChanged -= OnConsentChanged;
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
             LogFile.Dispose();
             Instance = null;
         }
@@ -283,21 +281,6 @@ namespace avaness.PluginLoader
         private void OnConsentChanged()
         {
             UpdatePlayerStats();
-        }
-
-        private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
-        {
-            string assembly = args.RequestingAssembly?.GetName().ToString();
-            if (args.Name.Contains("0Harmony"))
-            {
-                if (assembly != null)
-                    LogFile.WriteLine("Resolving 0Harmony for " + assembly);
-                else
-                    LogFile.WriteLine("Resolving 0Harmony");
-                return typeof(Harmony).Assembly;
-            }
-
-            return null;
         }
     }
 }
