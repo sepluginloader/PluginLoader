@@ -104,7 +104,7 @@ namespace avaness.PluginLoader.Compiler
                     MetadataReference reference = MetadataReference.CreateFromFile(dll);
                     if (reference != null)
                     {
-                        LogFile.WriteTrace("Custom compiler reference: " + (reference.Display ?? dll));
+                        LogFile.WriteLine("Custom compiler reference: " + (reference.Display ?? dll));
                         customReferences.Add(reference);
                     }
                 }
