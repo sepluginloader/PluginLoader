@@ -56,7 +56,10 @@ namespace avaness.PluginLoader.Network
             {
                 foreach (PackageReference package in reader.GetPackages(false))
                 {
-                    NuGetPackage installedPackage = await DownloadPackage(cacheContext, package.PackageIdentity, package.TargetFramework);
+                    NuGetFramework framework = package.TargetFramework;
+                    if (framework == null || framework.IsAny || framework.IsAgnostic || framework.IsUnsupported)
+                        framework = NuGetFramework.Parse("net48");
+                    NuGetPackage installedPackage = await DownloadPackage(cacheContext, package.PackageIdentity, framework);
                     if(installedPackage != null)
                         packages.Add(installedPackage);
                 }
