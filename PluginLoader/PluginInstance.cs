@@ -7,6 +7,7 @@ using HarmonyLib;
 using VRage.Game.Components;
 using VRage.Plugins;
 using System.IO;
+using System.Text;
 
 namespace avaness.PluginLoader
 {
@@ -191,16 +192,35 @@ namespace avaness.PluginLoader
             if (data.Status == PluginStatus.Error || !data.TryLoadAssembly(out Assembly a))
                 return false;
 
-            Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
-            if (pluginType == null)
+            try
             {
-                LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
+                Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
+
+                if (pluginType == null)
+                {
+                    LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
+                    data.Error();
+                    return false;
+                }
+
+                instance = new PluginInstance(data, a, pluginType);
+                return true;
+            }
+            catch(Exception e)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append("Failed to load ").Append(data).Append(" because of an exception: ").Append(e).AppendLine();
+                if (e is ReflectionTypeLoadException typeLoadEx && typeLoadEx.LoaderExceptions != null)
+                {
+                    sb.Append("Exception details: ").AppendLine();
+                    foreach (Exception loaderException in typeLoadEx.LoaderExceptions)
+                        sb.Append(loaderException).AppendLine();
+                }
+                LogFile.WriteLine(sb.ToString());
                 data.Error();
                 return false;
             }
 
-            instance = new PluginInstance(data, a, pluginType);
-            return true;
         }
 
         public override string ToString()
