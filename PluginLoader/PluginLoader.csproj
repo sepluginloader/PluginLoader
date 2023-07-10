@@ -159,6 +159,7 @@
     <Compile Include="Network\GitHub.cs" />
     <Compile Include="LoaderTools.cs" />
     <Compile Include="Network\NuGetClient.cs" />
+    <Compile Include="AssemblyResolver.cs" />
     <Compile Include="Network\NuGetLogger.cs" />
     <Compile Include="Network\NuGetPackage.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />

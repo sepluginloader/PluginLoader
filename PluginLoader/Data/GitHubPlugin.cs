@@ -45,6 +45,7 @@ namespace avaness.PluginLoader.Data
         private GitHubPluginConfig config;
         private CacheManifest manifest;
         private NuGetClient nuget;
+        private AssemblyResolver resolver;
 
         public GitHubPlugin()
         {
@@ -149,7 +150,7 @@ namespace avaness.PluginLoader.Data
 
             Assembly a;
 
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveNuGetPackages;
+            resolver = new AssemblyResolver();
 
             int gameVersion = Main.Instance.Config.GameVersion;
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
@@ -161,40 +162,29 @@ namespace avaness.PluginLoader.Data
                 manifest.GameVersion = gameVersion;
                 manifest.Commit = selectedCommit;
                 manifest.ClearAssets();
-                byte[] data = CompileFromSource(selectedCommit, x => lbl.SetBarValue(x));
+                string name = assemblyName + '_' + Path.GetRandomFileName();
+                byte[] data = CompileFromSource(selectedCommit, name, x => lbl.SetBarValue(x));
                 File.WriteAllBytes(manifest.DllFile, data);
                 manifest.DeleteUnknownFiles();
                 manifest.Save();
 
                 Status = PluginStatus.Updated;
                 lbl.SetText($"Compiled '{FriendlyName}'");
+                resolver.AddSourceFolder(manifest.LibDir);
+                resolver.AddAllowedAssemblyFile(manifest.DllFile);
+                resolver.AddAllowedAssemblyName(name);
                 a = Assembly.Load(data);
             }
             else
             {
                 manifest.DeleteUnknownFiles();
+                resolver.AddSourceFolder(manifest.LibDir);
+                resolver.AddAllowedAssemblyFile(manifest.DllFile);
                 a = Assembly.LoadFile(manifest.DllFile);
             }
 
             Version = a.GetName().Version;
             return a;
-        }
-
-        private Assembly ResolveNuGetPackages(object sender, ResolveEventArgs args)
-        {
-            string requestingAssembly = args.RequestingAssembly?.GetName().ToString();
-            AssemblyName targetAssembly = new AssemblyName(args.Name);
-            string targetPath = Path.Combine(manifest.LibDir, targetAssembly.Name + ".dll");
-            if (File.Exists(targetPath))
-            {
-                Assembly a = Assembly.LoadFile(targetPath);
-                if (requestingAssembly != null)
-                    LogFile.WriteLine("Resolved " + args.Name + " for " + requestingAssembly);
-                else
-                    LogFile.WriteLine("Resolved " + args.Name);
-                return a;
-            }
-            return null;
         }
 
         private Branch GetSelectedVersion()
@@ -204,7 +194,7 @@ namespace avaness.PluginLoader.Data
             return AlternateVersions?.FirstOrDefault(x => x.Name.Equals(config.SelectedVersion, StringComparison.OrdinalIgnoreCase));
         }
 
-        public byte[] CompileFromSource(string commit, Action<float> callback = null)
+        public byte[] CompileFromSource(string commit, string assemblyName, Action<float> callback = null)
         {
             RoslynCompiler compiler = new RoslynCompiler();
             using (Stream s = GitHub.DownloadRepo(Id, commit))
@@ -219,7 +209,7 @@ namespace avaness.PluginLoader.Data
                 }
                 callback?.Invoke(1);
             }
-            return compiler.Compile(assemblyName + '_' + Path.GetRandomFileName(), out _);
+            return compiler.Compile(assemblyName, out _);
         }
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)

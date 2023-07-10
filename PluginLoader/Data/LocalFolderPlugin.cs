@@ -29,7 +29,7 @@ namespace avaness.PluginLoader.Data
         public override bool IsLocal => true;
         private string[] sourceDirectories;
         private GitHubPlugin github;
-        private string binDir;
+        private AssemblyResolver resolver;
 
         public LocalFolderConfig FolderSettings { get; private set; }
 
@@ -89,7 +89,9 @@ namespace avaness.PluginLoader.Data
                     throw new IOException("No files were found in the directory specified.");
                 }
 
-                byte[] data = compiler.Compile(FriendlyName + '_' + Path.GetRandomFileName(), out byte[] symbols);
+                string assemblyName = FriendlyName + '_' + Path.GetRandomFileName();
+                byte[] data = compiler.Compile(assemblyName, out byte[] symbols);
+                resolver?.AddAllowedAssemblyName(assemblyName);
                 Assembly a = Assembly.Load(data, symbols);
                 Version = a.GetName().Version;
                 return a;
@@ -109,17 +111,18 @@ namespace avaness.PluginLoader.Data
                 {
                     packages = nuget.DownloadFromConfig(fileStream);
                 }
-                binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHash256(Path.GetFullPath(nugetFile).Replace('\\', '/')));
+                string binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHash256(Path.GetFullPath(nugetFile).Replace('\\', '/')));
                 if(Directory.Exists(binDir))
                     Directory.Delete(binDir, true);
                 Directory.CreateDirectory(binDir);
                 foreach (NuGetPackage package in packages)
-                    InstallPackage(package, compiler);
-                AppDomain.CurrentDomain.AssemblyResolve += ResolveNuGetPackages;
+                    InstallPackage(package, compiler, binDir);
+                resolver = new AssemblyResolver();
+                resolver.AddSourceFolder(binDir);
             }
         }
 
-        private void InstallPackage(NuGetPackage package, RoslynCompiler compiler)
+        private void InstallPackage(NuGetPackage package, RoslynCompiler compiler, string binDir)
         {
             foreach (NuGetPackage.Item file in package.LibFiles)
             {
@@ -135,23 +138,6 @@ namespace avaness.PluginLoader.Data
                 Directory.CreateDirectory(Path.GetDirectoryName(newFile));
                 File.Copy(file.FullPath, newFile);
             }
-        }
-
-        private Assembly ResolveNuGetPackages(object sender, ResolveEventArgs args)
-        {
-            string requestingAssembly = args.RequestingAssembly?.GetName().ToString();
-            AssemblyName targetAssembly = new AssemblyName(args.Name);
-            string targetPath = Path.Combine(binDir, targetAssembly.Name + ".dll");
-            if (File.Exists(targetPath))
-            {
-                Assembly a = Assembly.LoadFile(targetPath);
-                if (requestingAssembly != null)
-                    LogFile.WriteLine("Resolved " + args.Name + " for " + requestingAssembly);
-                else
-                    LogFile.WriteLine("Resolved " + args.Name);
-                return a;
-            }
-            return null;
         }
 
         private IEnumerable<string> GetProjectFiles(string folder)
