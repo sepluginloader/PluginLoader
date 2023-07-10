@@ -19,9 +19,6 @@ goto waitfile
 Rem Copy the file to the target location
 :copyfile
 echo Copying file.
-copy /y "%~1" "%se_folder%\%~nx1"
-
-Rem Copy Harmony, so it gets updated if needed
-copy "%~dp10Harmony.dll" "%se_folder%\0Harmony.dll"
+for /R "%~dp1" %%F in (*.dll) DO copy /y "%%F" "%se_folder%\%%~nxF"
 
 :eof
