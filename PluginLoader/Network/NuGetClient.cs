@@ -60,10 +60,6 @@ namespace avaness.PluginLoader.Network
                     if(installedPackage != null)
                         packages.Add(installedPackage);
                 }
-
-                NuGetPackage installedPackage2 = await DownloadPackage(cacheContext, new PackageIdentity("Microsoft.CodeAnalysis.Common", NuGetVersion.Parse("4.6.0")), NuGetFramework.Parse("net48"));
-                if (installedPackage2 != null)
-                    packages.Add(installedPackage2);
             }
 
             return packages.ToArray();

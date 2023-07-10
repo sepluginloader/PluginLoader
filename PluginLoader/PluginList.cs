@@ -42,16 +42,6 @@ namespace avaness.PluginLoader
                 HasError = true;
             }
 
-            GitHubPlugin github = new GitHubPlugin()
-            {
-                Id = "Math0424/SpaceEngineersVR",
-                FriendlyName = "Space Engineers VR",
-                Commit = "8ffeafe853e1b4fb58053653b82a098fe9d2fc59",
-                AssetFolder = "SpaceEngineersVR/Assets",
-                NuGetReferences = "SpaceEngineersVR/packages.config"
-            };
-            plugins[github.Id] = github;
-
             UpdateWorkshopItems(config);
 
             FindLocalPlugins(config, mainDirectory);
