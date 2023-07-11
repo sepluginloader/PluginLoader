@@ -126,35 +126,38 @@ namespace avaness.PluginLoader
             Process.GetCurrentProcess().Kill();
         }
 
-        public static string GetHash1(string file)
-        {
-            using (SHA1Managed sha = new SHA1Managed())
-            {
-                return GetHash(file, sha);
-            }
-        }
-
         public static string GetHash256(string file)
         {
             using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
             {
-                return GetHash(file, sha);
+                using (FileStream fileStream = new FileStream(file, FileMode.Open))
+                {
+                    using (BufferedStream bufferedStream = new BufferedStream(fileStream))
+                    {
+                        return GetHash(bufferedStream, sha);
+                    }
+                }
             }
         }
 
-        public static string GetHash(string file, HashAlgorithm hash)
+        public static string GetHashString256(string text)
         {
-            using (FileStream fileStream = new FileStream(file, FileMode.Open))
+            using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
             {
-                using (BufferedStream bufferedStream = new BufferedStream(fileStream))
+                using (MemoryStream memory = new MemoryStream(Encoding.UTF8.GetBytes(text)))
                 {
-                    byte[] data = hash.ComputeHash(bufferedStream);
-                    StringBuilder sb = new StringBuilder(2 * data.Length);
-                    foreach (byte b in data)
-                        sb.AppendFormat("{0:x2}", b);
-                    return sb.ToString();
+                    return GetHash(memory, sha);
                 }
             }
+        }
+
+        public static string GetHash(Stream input, HashAlgorithm hash)
+        {
+            byte[] data = hash.ComputeHash(input);
+            StringBuilder sb = new StringBuilder(2 * data.Length);
+            foreach (byte b in data)
+                sb.AppendFormat("{0:x2}", b);
+            return sb.ToString();
         }
 
         /// <summary>
