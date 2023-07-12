@@ -179,6 +179,8 @@
     <Compile Include="AssemblyResolver.cs" />
     <Compile Include="Network\NuGetLogger.cs" />
     <Compile Include="Network\NuGetPackage.cs" />
+    <Compile Include="Network\NuGetPackageId.cs" />
+    <Compile Include="Network\NuGetPackageList.cs" />
     <Compile Include="Patch\Patch_ComponentRegistered.cs" />
     <Compile Include="Patch\Patch_CreateMenu.cs" />
     <Compile Include="Patch\Patch_DisableConfig.cs" />

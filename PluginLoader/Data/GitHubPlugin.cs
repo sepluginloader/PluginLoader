@@ -39,7 +39,7 @@ namespace avaness.PluginLoader.Data
         public string AssetFolder { get; set; }
 
         [ProtoMember(5)]
-        public string NuGetReferences { get; set; }
+        public NuGetPackageList NuGetReferences { get; set; }
 
         private string assemblyName;
         private GitHubPluginConfig config;
@@ -105,9 +105,6 @@ namespace avaness.PluginLoader.Data
                     AssetFolder += '/';
             }
 
-            if(!string.IsNullOrWhiteSpace(NuGetReferences))
-                NuGetReferences = NuGetReferences.Replace('\\', '/').TrimStart('/');
-
             assemblyName = MakeSafeString(nameArgs[1]);
             manifest = CacheManifest.Load(nameArgs[0], nameArgs[1]);
         }
@@ -154,7 +151,7 @@ namespace avaness.PluginLoader.Data
 
             int gameVersion = Main.Instance.Config.GameVersion;
             string selectedCommit = GetSelectedVersion()?.Commit ?? Commit;
-            if (!manifest.IsCacheValid(selectedCommit, gameVersion, !string.IsNullOrWhiteSpace(AssetFolder), !string.IsNullOrWhiteSpace(NuGetReferences)))
+            if (!manifest.IsCacheValid(selectedCommit, gameVersion, !string.IsNullOrWhiteSpace(AssetFolder), NuGetReferences != null && NuGetReferences.HasPackages))
             {
                 var lbl = Main.Instance.Splash;
                 lbl.SetText($"Downloading '{FriendlyName}'");
@@ -207,24 +204,29 @@ namespace avaness.PluginLoader.Data
                     CompileFromSource(compiler, entry);
                     callback?.Invoke(i / (float)zip.Entries.Count);
                 }
-                callback?.Invoke(1);
             }
+            if(NuGetReferences?.PackageIds != null)
+            {
+                if (nuget == null)
+                    nuget = new NuGetClient();
+                InstallPackages(nuget.DownloadPackages(NuGetReferences.PackageIds), compiler);
+            }
+            callback?.Invoke(1);
             return compiler.Compile(assemblyName, out _);
         }
 
         private void CompileFromSource(RoslynCompiler compiler, ZipArchiveEntry entry)
         {
             string path = RemoveRoot(entry.FullName);
-            if (path == NuGetReferences)
+            if (NuGetReferences != null && path == NuGetReferences.PackagesConfigNormalized)
             {
+                nuget = new NuGetClient();
                 NuGetPackage[] packages;
                 using (Stream entryStream = entry.Open())
                 {
-                    nuget = new NuGetClient();
                     packages = nuget.DownloadFromConfig(entryStream);
                 }
-                foreach (NuGetPackage package in packages)
-                    InstallPackage(package, compiler);
+                InstallPackages(packages, compiler);
             }
             if (AllowedZipPath(path))
             {
@@ -244,6 +246,12 @@ namespace avaness.PluginLoader.Data
                     }
                 }
             }
+        }
+
+        private void InstallPackages(IEnumerable<NuGetPackage> packages, RoslynCompiler compiler)
+        {
+            foreach (NuGetPackage package in packages)
+                InstallPackage(package, compiler);
         }
 
         private void InstallPackage(NuGetPackage package, RoslynCompiler compiler)

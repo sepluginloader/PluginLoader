@@ -63,7 +63,7 @@ namespace avaness.PluginLoader.Data
                 RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild);
                 bool hasFile = false;
 
-                if (!string.IsNullOrWhiteSpace(github.NuGetReferences))
+                if (github.NuGetReferences != null && github.NuGetReferences.HasPackages)
                     InstallDependencies(compiler);
 
                 StringBuilder sb = new StringBuilder();
@@ -102,24 +102,37 @@ namespace avaness.PluginLoader.Data
 
         private void InstallDependencies(RoslynCompiler compiler)
         {
-            string nugetFile = Path.Combine(Id, github.NuGetReferences);
-            if (File.Exists(nugetFile))
+            NuGetPackageList packageList = github.NuGetReferences;
+            NuGetClient nuget = new NuGetClient();
+
+            string binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHashString256(Path.GetFullPath(Id)));
+            if (Directory.Exists(binDir))
+                Directory.Delete(binDir, true);
+            Directory.CreateDirectory(binDir);
+
+            if (!string.IsNullOrWhiteSpace(packageList.PackagesConfig))
             {
-                NuGetClient nuget = new NuGetClient();
-                NuGetPackage[] packages;
-                using (FileStream fileStream = File.OpenRead(nugetFile))
+                string nugetFile = Path.GetFullPath(Path.Combine(Id, packageList.PackagesConfig));
+                if (File.Exists(nugetFile))
                 {
-                    packages = nuget.DownloadFromConfig(fileStream);
+                    NuGetPackage[] packages;
+                    using (FileStream fileStream = File.OpenRead(nugetFile))
+                    {
+                        packages = nuget.DownloadFromConfig(fileStream);
+                    }
+                    foreach (NuGetPackage package in packages)
+                        InstallPackage(package, compiler, binDir);
                 }
-                string binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHash256(Path.GetFullPath(nugetFile).Replace('\\', '/')));
-                if(Directory.Exists(binDir))
-                    Directory.Delete(binDir, true);
-                Directory.CreateDirectory(binDir);
-                foreach (NuGetPackage package in packages)
-                    InstallPackage(package, compiler, binDir);
-                resolver = new AssemblyResolver();
-                resolver.AddSourceFolder(binDir);
             }
+
+            if(packageList.PackageIds != null)
+            {
+                foreach (NuGetPackage package in nuget.DownloadPackages(packageList.PackageIds))
+                    InstallPackage(package, compiler, binDir);
+            }
+
+            resolver = new AssemblyResolver();
+            resolver.AddSourceFolder(binDir);
         }
 
         private void InstallPackage(NuGetPackage package, RoslynCompiler compiler, string binDir)

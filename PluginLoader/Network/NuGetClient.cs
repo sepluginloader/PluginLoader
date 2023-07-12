@@ -56,10 +56,7 @@ namespace avaness.PluginLoader.Network
             {
                 foreach (PackageReference package in reader.GetPackages(false))
                 {
-                    NuGetFramework framework = package.TargetFramework;
-                    if (framework == null || framework.IsAny || framework.IsAgnostic || framework.IsUnsupported)
-                        framework = NuGetFramework.Parse("net48");
-                    NuGetPackage installedPackage = await DownloadPackage(cacheContext, package.PackageIdentity, framework);
+                    NuGetPackage installedPackage = await DownloadPackage(cacheContext, package.PackageIdentity, package.TargetFramework);
                     if(installedPackage != null)
                         packages.Add(installedPackage);
                 }
@@ -68,10 +65,37 @@ namespace avaness.PluginLoader.Network
             return packages.ToArray();
         }
 
-        public async Task<NuGetPackage> DownloadPackage(SourceCacheContext cacheContext, PackageIdentity package, NuGetFramework framework)
+        public NuGetPackage[] DownloadPackages(IEnumerable<NuGetPackageId> packageIds)
+        {
+            return Task.Run(() => DownloadPackagesAsync(packageIds)).GetAwaiter().GetResult();
+        }
+
+        public async Task<NuGetPackage[]> DownloadPackagesAsync(IEnumerable<NuGetPackageId> packageIds)
+        {
+            List<NuGetPackage> packages = new List<NuGetPackage>();
+            using (SourceCacheContext cacheContext = new SourceCacheContext())
+            {
+                foreach (NuGetPackageId package in packageIds)
+                {
+                    if(package.TryGetIdentity(out PackageIdentity id))
+                    {
+                        NuGetPackage installedPackage = await DownloadPackage(cacheContext, id);
+                        if (installedPackage != null)
+                            packages.Add(installedPackage);
+                    }
+                }
+            }
+
+            return packages.ToArray();
+        }
+
+        public async Task<NuGetPackage> DownloadPackage(SourceCacheContext cacheContext, PackageIdentity package, NuGetFramework framework = null)
         {
             if (!IsValidPackage(package.Id))
                 return null;
+
+            if (framework == null || framework.IsAny || framework.IsAgnostic || framework.IsUnsupported)
+                framework = NuGetFramework.Parse("net48");
 
             // Download package if needed
             string installedPath = pathResolver.GetInstalledPath(package);
