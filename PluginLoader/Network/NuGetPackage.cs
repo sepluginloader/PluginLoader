@@ -26,18 +26,18 @@ namespace avaness.PluginLoader.Network
         {
             PackageFolderReader packageReader = new PackageFolderReader(installPath);
             FrameworkReducer frameworkReducer = new FrameworkReducer();
-            LibFiles = GetItems(packageReader.GetLibItems(), frameworkReducer, targetFramework);
-            ContentFiles = GetItems(packageReader.GetContentItems(), frameworkReducer, targetFramework);
+            LibFiles = GetItems(packageReader.GetLibItems(), frameworkReducer, targetFramework, false);
+            ContentFiles = GetItems(packageReader.GetContentItems(), frameworkReducer, targetFramework, true);
         }
 
-        private Item[] GetItems(IEnumerable<FrameworkSpecificGroup> itemGroups, FrameworkReducer frameworkReducer, NuGetFramework targetFramework)
+        private Item[] GetItems(IEnumerable<FrameworkSpecificGroup> itemGroups, FrameworkReducer frameworkReducer, NuGetFramework targetFramework, bool contentItems)
         {
             NuGetFramework nearest = frameworkReducer.GetNearest(targetFramework, itemGroups.Select(x => x.TargetFramework));
             if (nearest != null)
             {
                 List<Item> libFiles = new List<Item>();
                 foreach (FrameworkSpecificGroup group in itemGroups.Where(x => x.TargetFramework.Equals(nearest)))
-                    libFiles.AddRange(group.Items.Select(x => GetPackageItem(x, group.TargetFramework, false)).Where(x => x != null));
+                    libFiles.AddRange(group.Items.Select(x => GetPackageItem(x, group.TargetFramework, contentItems)).Where(x => x != null));
                 return libFiles.ToArray();
             }
 
