@@ -13,15 +13,15 @@ namespace avaness.PluginLoader.Network
     public class NuGetPackageList
     {
         [ProtoMember(1)]
-        public string PackagesConfig { get; set; }
+        public string Config { get; set; }
 
         [ProtoMember(2)]
         [XmlArray("Packages")]
         [XmlArrayItem("Package")]
         public NuGetPackageId[] PackageIds { get; set; }
 
-        public string PackagesConfigNormalized => PackagesConfig?.Replace('\\', '/').TrimStart('/');
+        public string PackagesConfigNormalized => Config?.Replace('\\', '/').TrimStart('/');
 
-        public bool HasPackages => !string.IsNullOrWhiteSpace(PackagesConfig) || (PackageIds != null && PackageIds.Length > 0);
+        public bool HasPackages => !string.IsNullOrWhiteSpace(Config) || (PackageIds != null && PackageIds.Length > 0);
     }
 }

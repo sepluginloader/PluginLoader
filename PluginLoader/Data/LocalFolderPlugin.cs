@@ -110,9 +110,9 @@ namespace avaness.PluginLoader.Data
                 Directory.Delete(binDir, true);
             Directory.CreateDirectory(binDir);
 
-            if (!string.IsNullOrWhiteSpace(packageList.PackagesConfig))
+            if (!string.IsNullOrWhiteSpace(packageList.Config))
             {
-                string nugetFile = Path.GetFullPath(Path.Combine(Id, packageList.PackagesConfig));
+                string nugetFile = Path.GetFullPath(Path.Combine(Id, packageList.Config));
                 if (File.Exists(nugetFile))
                 {
                     NuGetPackage[] packages;
