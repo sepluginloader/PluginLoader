@@ -22,7 +22,6 @@ namespace avaness.PluginLoader.Network
         const string NugetServiceIndex = "https://api.nuget.org/v3/index.json";
         private static readonly NuGetFramework ProjectFramework = NuGetFramework.Parse("net48");
 
-        private static readonly Dictionary<PackageIdentity, SourcePackageDependencyInfo> dependencies = new Dictionary<PackageIdentity, SourcePackageDependencyInfo>();
         private static readonly ILogger logger = new NuGetLogger();
 
         private readonly string packageFolder;

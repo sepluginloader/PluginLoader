@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Network
 {
@@ -13,10 +14,28 @@ namespace avaness.PluginLoader.Network
     public class NuGetPackageId
     {
         [ProtoMember(1)]
+        [XmlElement]
         public string Name { get; set; }
 
+        [ProtoIgnore]
+        [XmlAttribute("Include")]
+        public string NameAttribute
+        {
+            get => Name;
+            set => Name = value;
+        }
+
         [ProtoMember(2)]
+        [XmlElement]
         public string Version { get; set; }
+
+        [ProtoIgnore]
+        [XmlAttribute("Version")]
+        public string VersionAttribute
+        {
+            get => Version;
+            set => Version = value;
+        }
 
         public bool TryGetIdentity(out PackageIdentity id)
         {
