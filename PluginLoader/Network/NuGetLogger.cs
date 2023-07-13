@@ -11,12 +11,33 @@ namespace avaness.PluginLoader.Network
     {
         public void Log(LogLevel level, string data)
         {
-            LogFile.WriteGameLog($"[NuGet] [{level}] {data}");
+            LogFile.WriteLine($"[NuGet] {data}", ConvertLogLevel(level));
         }
 
         public void Log(ILogMessage message)
         {
-            LogFile.WriteGameLog($"[NuGet] [{message}]");
+            Log(message.Level, message.Message);
+        }
+
+        private NLog.LogLevel ConvertLogLevel(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug:
+                    return NLog.LogLevel.Debug;
+                case LogLevel.Verbose:
+                    return NLog.LogLevel.Debug;
+                case LogLevel.Information:
+                    return NLog.LogLevel.Info;
+                case LogLevel.Minimal:
+                    return NLog.LogLevel.Info;
+                case LogLevel.Warning:
+                    return NLog.LogLevel.Warn;
+                case LogLevel.Error:
+                    return NLog.LogLevel.Error;
+            }
+
+            return NLog.LogLevel.Info;
         }
 
         public Task LogAsync(LogLevel level, string data)
