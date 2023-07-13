@@ -38,7 +38,7 @@ namespace avaness.PluginLoader
 
             if(plugins.Count == 0)
             {
-                LogFile.WriteLine("WARNING: No plugins in the plugin list. Plugin list will contain local plugins only.");
+                LogFile.Warn("No plugins in the plugin list. Plugin list will contain local plugins only.");
                 HasError = true;
             }
 
@@ -181,12 +181,12 @@ namespace avaness.PluginLoader
                     LogFile.WriteLine("Whitelist retrieved from disk");
                     list = tempList.ToArray();
                     if (obsolete > 0)
-                        LogFile.WriteLine("WARNING: " + obsolete + " obsolete plugins found in the whitelist file.");
+                        LogFile.Warn(obsolete + " obsolete plugins found in the whitelist file.");
                     return true;
                 }
                 catch (Exception e)
                 {
-                    LogFile.WriteLine("Error while reading whitelist: " + e);
+                    LogFile.Error("Error while reading whitelist: " + e);
                 }
             }
             else
@@ -223,7 +223,7 @@ namespace avaness.PluginLoader
                             }
                             catch (InvalidOperationException e)
                             {
-                                LogFile.WriteLine("An error occurred while reading " + entry.FullName + ": " + (e.InnerException ?? e));
+                                LogFile.Error("An error occurred while reading " + entry.FullName + ": " + (e.InnerException ?? e));
                             }
                         }
                     }
@@ -234,7 +234,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("Error while downloading whitelist: " + e);
+                LogFile.Error("Error while downloading whitelist: " + e);
             }
 
             return false;
@@ -262,7 +262,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("Error while saving whitelist: " + e);
+                LogFile.Error("Error while saving whitelist: " + e);
                 try
                 {
                     File.Delete(file);
@@ -286,7 +286,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("Error while downloading whitelist hash: " + e);
+                LogFile.Error("Error while downloading whitelist hash: " + e);
                 return false;
             }
         }

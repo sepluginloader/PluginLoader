@@ -1,39 +1,60 @@
 ﻿using System;
 using System.IO;
 using VRage.Utils;
+using NLog;
+using NLog.Config;
+using NLog.Layouts;
 
 namespace avaness.PluginLoader
 {
     public static class LogFile
     {
         private const string fileName = "loader.log";
-        private static StreamWriter writer;
+        private static Logger logger;
+        private static LogFactory logFactory;
 
         public static void Init(string mainPath)
         {
             string file = Path.Combine(mainPath, fileName);
+            LoggingConfiguration config = new LoggingConfiguration();
+            config.AddRuleForAllLevels(new NLog.Targets.FileTarget() 
+            { 
+                DeleteOldFileOnStartup = true,
+                FileName = file,
+                Layout = new SimpleLayout("${longdate} [${level:uppercase=true}] (${threadid}) ${message:withexception=true}")
+            });
+            logFactory = new LogFactory(config);
+            logFactory.ThrowExceptions = false;
+            
             try
             {
-                writer = File.CreateText(file);
+                logger = logFactory.GetLogger("PluginLoader");
             }
             catch
             {
-                writer = null;
+                logger = null;
             }
         }
 
-        /// <summary>
-        /// Writes the specifed text to the log file.
-        /// WARNING: Not thread safe!
-        /// </summary>
-        public static void WriteLine(string text, bool gameLog = true)
+        public static void Error(string text, bool gameLog = true)
+        {
+            WriteLine(text, LogLevel.Error, gameLog);
+        }
+
+        public static void Warn(string text, bool gameLog = true)
+        {
+            WriteLine(text, LogLevel.Warn, gameLog);
+        }
+
+        public static void WriteLine(string text, LogLevel level = null, bool gameLog = true)
         {
             try
             {
-                writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
-                if (gameLog)
-                    WriteGameLog(text);
-                writer?.Flush();
+                if (level == null)
+                    level = LogLevel.Info;
+                logger?.Log(level, text);
+                if(gameLog)
+                    MyLog.Default?.WriteLine($"[PluginLoader] [{level.Name}] {text}");
             }
             catch 
             {
@@ -41,37 +62,20 @@ namespace avaness.PluginLoader
             }
         }
 
-        /// <summary>
-        /// Writes the specifed text to the game log file.
-        /// This function is thread safe.
-        /// </summary>
-        public static void WriteGameLog(string text)
-        {
-            MyLog.Default.WriteLine($"[PluginLoader] {text}");
-        }
-
-        public static void WriteTrace(string text, bool gameLog = true)
-        {
-#if DEBUG
-            writer?.WriteLine($"{DateTime.UtcNow:O} {text}");
-            if(gameLog)
-                LogFile.WriteGameLog($"[PluginLoader] {text}");
-            writer?.Flush();
-#endif
-        }
 
         public static void Dispose()
         {
-            if (writer == null)
+            if (logger == null)
                 return;
 
             try
             {
-                writer.Flush();
-                writer.Close();
+                logFactory.Flush();
+                logFactory.Dispose();
             }
             catch { }
-            writer = null;
+            logger = null;
+            logFactory = null;
         }
     }
 }

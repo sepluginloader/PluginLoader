@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +31,7 @@ namespace avaness.PluginLoader.Compiler
             sb.AppendLine("Assembly References");
             sb.AppendLine(line);
 
+            LogLevel level = LogLevel.Info;
             try
             {
                 foreach (Assembly a in loadedAssemblies)
@@ -38,7 +40,7 @@ namespace avaness.PluginLoader.Compiler
                     AssemblyName name = a.GetName();
                     if (name.Name == harmonyInfo.Name && name.Version != harmonyInfo.Version)
                     {
-                        LogFile.WriteLine($"WARNING: Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
+                        LogFile.Warn($"Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
                         continue;
                     }
 
@@ -60,7 +62,7 @@ namespace avaness.PluginLoader.Compiler
                         // Prevent other Harmony versions from being loaded
                         if (name.Name == harmonyInfo.Name && name.Version != harmonyInfo.Version)
                         {
-                            LogFile.WriteLine($"WARNING: Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
+                            LogFile.Warn($"Multiple Harmony assemblies are loaded. Plugin Loader is using {harmonyInfo} but found {name}");
                             continue;
                         }
 
@@ -77,9 +79,10 @@ namespace avaness.PluginLoader.Compiler
             catch (Exception e)
             {
                 sb.Append("Error: ").Append(e).AppendLine();
+                level = LogLevel.Error;
             }
 
-            LogFile.WriteLine(sb.ToString(), false);
+            LogFile.WriteLine(sb.ToString(), level, gameLog: false);
         }
 
         /// <summary>
@@ -141,7 +144,7 @@ namespace avaness.PluginLoader.Compiler
             }
             catch (IOException)
             {
-                LogFile.WriteLine("WARNING: Unable to find the assembly '" + name + "'!");
+                LogFile.Warn("Unable to find the assembly '" + name + "'!");
             }
         }
     }

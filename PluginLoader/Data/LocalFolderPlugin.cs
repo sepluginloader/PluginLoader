@@ -282,7 +282,7 @@ namespace avaness.PluginLoader.Data
             }
             catch (Exception e)
             {
-                LogFile.WriteLine($"Error while reading the xml file {file} for {Id}: " + e);
+                LogFile.Error($"Error while reading the xml file {file} for {Id}: " + e);
             }
         }
 

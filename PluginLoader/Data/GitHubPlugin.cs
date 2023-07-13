@@ -338,7 +338,7 @@ namespace avaness.PluginLoader.Data
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("ERROR: Failed to invalidate github cache: " + e);
+                LogFile.Error("Failed to invalidate github cache: " + e);
             }
         }
 

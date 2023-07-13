@@ -72,6 +72,10 @@
     <Reference Include="NuGet.Versioning, Version=6.6.1.2, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Versioning.6.6.1\lib\net472\NuGet.Versioning.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NLog">
+      <HintPath>..\Bin64\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\Bin64\ProtoBuf.Net.dll</HintPath>
       <Private>False</Private>

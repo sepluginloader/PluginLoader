@@ -30,7 +30,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: GET {url} [{e.Message}]");
+                LogFile.Error($"REST API request failed: GET {url} [{e.Message}]");
                 return null;
             }
         }
@@ -55,7 +55,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: GET {uri} [{e.Message}]");
+                LogFile.Error($"REST API request failed: GET {uri} [{e.Message}]");
                 return null;
             }
         }
@@ -71,7 +71,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.Error($"REST API request failed: POST {url} [{e.Message}]");
                 return null;
             }
         }
@@ -92,7 +92,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: POST {uri} [{e.Message}]");
+                LogFile.Error($"REST API request failed: POST {uri} [{e.Message}]");
                 return null;
             }
         }
@@ -112,7 +112,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.Error($"REST API request failed: POST {url} [{e.Message}]");
                 return null;
             }
         }
@@ -131,7 +131,7 @@ namespace avaness.PluginLoader.Tools
             }
             catch (WebException e)
             {
-                LogFile.WriteGameLog($"REST API request failed: POST {url} [{e.Message}]");
+                LogFile.Error($"REST API request failed: POST {url} [{e.Message}]");
                 return false;
             }
         }

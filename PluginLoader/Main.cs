@@ -89,7 +89,7 @@ namespace avaness.PluginLoader
             Version expectedHarmony = new Version(HarmonyVersion);
             Version actualHarmony = typeof(Harmony).Assembly.GetName().Version;
             if (expectedHarmony != actualHarmony)
-                LogFile.WriteLine($"WARNING: Unexpected Harmony version, plugins may be unstable. Expected {expectedHarmony} but found {actualHarmony}");
+                LogFile.Warn($"Unexpected Harmony version, plugins may be unstable. Expected {expectedHarmony} but found {actualHarmony}");
 
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
@@ -140,7 +140,6 @@ namespace avaness.PluginLoader
         
         public void UpdatePlayerStats()
         {
-            LogFile.WriteLine("Downloading user statistics", false);
             ParallelTasks.Parallel.Start(() =>
             {
                 Stats = StatsClient.DownloadStats();
@@ -198,7 +197,7 @@ namespace avaness.PluginLoader
             if (StatsClient.Track(TrackablePluginIds))
                 LogFile.WriteLine("List of enabled plugins has been sent to the statistics server");
             else
-                LogFile.WriteLine("Failed to send the list of enabled plugins to the statistics server");
+                LogFile.Error("Failed to send the list of enabled plugins to the statistics server");
         }
 
         // Skip local plugins, keep only enabled ones

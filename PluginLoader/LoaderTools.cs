@@ -238,7 +238,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteGameLog("Error while opening file dialog: " + e);
+                LogFile.Error("Error while opening file dialog: " + e);
             }
         }
 
@@ -270,7 +270,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteGameLog("Error while opening file dialog: " + e);
+                LogFile.Error("Error while opening file dialog: " + e);
             }
         }
     }
