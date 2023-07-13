@@ -56,11 +56,11 @@ namespace avaness.PluginLoader
                     sb.AppendLine("An error occurred while updating workshop items:");
                     foreach (Exception e in exceptions)
                         sb.Append(e);
-                    LogFile.WriteLine(sb.ToString());
+                    LogFile.Error(sb.ToString());
                 }
                 else
                 {
-                    LogFile.WriteLine("Unable to update workshop items. Result: " + result.Result);
+                    LogFile.Error("Unable to update workshop items. Result: " + result.Result);
                 }
 
             }

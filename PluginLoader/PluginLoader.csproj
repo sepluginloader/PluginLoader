@@ -44,6 +44,9 @@
       <HintPath>..\Bin64\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NLog">
+      <HintPath>..\Bin64\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\Bin64\ProtoBuf.Net.dll</HintPath>
     </Reference>

@@ -109,7 +109,7 @@ namespace avaness.PluginLoader.Data
 
                 if (a == null)
                 {
-                    LogFile.WriteLine("Failed to load " + ToString());
+                    LogFile.Error("Failed to load " + ToString());
                     Error();
                     return false;
                 }
@@ -122,10 +122,10 @@ namespace avaness.PluginLoader.Data
             catch (Exception e)
             {
                 string name = ToString();
-                LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
+                LogFile.Error($"Failed to load {name} because of an error: " + e);
                 if (e is MemberAccessException)
                 {
-                    LogFile.WriteLine($"Is {name} up to date?");
+                    LogFile.Error($"Is {name} up to date?");
                     InvalidateCache();
                 }
 
@@ -188,13 +188,6 @@ namespace avaness.PluginLoader.Data
             {
                 MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        protected void ErrorSecurity(string hash)
-        {
-            Status = PluginStatus.Blocked;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LogFile.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 
         public abstract void Show();

@@ -63,7 +63,7 @@ namespace avaness.PluginLoader
             }
             catch (Exception e)
             {
-                LogFile.WriteLine($"Unable to find OpenConfigDialog() in {data} due to an error: {e}");
+                LogFile.Error($"Unable to find OpenConfigDialog() in {data} due to an error: {e}");
                 openConfigDialog = null;
             }
             return true;
@@ -158,14 +158,14 @@ namespace avaness.PluginLoader
                 catch (Exception e)
                 {
                     data.Status = PluginStatus.Error;
-                    LogFile.WriteLine($"Failed to dispose {data} because of an error: {e}");
+                    LogFile.Error($"Failed to dispose {data} because of an error: {e}");
                 }
             }
         }
 
         private void ThrowError(string error)
         {
-            LogFile.WriteLine(error);
+            LogFile.Error(error);
             data.Error();
             Dispose();
         }
@@ -179,7 +179,7 @@ namespace avaness.PluginLoader
             Type pluginType = a.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t));
             if (pluginType == null)
             {
-                LogFile.WriteLine($"Failed to load {data} because it does not contain an IPlugin");
+                LogFile.Error($"Failed to load {data} because it does not contain an IPlugin");
                 data.Error();
                 return false;
             }

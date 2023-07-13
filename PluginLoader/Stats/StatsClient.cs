@@ -53,12 +53,12 @@ namespace avaness.PluginLoader.Stats
         {
             if (!PlayerConsent.ConsentGiven)
             {
-                LogFile.WriteGameLog("Downloading plugin statistics anonymously...");
+                LogFile.WriteLine("Downloading plugin statistics anonymously...");
                 votingToken = null;
                 return SimpleHttpClient.Get<PluginStats>(StatsUri);
             }
 
-            LogFile.WriteGameLog("Downloading plugin statistics, ratings and votes for " + PlayerHash);
+            LogFile.WriteLine("Downloading plugin statistics, ratings and votes for " + PlayerHash);
 
             var parameters = new Dictionary<string, string> { ["playerHash"] = PlayerHash };
             var pluginStats = SimpleHttpClient.Get<PluginStats>(StatsUri, parameters);
@@ -83,7 +83,7 @@ namespace avaness.PluginLoader.Stats
         {
             if (votingToken == null)
             {
-                LogFile.WriteLine($"Voting token is not available, cannot vote");
+                LogFile.Error($"Voting token is not available, cannot vote");
                 return null;
             }
 

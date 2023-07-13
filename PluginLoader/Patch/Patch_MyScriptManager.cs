@@ -49,7 +49,7 @@ namespace avaness.PluginLoader.Patch
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("An error occured while loading client mods: " + e);
+                LogFile.Error("An error occured while loading client mods: " + e);
                 throw;
             }
         }

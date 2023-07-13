@@ -145,14 +145,14 @@ namespace avaness.PluginLoader.Config
 
             foreach (KeyValuePair<string, PluginData> kv in enabledPlugins.Where(x => x.Value == null).ToArray())
             {
-                LogFile.WriteLine($"{kv.Key} was in the config but is no longer available");
+                LogFile.Warn($"{kv.Key} was in the config but is no longer available");
                 enabledPlugins.Remove(kv.Key);
                 save = true;
             }
 
             foreach (string id in pluginSettings.Keys.Where(x => !plugins.Contains(x)).ToArray())
             {
-                LogFile.WriteLine($"{id} had settings in the config but is no longer available");
+                LogFile.Warn($"{id} had settings in the config but is no longer available");
                 pluginSettings.Remove(id);
                 save = true;
             }
@@ -202,7 +202,7 @@ namespace avaness.PluginLoader.Config
             }
             catch (Exception e)
             {
-                LogFile.WriteLine($"An error occurred while saving plugin config: " + e);
+                LogFile.Error($"An error occurred while saving plugin config: " + e);
             }
         }
 
@@ -222,7 +222,7 @@ namespace avaness.PluginLoader.Config
                 }
                 catch (Exception e)
                 {
-                    LogFile.WriteLine($"An error occurred while loading plugin config: " + e);
+                    LogFile.Error($"An error occurred while loading plugin config: " + e);
                 }
             }
 
