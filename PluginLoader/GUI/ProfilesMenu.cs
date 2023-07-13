@@ -135,6 +135,7 @@ namespace avaness.PluginLoader.GUI
                 profiles.Remove(p.Key);
                 profilesTable.Remove(row);
                 profilesModified = true;
+                UpdateButtons();
             }
         }
 
