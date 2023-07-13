@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -16,7 +13,6 @@ using NuGet.Packaging.Signing;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Resolver;
-using NuGet.Versioning;
 using VRage.FileSystem;
 
 namespace avaness.PluginLoader.Network
@@ -24,6 +20,9 @@ namespace avaness.PluginLoader.Network
     public class NuGetClient
     {
         const string NugetServiceIndex = "https://api.nuget.org/v3/index.json";
+        private static readonly NuGetFramework ProjectFramework = NuGetFramework.Parse("net48");
+
+        private static readonly Dictionary<PackageIdentity, SourcePackageDependencyInfo> dependencies = new Dictionary<PackageIdentity, SourcePackageDependencyInfo>();
         private static readonly ILogger logger = new NuGetLogger();
 
         private readonly string packageFolder;
@@ -65,39 +64,92 @@ namespace avaness.PluginLoader.Network
             return packages.ToArray();
         }
 
-        public NuGetPackage[] DownloadPackages(IEnumerable<NuGetPackageId> packageIds)
+        public NuGetPackage[] DownloadPackages(IEnumerable<NuGetPackageId> packageIds, bool getDependencies = true)
         {
-            return Task.Run(() => DownloadPackagesAsync(packageIds)).GetAwaiter().GetResult();
+            return Task.Run(() => DownloadPackagesAsync(packageIds, getDependencies)).GetAwaiter().GetResult();
         }
 
-        public async Task<NuGetPackage[]> DownloadPackagesAsync(IEnumerable<NuGetPackageId> packageIds)
+        public async Task<NuGetPackage[]> DownloadPackagesAsync(IEnumerable<NuGetPackageId> packageIds, bool getDependencies = true)
         {
-            List<NuGetPackage> packages = new List<NuGetPackage>();
+            List<PackageIdentity> packages = new List<PackageIdentity>();
+            foreach(NuGetPackageId id in packageIds)
+            {
+                if(id.TryGetIdentity(out PackageIdentity nugetId))
+                    packages.Add(nugetId);
+            }
+
+            List<NuGetPackage> result = new List<NuGetPackage>();
             using (SourceCacheContext cacheContext = new SourceCacheContext())
             {
-                foreach (NuGetPackageId package in packageIds)
+                IEnumerable<PackageIdentity> downloadPackages;
+                if (getDependencies)
+                    downloadPackages = await ResolveDependencies(packages, cacheContext);
+                else
+                    downloadPackages = packages;
+
+                foreach (PackageIdentity id in downloadPackages)
                 {
-                    if(package.TryGetIdentity(out PackageIdentity id))
-                    {
-                        NuGetPackage installedPackage = await DownloadPackage(cacheContext, id);
-                        if (installedPackage != null)
-                            packages.Add(installedPackage);
-                    }
+                    NuGetPackage installedPackage = await DownloadPackage(cacheContext, id);
+                    if (installedPackage != null)
+                        result.Add(installedPackage);
                 }
             }
 
-            return packages.ToArray();
+            return result.ToArray();
+        }
+
+        private async Task<IEnumerable<PackageIdentity>> ResolveDependencies(IEnumerable<PackageIdentity> packages, SourceCacheContext context)
+        {
+            PackageResolverContext resolverContext = new PackageResolverContext(
+                dependencyBehavior: DependencyBehavior.Lowest,
+                targetIds: packages.Select(x => x.Id),
+                requiredPackageIds: Enumerable.Empty<string>(),
+                packagesConfig: Enumerable.Empty<PackageReference>(),
+                preferredVersions: Enumerable.Empty<PackageIdentity>(),
+                availablePackages: await GetDependencies(packages, context),
+                packageSources: new[] { sourceRepository.PackageSource },
+                log: logger);
+
+            return new PackageResolver().Resolve(resolverContext, CancellationToken.None);
+        }
+
+        private async Task<IEnumerable<SourcePackageDependencyInfo>> GetDependencies(
+            IEnumerable<PackageIdentity> packages,
+            SourceCacheContext context)
+        {
+            Dictionary<PackageIdentity, SourcePackageDependencyInfo> result = new Dictionary<PackageIdentity, SourcePackageDependencyInfo>();
+
+            DependencyInfoResource dependencyInfoResource = await sourceRepository.GetResourceAsync<DependencyInfoResource>();
+            if (dependencyInfoResource == null)
+                return result.Values;
+
+            Stack<PackageIdentity> stack = new Stack<PackageIdentity>(packages);
+            while (stack.Count > 0)
+            {
+                PackageIdentity package = stack.Pop();
+
+                if (!result.ContainsKey(package))
+                {
+                    SourcePackageDependencyInfo dependencyInfo = await dependencyInfoResource.ResolvePackage(package, ProjectFramework, context, logger, CancellationToken.None);
+                    result.Add(package, dependencyInfo);
+                    if (dependencyInfo == null)
+                        continue;
+                    foreach (PackageDependency dependency in dependencyInfo.Dependencies)
+                        stack.Push(new PackageIdentity(dependency.Id, dependency.VersionRange.MinVersion));
+                }
+            }
+
+            return result.Values.Where(x => x != null);
         }
 
         public async Task<NuGetPackage> DownloadPackage(SourceCacheContext cacheContext, PackageIdentity package, NuGetFramework framework = null)
         {
-            if (!IsValidPackage(package.Id))
+            if (IsSystemPackage(package.Id))
                 return null;
 
             if (framework == null || framework.IsAny || framework.IsAgnostic || framework.IsUnsupported)
-                framework = NuGetFramework.Parse("net48");
+                framework = ProjectFramework;
 
-            // Download package if needed
             string installedPath = pathResolver.GetInstalledPath(package);
             if (installedPath == null)
             {
@@ -125,9 +177,13 @@ namespace avaness.PluginLoader.Network
             return new NuGetPackage(installedPath, framework);
         }
 
-        private bool IsValidPackage(string id)
+        private bool IsSystemPackage(string id)
         {
-            return !id.StartsWith("System.") && id != "Lib.Harmony";
+            return id.Equals("Lib.Harmony", StringComparison.InvariantCultureIgnoreCase) ||
+                id.StartsWith("System", StringComparison.InvariantCultureIgnoreCase) ||
+                id.StartsWith("Microsoft.NET", StringComparison.InvariantCultureIgnoreCase) ||
+                id.StartsWith("NETStandard", StringComparison.InvariantCultureIgnoreCase) ||
+                id.StartsWith("Microsoft.Win32", StringComparison.InvariantCultureIgnoreCase);
         }
 
     }

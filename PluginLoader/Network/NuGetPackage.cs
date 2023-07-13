@@ -26,30 +26,22 @@ namespace avaness.PluginLoader.Network
         {
             PackageFolderReader packageReader = new PackageFolderReader(installPath);
             FrameworkReducer frameworkReducer = new FrameworkReducer();
+            LibFiles = GetItems(packageReader.GetLibItems(), frameworkReducer, targetFramework);
+            ContentFiles = GetItems(packageReader.GetContentItems(), frameworkReducer, targetFramework);
+        }
 
-            IEnumerable<FrameworkSpecificGroup> items = packageReader.GetLibItems();
-            NuGetFramework nearest = frameworkReducer.GetNearest(targetFramework, items.Select(x => x.TargetFramework));
+        private Item[] GetItems(IEnumerable<FrameworkSpecificGroup> itemGroups, FrameworkReducer frameworkReducer, NuGetFramework targetFramework)
+        {
+            NuGetFramework nearest = frameworkReducer.GetNearest(targetFramework, itemGroups.Select(x => x.TargetFramework));
             if (nearest != null)
             {
-                FrameworkSpecificGroup group = items.First(x => x.TargetFramework.Equals(nearest));
-                LibFiles = group.Items.Select(x => GetPackageItem(x, group.TargetFramework, false)).Where(x => x != null).ToArray();
-            }
-            else
-            {
-                LibFiles = Array.Empty<Item>();
+                List<Item> libFiles = new List<Item>();
+                foreach (FrameworkSpecificGroup group in itemGroups.Where(x => x.TargetFramework.Equals(nearest)))
+                    libFiles.AddRange(group.Items.Select(x => GetPackageItem(x, group.TargetFramework, false)).Where(x => x != null));
+                return libFiles.ToArray();
             }
 
-            items = packageReader.GetContentItems();
-            nearest = frameworkReducer.GetNearest(targetFramework, items.Select(x => x.TargetFramework));
-            if (nearest != null)
-            {
-                FrameworkSpecificGroup group = items.First(x => x.TargetFramework.Equals(nearest));
-                ContentFiles = group.Items.Select(x => GetPackageItem(x, group.TargetFramework, true)).Where(x => x != null).ToArray();
-            }
-            else
-            {
-                ContentFiles = Array.Empty<Item>();
-            }
+            return Array.Empty<Item>();
         }
 
         private Item GetPackageItem(string path, NuGetFramework framework, bool content)
