@@ -16,7 +16,7 @@ namespace avaness.PluginLoader.Network
         public string Config { get; set; }
 
         [ProtoMember(2)]
-        [XmlElement("PackageReference", Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        [XmlElement("PackageReference")]
         public NuGetPackageId[] PackageIds { get; set; }
 
         public string PackagesConfigNormalized => Config?.Replace('\\', '/').TrimStart('/');
