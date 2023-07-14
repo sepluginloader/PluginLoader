@@ -57,6 +57,8 @@ namespace avaness.PluginLoader.Network
 
         public async Task<NuGetPackage[]> DownloadFromConfigAsync(Stream packagesConfig)
         {
+            logger.LogInformation("Downloading packages from packages.config");
+
             PackagesConfigReader reader = new PackagesConfigReader(packagesConfig, true);
             List<NuGetPackage> packages = new List<NuGetPackage>();
             using (SourceCacheContext cacheContext = new SourceCacheContext())
@@ -85,6 +87,11 @@ namespace avaness.PluginLoader.Network
                 if(id.TryGetIdentity(out PackageIdentity nugetId))
                     packages.Add(nugetId);
             }
+
+            if (packages.Count == 0)
+                return Array.Empty<NuGetPackage>();
+
+            logger.LogInformation($"Downloading {packages.Count} packages with dependencies");
 
             List<NuGetPackage> result = new List<NuGetPackage>();
             using (SourceCacheContext cacheContext = new SourceCacheContext())
@@ -177,9 +184,14 @@ namespace avaness.PluginLoader.Network
                 installedPath = pathResolver.GetInstalledPath(package);
                 if (installedPath == null)
                     return null;
+
+                logger.LogInformation($"Package downloaded: {package.Id}");
+            }
+            else
+            {
+                logger.LogInformation($"Package already exists: {package.Id}");
             }
 
-            logger.LogInformation($"Package downloaded: {package.Id}");
             return new NuGetPackage(installedPath, framework);
         }
 
