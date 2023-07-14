@@ -22,6 +22,7 @@ namespace avaness.PluginLoader.Network
         const string NugetServiceIndex = "https://api.nuget.org/v3/index.json";
         private static readonly NuGetFramework ProjectFramework = NuGetFramework.Parse("net48");
 
+        private static HashSet<string> binAssemblies;
         private static readonly ILogger logger = new NuGetLogger();
 
         private readonly string packageFolder;
@@ -32,6 +33,14 @@ namespace avaness.PluginLoader.Network
 
         public NuGetClient()
         {
+            if(binAssemblies == null)
+            {
+                binAssemblies = new HashSet<string>(
+                    Directory.EnumerateFiles(MyFileSystem.ExePath, "*.dll", SearchOption.TopDirectoryOnly)
+                    .Select(Path.GetFileNameWithoutExtension)
+                    .Select(x => x.ToLowerInvariant()));
+            }
+
             nugetSettings = Settings.LoadDefaultSettings(root: null);
             extractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv3, XmlDocFileSaveMode.Skip, ClientPolicyContext.GetClientPolicy(nugetSettings, logger), logger);
             sourceRepository = Repository.Factory.GetCoreV3(NugetServiceIndex);
@@ -80,11 +89,9 @@ namespace avaness.PluginLoader.Network
             List<NuGetPackage> result = new List<NuGetPackage>();
             using (SourceCacheContext cacheContext = new SourceCacheContext())
             {
-                IEnumerable<PackageIdentity> downloadPackages;
+                IEnumerable<PackageIdentity> downloadPackages = packages.Where(x => !IsSystemPackage(x.Id));
                 if (getDependencies)
-                    downloadPackages = await ResolveDependencies(packages, cacheContext);
-                else
-                    downloadPackages = packages;
+                    downloadPackages = await ResolveDependencies(downloadPackages, cacheContext);
 
                 foreach (PackageIdentity id in downloadPackages)
                 {
@@ -182,7 +189,8 @@ namespace avaness.PluginLoader.Network
                 id.StartsWith("System", StringComparison.InvariantCultureIgnoreCase) ||
                 id.StartsWith("Microsoft.NET", StringComparison.InvariantCultureIgnoreCase) ||
                 id.StartsWith("NETStandard", StringComparison.InvariantCultureIgnoreCase) ||
-                id.StartsWith("Microsoft.Win32", StringComparison.InvariantCultureIgnoreCase);
+                id.StartsWith("Microsoft.Win32", StringComparison.InvariantCultureIgnoreCase) ||
+                binAssemblies.Contains(id.ToLowerInvariant());
         }
 
     }
