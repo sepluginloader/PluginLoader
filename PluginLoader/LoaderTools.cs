@@ -242,21 +242,19 @@ namespace avaness.PluginLoader
             }
         }
 
-        public static void OpenFolderDialog(string title, string directory, Action<string> onOk)
+        public static void OpenFolderDialog(string title, Action<string> onOk)
         {
-            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, directory, onOk)));
+            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, onOk)));
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
         }
-        private static void OpenFolderDialogThread(string title, string directory, Action<string> onOk)
+        private static void OpenFolderDialogThread(string title, Action<string> onOk)
         {
             try
             {
                 // Get the file path via prompt
                 using (FolderBrowserDialog openFileDialog = new FolderBrowserDialog())
                 {
-                    if (Directory.Exists(directory))
-                        openFileDialog.SelectedPath = directory;
                     openFileDialog.Description = title;
 
                     if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)

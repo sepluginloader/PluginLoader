@@ -288,7 +288,7 @@ namespace avaness.PluginLoader.Data
 
         public static void CreateNew(Action<LocalFolderPlugin> onComplete)
         {
-            LoaderTools.OpenFolderDialog("Open the root of your project", LoaderTools.PluginsDir, (folder) =>
+            LoaderTools.OpenFolderDialog("Open the root of your project", (folder) =>
             {
                 if (Main.Instance.List.Contains(folder))
                 {
