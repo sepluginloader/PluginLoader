@@ -156,7 +156,7 @@ namespace avaness.PluginLoader
 
             if(hasGitHub)
             {
-                MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated, so all plugins that are currently enabled must be downloaded and compiled.", "PluginLoader", MessageBoxButtons.OK);
+                LoaderTools.ShowMessageBox("Space Engineers has been updated, so all plugins that are currently enabled must be downloaded and compiled.");
             }
 
             try

@@ -28,12 +28,31 @@ namespace avaness.PluginLoader
     {
         public static string PluginsDir => Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
 
-        public static Form GetMainForm()
+        public static DialogResult ShowMessageBox(string msg, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.None, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (Application.OpenForms.Count > 0)
-                return Application.OpenForms[0];
-            else
-                return new Form { TopMost = true };
+            {
+                Form form = Application.OpenForms[0];
+                if (form.InvokeRequired)
+                {
+                    // Form is on a different thread
+                    try
+                    {
+                        object result = form.Invoke(() => MessageBox.Show(form, msg, "Plugin Loader", buttons, icon, defaultButton));
+                        if (result is DialogResult dialogResult)
+                            return dialogResult;
+                    }
+                    catch (Exception) { }
+                }
+                else
+                {
+                    // Form is on the same thread
+                    return MessageBox.Show(form, msg, "Plugin Loader", buttons, icon, defaultButton);
+                }
+            }
+
+            // No form
+            return MessageBox.Show(msg, "Plugin Loader", buttons, icon, defaultButton, System.Windows.Forms.MessageBoxOptions.DefaultDesktopOnly);
         }
 
         public static void AskToRestart()

@@ -182,13 +182,13 @@ namespace avaness.PluginLoader.Data
             {
                 MyLog.Default.Flush();
                 msg += "\n\nWould you like to open the game log?";
-                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                DialogResult result = LoaderTools.ShowMessageBox(msg, MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                 if (result == DialogResult.Yes)
                     Process.Start(file);
             }
             else
             {
-                MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LoaderTools.ShowMessageBox(msg, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
