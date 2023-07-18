@@ -75,6 +75,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="NLog">
       <HintPath>..\Bin64\NLog.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\Bin64\ProtoBuf.Net.dll</HintPath>
