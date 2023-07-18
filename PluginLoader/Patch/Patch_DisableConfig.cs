@@ -21,6 +21,7 @@ namespace avaness.PluginLoader.Patch
 				&& LoaderTools.ShowMessageBox("Escape pressed. Start the game with all plugins disabled?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
 				main.DisablePlugins();
+				MyInput.Static.ClearStates();
 			}
 			else
             {
