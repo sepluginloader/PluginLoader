@@ -246,7 +246,17 @@ namespace avaness.PluginLoader
                     openFileDialog.Filter = filter;
                     openFileDialog.RestoreDirectory = true;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    Form form = new Form
+                    {
+                        TopMost = true,
+                        TopLevel = true,
+                    };
+
+                    DialogResult dialogResult = openFileDialog.ShowDialog(form);
+
+                    form.Close();
+
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
@@ -276,7 +286,17 @@ namespace avaness.PluginLoader
                 {
                     openFileDialog.Description = title;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    Form form = new Form
+                    {
+                        TopMost = true,
+                        TopLevel = true,
+                    };
+
+                    DialogResult dialogResult = openFileDialog.ShowDialog(form);
+
+                    form.Close();
+
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.SelectedPath))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
