@@ -253,14 +253,15 @@ namespace avaness.PluginLoader
                     };
 
                     DialogResult dialogResult = openFileDialog.ShowDialog(form);
+                    string fileName = openFileDialog.FileName;
 
                     form.Close();
 
-                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fileName))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.FileName),
+                            () => onOk(fileName),
                             "PluginLoader");
                     }
                 }
@@ -293,14 +294,18 @@ namespace avaness.PluginLoader
                     };
 
                     DialogResult dialogResult = openFileDialog.ShowDialog(form);
+                    string selectedPath = openFileDialog.SelectedPath;
 
                     form.Close();
 
-                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.SelectedPath))
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(selectedPath))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.SelectedPath),
+                            () =>
+                            {
+                                onOk(selectedPath);
+                            },
                             "PluginLoader");
                     }
                 }
