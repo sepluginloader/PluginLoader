@@ -14,9 +14,10 @@ using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Data;
 using avaness.PluginLoader.Stats;
 using System.Net;
+using avaness.PluginLoader.Network;
+using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using avaness.PluginLoader.Stats.Model;
-using ParallelTasks;
 using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader
@@ -58,13 +59,13 @@ namespace avaness.PluginLoader
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
 
-            Network.GitHub.Init();
+            GitHub.Init();
 
             Splash.SetText("Finding references...");
             RoslynReferences.GenerateAssemblyList();
 
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
             AppDomain.CurrentDomain.FirstChanceException += OnException;
+
 
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
@@ -88,7 +89,7 @@ namespace avaness.PluginLoader
             Version expectedHarmony = new Version(HarmonyVersion);
             Version actualHarmony = typeof(Harmony).Assembly.GetName().Version;
             if (expectedHarmony != actualHarmony)
-                LogFile.WriteLine($"WARNING: Unexpected Harmony version, plugins may be unstable. Expected {expectedHarmony} but found {actualHarmony}");
+                LogFile.Warn($"Unexpected Harmony version, plugins may be unstable. Expected {expectedHarmony} but found {actualHarmony}");
 
             new Harmony("avaness.PluginLoader").PatchAll(Assembly.GetExecutingAssembly());
 
@@ -115,6 +116,7 @@ namespace avaness.PluginLoader
 
             Splash.Delete();
             Splash = null;
+
         }
 
         private void OnException(object sender, FirstChanceExceptionEventArgs e)
@@ -138,8 +140,7 @@ namespace avaness.PluginLoader
         
         public void UpdatePlayerStats()
         {
-            LogFile.WriteLine("Downloading user statistics", false);
-            Parallel.Start(() =>
+            ParallelTasks.Parallel.Start(() =>
             {
                 Stats = StatsClient.DownloadStats();
             });
@@ -155,7 +156,7 @@ namespace avaness.PluginLoader
 
             if(hasGitHub)
             {
-                MessageBox.Show(LoaderTools.GetMainForm(), "Space Engineers has been updated, so all plugins that are currently enabled must be downloaded and compiled.", "PluginLoader", MessageBoxButtons.OK);
+                LoaderTools.ShowMessageBox("Space Engineers has been updated, so all plugins that are currently enabled must be downloaded and compiled.");
             }
 
             try
@@ -196,7 +197,7 @@ namespace avaness.PluginLoader
             if (StatsClient.Track(TrackablePluginIds))
                 LogFile.WriteLine("List of enabled plugins has been sent to the statistics server");
             else
-                LogFile.WriteLine("Failed to send the list of enabled plugins to the statistics server");
+                LogFile.Error("Failed to send the list of enabled plugins to the statistics server");
         }
 
         // Skip local plugins, keep only enabled ones
@@ -272,7 +273,6 @@ namespace avaness.PluginLoader
             plugins.Clear();
 
             PlayerConsent.OnConsentChanged -= OnConsentChanged;
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependencies;
             LogFile.Dispose();
             Instance = null;
         }
@@ -280,21 +280,6 @@ namespace avaness.PluginLoader
         private void OnConsentChanged()
         {
             UpdatePlayerStats();
-        }
-
-        private Assembly ResolveDependencies(object sender, ResolveEventArgs args)
-        {
-            string assembly = args.RequestingAssembly?.GetName().ToString();
-            if (args.Name.Contains("0Harmony"))
-            {
-                if (assembly != null)
-                    LogFile.WriteLine("Resolving 0Harmony for " + assembly);
-                else
-                    LogFile.WriteLine("Resolving 0Harmony");
-                return typeof(Harmony).Assembly;
-            }
-
-            return null;
         }
     }
 }

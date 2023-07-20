@@ -260,7 +260,7 @@ namespace avaness.PluginLoader.GUI
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("Error while opening local plugins folder: " + e);
+                LogFile.Error("Error while opening local plugins folder: " + e);
             }
         }
 

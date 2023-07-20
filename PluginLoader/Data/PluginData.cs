@@ -12,6 +12,8 @@ using System.Xml.Serialization;
 using VRage.Utils;
 using VRage;
 using avaness.PluginLoader.Config;
+using avaness.PluginLoader.Network;
+using System.Linq;
 
 namespace avaness.PluginLoader.Data
 {
@@ -109,23 +111,23 @@ namespace avaness.PluginLoader.Data
 
                 if (a == null)
                 {
-                    LogFile.WriteLine("Failed to load " + ToString());
+                    LogFile.Error("Failed to load " + ToString());
                     Error();
                     return false;
                 }
 
                 // Precompile the entire assembly in order to force any missing method exceptions
-                LogFile.WriteLine("Precompiling " + a);
-                LoaderTools.Precompile(a);
+                //LogFile.WriteLine("Precompiling " + a);
+                //LoaderTools.Precompile(a);
                 return true;
             }
             catch (Exception e)
             {
                 string name = ToString();
-                LogFile.WriteLine($"Failed to load {name} because of an error: " + e);
+                LogFile.Error($"Failed to load {name} because of an error: " + e);
                 if (e is MemberAccessException)
                 {
-                    LogFile.WriteLine($"Is {name} up to date?");
+                    LogFile.Error($"Is {name} up to date?");
                     InvalidateCache();
                 }
 
@@ -180,21 +182,14 @@ namespace avaness.PluginLoader.Data
             {
                 MyLog.Default.Flush();
                 msg += "\n\nWould you like to open the game log?";
-                DialogResult result = MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                DialogResult result = LoaderTools.ShowMessageBox(msg, MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                 if (result == DialogResult.Yes)
                     Process.Start(file);
             }
             else
             {
-                MessageBox.Show(LoaderTools.GetMainForm(), msg, "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LoaderTools.ShowMessageBox(msg, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        protected void ErrorSecurity(string hash)
-        {
-            Status = PluginStatus.Blocked;
-            MessageBox.Show(LoaderTools.GetMainForm(), $"Unable to load the plugin {this} because it is not whitelisted!", "Plugin Loader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LogFile.WriteLine("Error: " + this + " with an sha256 of " + hash + " is not on the whitelist!");
         }
 
         public abstract void Show();
@@ -270,6 +265,11 @@ namespace avaness.PluginLoader.Data
         public virtual void AddDetailControls(PluginDetailMenu screen, MyGuiControlBase bottomControl, out MyGuiControlBase topControl)
         {
             topControl = null;
+        }
+
+        public virtual string GetAssetPath()
+        {
+            return null;
         }
     }
 }

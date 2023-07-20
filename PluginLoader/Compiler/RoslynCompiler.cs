@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using avaness.PluginLoader.Network;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
@@ -14,6 +15,7 @@ namespace avaness.PluginLoader.Compiler
     public class RoslynCompiler
     {
         private readonly List<Source> source = new List<Source>();
+        private readonly List<MetadataReference> customReferences = new List<MetadataReference>();
         private bool debugBuild;
 
         public RoslynCompiler(bool debugBuild = false)
@@ -38,7 +40,7 @@ namespace avaness.PluginLoader.Compiler
             CSharpCompilation compilation = CSharpCompilation.Create(
                 assemblyName,
                 syntaxTrees: source.Select(x => x.Tree),
-                references: RoslynReferences.EnumerateAllReferences(),
+                references: RoslynReferences.EnumerateAllReferences().Concat(customReferences),
                 options: new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary, 
                     optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release,
@@ -72,7 +74,7 @@ namespace avaness.PluginLoader.Compiler
                         Location location = diagnostic.Location;
                         Source source = this.source.FirstOrDefault(x => x.Tree == location.SourceTree);
                         LinePosition pos = location.GetLineSpan().StartLinePosition;
-                        LogFile.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} in file:\n{source?.Name ?? "null"} ({pos.Line + 1},{pos.Character + 1})");
+                        LogFile.Error($"{diagnostic.Id}: {diagnostic.GetMessage()} in file:\n{source?.Name ?? "null"} ({pos.Line + 1},{pos.Character + 1})");
                     }
                     throw new Exception("Compilation failed!");
                 }
@@ -89,6 +91,26 @@ namespace avaness.PluginLoader.Compiler
                 }
             }
 
+        }
+
+        public void TryAddDependency(string dll)
+        {
+            if(Path.HasExtension(dll)
+                && Path.GetExtension(dll).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                && File.Exists(dll))
+            {
+                try
+                {
+                    MetadataReference reference = MetadataReference.CreateFromFile(dll);
+                    if (reference != null)
+                    {
+                        LogFile.WriteLine("Custom compiler reference: " + (reference.Display ?? dll));
+                        customReferences.Add(reference);
+                    }
+                }
+                catch
+                { }
+            }
         }
 
         private class Source

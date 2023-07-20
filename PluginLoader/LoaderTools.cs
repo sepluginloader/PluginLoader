@@ -28,12 +28,31 @@ namespace avaness.PluginLoader
     {
         public static string PluginsDir => Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
 
-        public static Form GetMainForm()
+        public static DialogResult ShowMessageBox(string msg, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.None, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (Application.OpenForms.Count > 0)
-                return Application.OpenForms[0];
-            else
-                return new Form { TopMost = true };
+            {
+                Form form = Application.OpenForms[0];
+                if (form.InvokeRequired)
+                {
+                    // Form is on a different thread
+                    try
+                    {
+                        object result = form.Invoke(() => MessageBox.Show(form, msg, "Plugin Loader", buttons, icon, defaultButton));
+                        if (result is DialogResult dialogResult)
+                            return dialogResult;
+                    }
+                    catch (Exception) { }
+                }
+                else
+                {
+                    // Form is on the same thread
+                    return MessageBox.Show(form, msg, "Plugin Loader", buttons, icon, defaultButton);
+                }
+            }
+
+            // No form
+            return MessageBox.Show(msg, "Plugin Loader", buttons, icon, defaultButton, System.Windows.Forms.MessageBoxOptions.DefaultDesktopOnly);
         }
 
         public static void AskToRestart()
@@ -126,35 +145,38 @@ namespace avaness.PluginLoader
             Process.GetCurrentProcess().Kill();
         }
 
-        public static string GetHash1(string file)
-        {
-            using (SHA1Managed sha = new SHA1Managed())
-            {
-                return GetHash(file, sha);
-            }
-        }
-
         public static string GetHash256(string file)
         {
             using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
             {
-                return GetHash(file, sha);
+                using (FileStream fileStream = new FileStream(file, FileMode.Open))
+                {
+                    using (BufferedStream bufferedStream = new BufferedStream(fileStream))
+                    {
+                        return GetHash(bufferedStream, sha);
+                    }
+                }
             }
         }
 
-        public static string GetHash(string file, HashAlgorithm hash)
+        public static string GetHashString256(string text)
         {
-            using (FileStream fileStream = new FileStream(file, FileMode.Open))
+            using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
             {
-                using (BufferedStream bufferedStream = new BufferedStream(fileStream))
+                using (MemoryStream memory = new MemoryStream(Encoding.UTF8.GetBytes(text)))
                 {
-                    byte[] data = hash.ComputeHash(bufferedStream);
-                    StringBuilder sb = new StringBuilder(2 * data.Length);
-                    foreach (byte b in data)
-                        sb.AppendFormat("{0:x2}", b);
-                    return sb.ToString();
+                    return GetHash(memory, sha);
                 }
             }
+        }
+
+        public static string GetHash(Stream input, HashAlgorithm hash)
+        {
+            byte[] data = hash.ComputeHash(input);
+            StringBuilder sb = new StringBuilder(2 * data.Length);
+            foreach (byte b in data)
+                sb.AppendFormat("{0:x2}", b);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -224,50 +246,73 @@ namespace avaness.PluginLoader
                     openFileDialog.Filter = filter;
                     openFileDialog.RestoreDirectory = true;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    Form form = new Form
+                    {
+                        TopMost = true,
+                        TopLevel = true,
+                    };
+
+                    DialogResult dialogResult = openFileDialog.ShowDialog(form);
+                    string fileName = openFileDialog.FileName;
+
+                    form.Close();
+
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fileName))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.FileName),
+                            () => onOk(fileName),
                             "PluginLoader");
                     }
                 }
             }
             catch (Exception e)
             {
-                LogFile.WriteGameLog("Error while opening file dialog: " + e);
+                LogFile.Error("Error while opening file dialog: " + e);
             }
         }
 
-        public static void OpenFolderDialog(string title, string directory, Action<string> onOk)
+        public static void OpenFolderDialog(string title, Action<string> onOk)
         {
-            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, directory, onOk)));
+            Thread t = new Thread(new ThreadStart(() => OpenFolderDialogThread(title, onOk)));
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
         }
-        private static void OpenFolderDialogThread(string title, string directory, Action<string> onOk)
+        private static void OpenFolderDialogThread(string title, Action<string> onOk)
         {
             try
             {
                 // Get the file path via prompt
                 using (FolderBrowserDialog openFileDialog = new FolderBrowserDialog())
                 {
-                    if (Directory.Exists(directory))
-                        openFileDialog.SelectedPath = directory;
                     openFileDialog.Description = title;
 
-                    if (openFileDialog.ShowDialog(GetMainForm()) == DialogResult.OK)
+                    Form form = new Form
+                    {
+                        TopMost = true,
+                        TopLevel = true,
+                    };
+
+                    DialogResult dialogResult = openFileDialog.ShowDialog(form);
+                    string selectedPath = openFileDialog.SelectedPath;
+
+                    form.Close();
+
+                    if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(selectedPath))
                     {
                         // Move back to the main thread so that we can interact with keen code again
                         MySandboxGame.Static.Invoke(
-                            () => onOk(openFileDialog.SelectedPath),
+                            () =>
+                            {
+                                onOk(selectedPath);
+                            },
                             "PluginLoader");
                     }
                 }
             }
             catch (Exception e)
             {
-                LogFile.WriteGameLog("Error while opening file dialog: " + e);
+                LogFile.Error("Error while opening file dialog: " + e);
             }
         }
     }

@@ -23,7 +23,7 @@ namespace avaness.PluginLoader.Network
             }
             catch (NotSupportedException e)
             {
-                LogFile.WriteLine("An error occurred while setting up networking, web requests will probably fail: " + e);
+                LogFile.Error("An error occurred while setting up networking, web requests will probably fail: " + e);
             }
         }
 

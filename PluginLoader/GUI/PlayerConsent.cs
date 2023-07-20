@@ -71,7 +71,7 @@ namespace avaness.PluginLoader.GUI
 
             if (!StatsClient.Consent(consent))
             {
-                LogFile.WriteLine("Failed to register player consent on statistics server");
+                LogFile.Error("Failed to register player consent on statistics server");
                 return;
             }
 

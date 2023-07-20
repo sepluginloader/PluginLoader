@@ -1,6 +1,7 @@
 ﻿using avaness.PluginLoader.Compiler;
 using avaness.PluginLoader.Config;
 using avaness.PluginLoader.GUI;
+using avaness.PluginLoader.Network;
 using Sandbox;
 using Sandbox.Graphics.GUI;
 using System;
@@ -14,6 +15,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage;
+using VRage.FileSystem;
 using VRage.Utils;
 
 namespace avaness.PluginLoader.Data
@@ -26,6 +28,8 @@ namespace avaness.PluginLoader.Data
         public override string Source => "Development Folder";
         public override bool IsLocal => true;
         private string[] sourceDirectories;
+        private GitHubPlugin github;
+        private AssemblyResolver resolver;
 
         public LocalFolderConfig FolderSettings { get; private set; }
 
@@ -58,6 +62,10 @@ namespace avaness.PluginLoader.Data
             {
                 RoslynCompiler compiler = new RoslynCompiler(FolderSettings.DebugBuild);
                 bool hasFile = false;
+
+                if (github.NuGetReferences != null && github.NuGetReferences.HasPackages)
+                    InstallDependencies(compiler);
+
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Compiling files from ").Append(Id).Append(":").AppendLine();
                 foreach(var file in GetProjectFiles(Id))
@@ -81,13 +89,69 @@ namespace avaness.PluginLoader.Data
                     throw new IOException("No files were found in the directory specified.");
                 }
 
-                byte[] data = compiler.Compile(FriendlyName + '_' + Path.GetRandomFileName(), out byte[] symbols);
+                string assemblyName = FriendlyName + '_' + Path.GetRandomFileName();
+                byte[] data = compiler.Compile(assemblyName, out byte[] symbols);
+                resolver?.AddAllowedAssemblyName(assemblyName);
                 Assembly a = Assembly.Load(data, symbols);
                 Version = a.GetName().Version;
                 return a;
             }
 
             throw new DirectoryNotFoundException("Unable to find directory '" + Id + "'");
+        }
+
+        private void InstallDependencies(RoslynCompiler compiler)
+        {
+            NuGetPackageList packageList = github.NuGetReferences;
+            NuGetClient nuget = new NuGetClient();
+
+            string binDir = Path.Combine(MyFileSystem.ExePath, "NuGet", "bin", LoaderTools.GetHashString256(Path.GetFullPath(Id)));
+            if (Directory.Exists(binDir))
+                Directory.Delete(binDir, true);
+            Directory.CreateDirectory(binDir);
+
+            if (!string.IsNullOrWhiteSpace(packageList.Config))
+            {
+                string nugetFile = Path.GetFullPath(Path.Combine(Id, packageList.Config));
+                if (File.Exists(nugetFile))
+                {
+                    NuGetPackage[] packages;
+                    using (FileStream fileStream = File.OpenRead(nugetFile))
+                    {
+                        packages = nuget.DownloadFromConfig(fileStream);
+                    }
+                    foreach (NuGetPackage package in packages)
+                        InstallPackage(package, compiler, binDir);
+                }
+            }
+
+            if(packageList.PackageIds != null)
+            {
+                foreach (NuGetPackage package in nuget.DownloadPackages(packageList.PackageIds))
+                    InstallPackage(package, compiler, binDir);
+            }
+
+            resolver = new AssemblyResolver();
+            resolver.AddSourceFolder(binDir);
+        }
+
+        private void InstallPackage(NuGetPackage package, RoslynCompiler compiler, string binDir)
+        {
+            foreach (NuGetPackage.Item file in package.LibFiles)
+            {
+                string newFile = Path.Combine(binDir, file.FilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
+                File.Copy(file.FullPath, newFile);
+                if (Path.GetDirectoryName(newFile) == binDir)
+                    compiler.TryAddDependency(newFile);
+            }
+
+            foreach (NuGetPackage.Item file in package.ContentFiles)
+            {
+                string newFile = Path.Combine(binDir, file.FilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(newFile));
+                File.Copy(file.FullPath, newFile);
+            }
         }
 
         private IEnumerable<string> GetProjectFiles(string folder)
@@ -213,17 +277,18 @@ namespace avaness.PluginLoader.Data
                     Description = github.Description;
                     sourceDirectories = github.SourceDirectories;
                     FolderSettings.DataFile = file;
+                    this.github = github;
                 }
             }
             catch (Exception e)
             {
-                LogFile.WriteLine("Error while reading the xml file: " + e);
+                LogFile.Error($"Error while reading the xml file {file} for {Id}: " + e);
             }
         }
 
         public static void CreateNew(Action<LocalFolderPlugin> onComplete)
         {
-            LoaderTools.OpenFolderDialog("Open the root of your project", LoaderTools.PluginsDir, (folder) =>
+            LoaderTools.OpenFolderDialog("Open the root of your project", (folder) =>
             {
                 if (Main.Instance.List.Contains(folder))
                 {
@@ -278,6 +343,13 @@ namespace avaness.PluginLoader.Data
             screen.PositionAbove(btnRemove, releaseDropdown, MyAlignH.Left);
             screen.Controls.Add(releaseDropdown);
             topControl = releaseDropdown;
+        }
+
+        public override string GetAssetPath()
+        {
+            if (string.IsNullOrEmpty(github.AssetFolder))
+                return null;
+            return Path.GetFullPath(Path.Combine(Id, github.AssetFolder));
         }
     }
 }
