@@ -275,7 +275,7 @@ namespace avaness.PluginLoader.Data
                     Tooltip = github.Tooltip;
                     Author = github.Author;
                     Description = github.Description;
-                    sourceDirectories = github.SourceDirectories;
+                    sourceDirectories = github.SourceDirectories?.Select(x => Path.Combine(Id, x).Replace('\\', '/')).ToArray();
                     FolderSettings.DataFile = file;
                     this.github = github;
                 }
