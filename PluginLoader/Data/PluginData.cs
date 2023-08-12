@@ -10,10 +10,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using VRage.Utils;
-using VRage;
 using avaness.PluginLoader.Config;
-using avaness.PluginLoader.Network;
-using System.Linq;
 
 namespace avaness.PluginLoader.Data
 {

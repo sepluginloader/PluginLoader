@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using VRage.Utils;
 using NLog;
 using NLog.Config;

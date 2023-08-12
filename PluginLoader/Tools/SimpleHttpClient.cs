@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using LitJson;
-using VRage.Utils;
 
 namespace avaness.PluginLoader.Tools
 {

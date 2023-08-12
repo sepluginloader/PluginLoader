@@ -1,6 +1,5 @@
 ﻿using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
-using System.Text;
 using VRageMath;
 using VRage.Utils;
 using avaness.PluginLoader.Data;
@@ -10,8 +9,6 @@ using System.Linq;
 using avaness.PluginLoader.Stats.Model;
 using VRage.Game;
 using avaness.PluginLoader.GUI.GuiControls;
-using VRage.Audio;
-using Sandbox;
 using System.Diagnostics;
 using System.IO;
 using avaness.PluginLoader.Config;

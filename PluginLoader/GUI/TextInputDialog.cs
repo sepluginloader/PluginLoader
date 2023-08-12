@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Text;
-using Sandbox;
-using Sandbox.Game.Gui;
-using Sandbox.Game.Localization;
 using Sandbox.Graphics.GUI;
-using VRage;
-using VRage.Game;
-using VRage.Input;
 using VRage.Utils;
 using VRageMath;
 
 namespace avaness.PluginLoader.GUI
 {
-	public class TextInputDialog : PluginScreen
+    public class TextInputDialog : PluginScreen
 	{
         private readonly string title;
         private string text;

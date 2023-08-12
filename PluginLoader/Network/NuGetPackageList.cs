@@ -1,10 +1,4 @@
-﻿using NuGet.Packaging;
-using NuGet.Protocol.Core.Types;
-using ProtoBuf;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
+﻿using ProtoBuf;
 using System.Xml.Serialization;
 
 namespace avaness.PluginLoader.Network

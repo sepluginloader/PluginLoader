@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using avaness.PluginLoader.GUI;
 using avaness.PluginLoader.Stats.Model;
 using avaness.PluginLoader.Tools;
-using VRage.Utils;
 
 namespace avaness.PluginLoader.Stats
 {

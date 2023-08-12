@@ -1,5 +1,4 @@
-﻿using System;
-using Sandbox.Graphics.GUI;
+﻿using Sandbox.Graphics.GUI;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;

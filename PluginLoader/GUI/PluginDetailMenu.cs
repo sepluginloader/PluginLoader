@@ -4,13 +4,10 @@ using avaness.PluginLoader.Stats.Model;
 using Sandbox.Graphics.GUI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
-using avaness.PluginLoader.Config;
 
 namespace avaness.PluginLoader.GUI
 {
