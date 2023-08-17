@@ -179,7 +179,7 @@ namespace avaness.PluginLoader.Data
                 if (p.ExitCode == 0)
                 {
                     string[] files = gitOutput.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    return files.Where(x => x.EndsWith(".cs") && IsValidProjectFile(x)).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar))).Where(x => File.Exists(x));
+                    return files.Where(x => x.EndsWith(".cs")).Select(x => Path.Combine(folder, x.Trim().Replace('/', Path.DirectorySeparatorChar))).Where(x => IsValidProjectFile(x) && File.Exists(x));
                 }
                 else
                 {
