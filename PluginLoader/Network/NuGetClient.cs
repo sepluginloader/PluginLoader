@@ -198,7 +198,7 @@ namespace avaness.PluginLoader.Network
 
         private bool CheckAlreadyInstalled(string id)
         {
-            if (binAssemblies.Contains(id.ToLowerInvariant()))
+            if (id.Equals("Lib.Harmony", StringComparison.InvariantCultureIgnoreCase) || binAssemblies.Contains(id.ToLowerInvariant()))
                 logger.LogInformation("Package " + id + " not downloaded because it is in Bin64");
             else if (RoslynReferences.Contains(id))
                 logger.LogInformation("Package " + id + " not downloaded because it is already installed on the system");
