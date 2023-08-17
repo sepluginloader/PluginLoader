@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using avaness.PluginLoader.Compiler;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -96,7 +97,7 @@ namespace avaness.PluginLoader.Network
             List<NuGetPackage> result = new List<NuGetPackage>();
             using (SourceCacheContext cacheContext = new SourceCacheContext())
             {
-                IEnumerable<PackageIdentity> downloadPackages = packages.Where(x => !IsSystemPackage(x.Id));
+                IEnumerable<PackageIdentity> downloadPackages = packages.Where(x => !CheckAlreadyInstalled(x.Id));
                 if (getDependencies)
                     downloadPackages = await ResolveDependencies(downloadPackages, cacheContext);
 
@@ -157,7 +158,7 @@ namespace avaness.PluginLoader.Network
 
         public async Task<NuGetPackage> DownloadPackage(SourceCacheContext cacheContext, PackageIdentity package, NuGetFramework framework = null)
         {
-            if (IsSystemPackage(package.Id))
+            if (CheckAlreadyInstalled(package.Id))
                 return null;
 
             if (framework == null || framework.IsAny || framework.IsAgnostic || framework.IsUnsupported)
@@ -189,20 +190,21 @@ namespace avaness.PluginLoader.Network
             }
             else
             {
-                logger.LogInformation($"Package already exists: {package.Id}");
+                logger.LogInformation($"Package located in cache: {package.Id}");
             }
 
             return new NuGetPackage(installedPath, framework);
         }
 
-        private bool IsSystemPackage(string id)
+        private bool CheckAlreadyInstalled(string id)
         {
-            return id.Equals("Lib.Harmony", StringComparison.InvariantCultureIgnoreCase) ||
-                id.StartsWith("System", StringComparison.InvariantCultureIgnoreCase) ||
-                id.StartsWith("Microsoft.NET", StringComparison.InvariantCultureIgnoreCase) ||
-                id.StartsWith("NETStandard", StringComparison.InvariantCultureIgnoreCase) ||
-                id.StartsWith("Microsoft.Win32", StringComparison.InvariantCultureIgnoreCase) ||
-                binAssemblies.Contains(id.ToLowerInvariant());
+            if (binAssemblies.Contains(id.ToLowerInvariant()))
+                logger.LogInformation("Package " + id + " not downloaded because it is in Bin64");
+            else if (RoslynReferences.Contains(id))
+                logger.LogInformation("Package " + id + " not downloaded because it is already installed on the system");
+            else
+                return false;
+            return true;
         }
 
     }

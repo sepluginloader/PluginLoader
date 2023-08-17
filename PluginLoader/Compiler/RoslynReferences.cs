@@ -147,5 +147,10 @@ namespace avaness.PluginLoader.Compiler
                 LogFile.Warn("Unable to find the assembly '" + name + "'!");
             }
         }
+
+        public static bool Contains(string id)
+        {
+            return allReferences.ContainsKey(id);
+        }
     }
 }
