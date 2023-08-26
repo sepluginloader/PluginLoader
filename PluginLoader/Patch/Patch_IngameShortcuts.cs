@@ -62,7 +62,10 @@ namespace avaness.PluginLoader.Patch
         private static void OnRestartMessageClosed(MyGuiScreenMessageBox.ResultEnum result)
         {
             if(result == MyGuiScreenMessageBox.ResultEnum.YES)
-                LoaderTools.UnloadAndRestart();
+            {
+                LoaderTools.Unload();
+                LoaderTools.Restart(true);
+            }
         }
     }
 }

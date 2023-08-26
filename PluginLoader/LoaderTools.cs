@@ -21,12 +21,15 @@ using Sandbox.Game.Screens.Helpers;
 using VRage;
 using VRage.Audio;
 using Sandbox.Game.Gui;
+using System.Collections.Generic;
 
 namespace avaness.PluginLoader
 {
     public static class LoaderTools
     {
         public static string PluginsDir => Path.GetFullPath(Path.Combine(MyFileSystem.ExePath, "Plugins"));
+
+        public const string AutoRejoinArg = "-auto_join_world";
 
         public static DialogResult ShowMessageBox(string msg, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.None, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
@@ -58,9 +61,15 @@ namespace avaness.PluginLoader
         public static void AskToRestart()
         {
             if (MyGuiScreenGamePlay.Static != null)
-                AskSave(delegate { UnloadAndRestart(); });
+                AskSave(delegate {
+                    Unload();
+                    Restart();
+                });
             else
-                UnloadAndRestart();
+            {
+                Unload();
+                Restart();
+            }
         }
 
         /// <summary>
@@ -127,8 +136,7 @@ namespace avaness.PluginLoader
             }
         }
 
-
-        public static void UnloadAndRestart()
+        public static void Unload()
         {
             LogFile.Dispose();
             MySessionLoader.Unload();
@@ -136,12 +144,36 @@ namespace avaness.PluginLoader
             MySandboxGame.Config.Save();
             MyScreenManager.CloseAllScreensNowExcept(null);
             MyPlugins.Unload();
-            Restart();
         }
 
-        public static void Restart()
+        public static void Restart(bool autoRejoin = false)
         {
-            Application.Restart();
+            Start(autoRejoin);
+            Process.GetCurrentProcess().Kill();
+        }
+
+        private static void Start(bool autoRejoin)
+        {
+            // Regular app case 
+            StringBuilder sb = new StringBuilder();
+            IEnumerable<string> args = Environment.GetCommandLineArgs().Skip(1).Where(x => x != AutoRejoinArg);
+            if(autoRejoin)
+                args = args.Append(AutoRejoinArg);
+            foreach (string arg in args)
+            {
+                if (sb.Length > 0)
+                    sb.Append(' ');
+                sb.Append('"');
+                sb.Append(arg);
+                sb.Append('"');
+            }
+
+            ProcessStartInfo currentStartInfo = Process.GetCurrentProcess().StartInfo;
+            currentStartInfo.FileName = Application.ExecutablePath;
+            if (sb.Length > 0)
+                currentStartInfo.Arguments = sb.ToString();
+
+            Process.Start(currentStartInfo);
             Process.GetCurrentProcess().Kill();
         }
 

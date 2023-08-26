@@ -6,6 +6,7 @@ using avaness.PluginLoader.GUI;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
+using System;
 
 // ReSharper disable InconsistentNaming
 
@@ -14,7 +15,9 @@ namespace avaness.PluginLoader.Patch
     [HarmonyPatch(typeof(MyGuiScreenMainMenu), "CreateMainMenu")]
     public static class Patch_CreateMainMenu
     {
-        public static void Postfix(MyGuiScreenMainMenu __instance, Vector2 leftButtonPositionOrigin, ref Vector2 lastButtonPosition)
+        private static bool usedAutoRejoin = false;
+
+        public static void Postfix(MyGuiScreenMainMenu __instance, Vector2 leftButtonPositionOrigin, ref Vector2 lastButtonPosition, MyGuiControlButton ___m_continueButton)
         {
             MyGuiControlButton lastBtn = null;
             foreach (var control in __instance.Controls)
@@ -45,6 +48,12 @@ namespace avaness.PluginLoader.Patch
                 BorderColor = Vector4.Zero
             };
             __instance.Controls.Add(openBtn);
+
+            if (___m_continueButton != null && ___m_continueButton.Visible && !usedAutoRejoin && Environment.GetCommandLineArgs().Contains(LoaderTools.AutoRejoinArg))
+            {
+                ___m_continueButton.PressButton();
+                usedAutoRejoin = true;
+            }
         }
     }
 
@@ -54,7 +63,7 @@ namespace avaness.PluginLoader.Patch
     {
         public static void Postfix(MyGuiScreenMainMenu __instance, Vector2 leftButtonPositionOrigin, ref Vector2 lastButtonPosition)
         {
-            Patch_CreateMainMenu.Postfix(__instance, leftButtonPositionOrigin, ref lastButtonPosition);
+            Patch_CreateMainMenu.Postfix(__instance, leftButtonPositionOrigin, ref lastButtonPosition, null);
         }
     }
 }
