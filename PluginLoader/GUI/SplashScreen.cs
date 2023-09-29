@@ -37,7 +37,6 @@ namespace avaness.PluginLoader.GUI
 			MyVRage.Platform.Windows.HideSplashScreen();
 
 			Name = "SplashScreenPluginLoader";
-			TopMost = true;
 			FormBorderStyle = FormBorderStyle.None;
 
 			SizeF barSize = new SizeF(Size.Width * barWidth, Size.Height * barHeight);
