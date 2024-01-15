@@ -158,9 +158,13 @@ namespace avaness.PluginLoader
 
             try
             {
-                Directory.Delete(pluginCache);
+                LogFile.WriteLine("Deleting plugin cache because of an update");
+                Directory.Delete(pluginCache, true);
             }
-            catch { }
+            catch (Exception e) 
+            {
+                LogFile.Error("Failed to delete plugin cache: " + e);
+            }
         }
 
         public bool TryGetPluginInstance(string id, out PluginInstance instance)
