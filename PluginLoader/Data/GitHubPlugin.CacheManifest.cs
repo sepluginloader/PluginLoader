@@ -110,8 +110,11 @@ namespace avaness.PluginLoader.Data
                 if(!File.Exists(DllFile) || Commit != currentCommit)
                     return false;
 
-                if (GameVersion != 0 && currentGameVersion != 0 && GameVersion != currentGameVersion)
-                    return false;
+                if(currentGameVersion != 0)
+                {
+                    if (GameVersion == 0 || GameVersion != currentGameVersion)
+                        return false;
+                }
 
                 if (requiresAssets && !assetFiles.Values.Any(x => x.Type == AssetFile.AssetType.Asset))
                     return false;
