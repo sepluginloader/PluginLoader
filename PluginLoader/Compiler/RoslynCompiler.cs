@@ -1,18 +1,19 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace avaness.PluginLoader.Compiler
 {
     public class RoslynCompiler
     {
         private readonly List<Source> source = new List<Source>();
+        private readonly HashSet<string> publicized = new HashSet<string>();
         private readonly List<MetadataReference> customReferences = new List<MetadataReference>();
         private bool debugBuild;
 
@@ -28,19 +29,74 @@ namespace avaness.PluginLoader.Compiler
             {
                 s.CopyTo(mem);
                 source.Add(new Source(mem, name, debugBuild));
+
+                SourceText sourceText = SourceText.From(mem);
+                HashSet<string> ignoredAccess = GetIgnoredAccessAssemblies(sourceText);
+                publicized.UnionWith(ignoredAccess);
             }
+        }
+
+        public static HashSet<string> GetIgnoredAccessAssemblies(SourceText source)
+        {
+            HashSet<string> found = new HashSet<string>();
+
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source);
+            SyntaxNode root = syntaxTree.GetRoot();
+
+            IEnumerable<AttributeSyntax> attributes = root.DescendantNodes()
+                .OfType<AttributeSyntax>()
+                .Where(attr => attr.Name.ToString().EndsWith("IgnoresAccessChecksTo"));
+
+            foreach (var attribute in attributes)
+            {
+                AttributeArgumentSyntax targetAssemblyArg = attribute.ArgumentList.Arguments.FirstOrDefault();
+
+                if (targetAssemblyArg?.Expression is not LiteralExpressionSyntax literalExpression)
+                {
+                    continue;
+                }
+
+                if (literalExpression.IsKind(SyntaxKind.StringLiteralExpression))
+                {
+                    string ignoredAssemblyName = literalExpression.Token.ValueText;
+                    found.Add(ignoredAssemblyName);
+                }
+            }
+
+            return found;
         }
 
         public byte[] Compile(string assemblyName, out byte[] symbols)
         {
             symbols = null;
+            var references = new HashSet<MetadataReference>();
+
+            foreach (var reference in RoslynReferences.GetAllReferences())
+            {
+                if (publicized.Contains(reference.Key))
+                {
+                    if (RoslynReferences.GetPublicizedReference(reference.Key, out var publicizedRef))
+                    {
+                        LogFile.WriteLine($"Using publicized {reference.Key} for {assemblyName}");
+                        references.Add(publicizedRef);
+                    }
+                    else
+                    {
+                        throw new Exception("Publicizing failed!");
+                    }
+                }
+                else
+                {
+                    references.Add(reference.Value);
+                }
+            }
 
             CSharpCompilation compilation = CSharpCompilation.Create(
                 assemblyName,
                 syntaxTrees: source.Select(x => x.Tree),
-                references: RoslynReferences.EnumerateAllReferences().Concat(customReferences),
+                references: references,
                 options: new CSharpCompilationOptions(
-                    OutputKind.DynamicallyLinkedLibrary, 
+                    OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: debugBuild ? OptimizationLevel.Debug : OptimizationLevel.Release,
                     allowUnsafe: true));
 
@@ -59,7 +115,7 @@ namespace avaness.PluginLoader.Compiler
                 {
                     result = compilation.Emit(ms);
                 }
-                 
+
                 if (!result.Success)
                 {
                     // handle exceptions
@@ -78,12 +134,12 @@ namespace avaness.PluginLoader.Compiler
                 }
                 else
                 {
-                    if(debugBuild)
+                    if (debugBuild)
                     {
                         pdb.Seek(0, SeekOrigin.Begin);
                         symbols = pdb.ToArray();
                     }
-                    
+
                     ms.Seek(0, SeekOrigin.Begin);
                     return ms.ToArray();
                 }
@@ -93,7 +149,7 @@ namespace avaness.PluginLoader.Compiler
 
         public void TryAddDependency(string dll)
         {
-            if(Path.HasExtension(dll)
+            if (Path.HasExtension(dll)
                 && Path.GetExtension(dll).Equals(".dll", StringComparison.OrdinalIgnoreCase)
                 && File.Exists(dll))
             {
