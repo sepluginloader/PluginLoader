@@ -95,7 +95,8 @@ namespace avaness.PluginLoader.GUI
 
         private void OnItemDoubleClicked(MyGuiControlTable table, MyGuiControlTable.EventArgs args)
         {
-            if (table.GetRow(args.RowIndex)?.UserData is Profile p)
+            int rowIndex = args.RowIndex;
+            if (rowIndex >= 0 && rowIndex < table.RowsCount && table.GetRow(rowIndex)?.UserData is Profile p)
                 LoadProfile(p);
         }
 
