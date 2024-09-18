@@ -23,7 +23,6 @@ namespace avaness.PluginLoader.Network
         const string NugetServiceIndex = "https://api.nuget.org/v3/index.json";
         private static readonly NuGetFramework ProjectFramework = NuGetFramework.Parse("net48");
 
-        private static HashSet<string> binAssemblies;
         private static readonly ILogger logger = new NuGetLogger();
 
         private readonly string packageFolder;
@@ -34,14 +33,6 @@ namespace avaness.PluginLoader.Network
 
         public NuGetClient()
         {
-            if(binAssemblies == null)
-            {
-                binAssemblies = new HashSet<string>(
-                    Directory.EnumerateFiles(MyFileSystem.ExePath, "*.dll", SearchOption.TopDirectoryOnly)
-                    .Select(Path.GetFileNameWithoutExtension)
-                    .Select(x => x.ToLowerInvariant()));
-            }
-
             nugetSettings = Settings.LoadDefaultSettings(root: null);
             extractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv3, XmlDocFileSaveMode.Skip, ClientPolicyContext.GetClientPolicy(nugetSettings, logger), logger);
             sourceRepository = Repository.Factory.GetCoreV3(NugetServiceIndex);
@@ -67,7 +58,7 @@ namespace avaness.PluginLoader.Network
                 foreach (PackageReference package in reader.GetPackages(false))
                 {
                     NuGetPackage installedPackage = await DownloadPackage(cacheContext, package.PackageIdentity, package.TargetFramework);
-                    if(installedPackage != null)
+                    if (installedPackage != null)
                         packages.Add(installedPackage);
                 }
             }
@@ -83,9 +74,9 @@ namespace avaness.PluginLoader.Network
         public async Task<NuGetPackage[]> DownloadPackagesAsync(IEnumerable<NuGetPackageId> packageIds, bool getDependencies = true)
         {
             List<PackageIdentity> packages = new List<PackageIdentity>();
-            foreach(NuGetPackageId id in packageIds)
+            foreach (NuGetPackageId id in packageIds)
             {
-                if(id.TryGetIdentity(out PackageIdentity nugetId))
+                if (id.TryGetIdentity(out PackageIdentity nugetId))
                     packages.Add(nugetId);
             }
 
@@ -198,13 +189,12 @@ namespace avaness.PluginLoader.Network
 
         private bool CheckAlreadyInstalled(string id)
         {
-            if (id.Equals("Lib.Harmony", StringComparison.InvariantCultureIgnoreCase) || binAssemblies.Contains(id.ToLowerInvariant()))
+            if (id.Equals("Lib.Harmony", StringComparison.InvariantCultureIgnoreCase))
+            {
                 logger.LogInformation("Package " + id + " not downloaded because it is in Bin64");
-            else if (RoslynReferences.Contains(id))
-                logger.LogInformation("Package " + id + " not downloaded because it is already installed on the system");
-            else
-                return false;
-            return true;
+                return true;
+            }
+            return false;
         }
 
     }
