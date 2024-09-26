@@ -16,6 +16,9 @@ using avaness.PluginLoader.Network;
 using System.Runtime.ExceptionServices;
 using avaness.PluginLoader.Stats.Model;
 using avaness.PluginLoader.Config;
+using VRage.Utils;
+using System.Text;
+using VRage;
 
 namespace avaness.PluginLoader
 {
@@ -35,8 +38,10 @@ namespace avaness.PluginLoader
         /// </summary>
         public bool HasLocal { get; private set; }
 
-        private bool init;
+        public bool DebugCompileAll { get; }
 
+        private bool init;
+        private readonly StringBuilder debugCompileResults = new StringBuilder();
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
 
         public Main()
@@ -56,6 +61,10 @@ namespace avaness.PluginLoader
             LogFile.Init(pluginsDir);
             LogFile.WriteLine("Starting - v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
 
+            DebugCompileAll = Environment.GetCommandLineArgs()?.Any(x => x != null && x.Equals("-testcompileall", StringComparison.InvariantCultureIgnoreCase)) == true;
+            if (DebugCompileAll)
+                LogFile.WriteLine("COMPILING ALL PLUGINS");
+
             GitHub.Init();
 
             Splash.SetText("Finding references...");
@@ -63,14 +72,13 @@ namespace avaness.PluginLoader
 
             AppDomain.CurrentDomain.FirstChanceException += OnException;
 
-
             Splash.SetText("Starting...");
             Config = PluginConfig.Load(pluginsDir);
             Config.CheckGameVersion();
             List = new PluginList(pluginsDir, Config);
             
             Splash.SetText("Starting...");
-            Config.Init(List);
+            Config.Init(List, DebugCompileAll);
 
             if (Config.GameVersionChanged)
                 ClearGitHubCache(pluginsDir);
@@ -92,6 +100,9 @@ namespace avaness.PluginLoader
 
             Splash.SetText("Instantiating plugins...");
             LogFile.WriteLine("Instantiating plugins");
+
+            if(DebugCompileAll)
+                debugCompileResults.Append("Plugins that failed to compile:").AppendLine();
             foreach (PluginData data in Config.EnabledPlugins)
             {
                 if (PluginInstance.TryGet(data, out PluginInstance p))
@@ -99,6 +110,10 @@ namespace avaness.PluginLoader
                     plugins.Add(p);
                     if (data.IsLocal)
                         HasLocal = true;
+                }
+                else if(DebugCompileAll)
+                {
+                    debugCompileResults.Append(data.FriendlyName ?? "(null)").Append(" - ").Append(data.Id ?? "(null)").Append(" by ").Append(data.Author ?? "(null)").AppendLine();
                 }
             }
 
@@ -232,13 +247,30 @@ namespace avaness.PluginLoader
         public void Init(object gameInstance)
         {
             LogFile.WriteLine($"Initializing {plugins.Count} plugins");
+            if (DebugCompileAll)
+                debugCompileResults.Append("Plugins that failed to Init:").AppendLine();
             for (int i = plugins.Count - 1; i >= 0; i--)
             {
                 PluginInstance p = plugins[i];
                 if (!p.Init(gameInstance))
+                {
                     plugins.RemoveAtFast(i);
+                    if(DebugCompileAll)
+                        debugCompileResults.Append(p.FriendlyName ?? "(null)").Append(" - ").Append(p.Id ?? "(null)").Append(" by ").Append(p.Author ?? "(null)").AppendLine();
+                }
             }
             init = true;
+
+            if(DebugCompileAll)
+            {
+                MessageBox.Show("All plugins compiled, log file will now open");
+
+                LogFile.WriteLine(debugCompileResults.ToString());
+
+                string file = MyLog.Default.GetFilePath();
+                if (File.Exists(file) && file.EndsWith(".log"))
+                    Process.Start(file);
+            }
         }
 
         public void Update()

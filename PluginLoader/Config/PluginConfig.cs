@@ -115,7 +115,7 @@ namespace avaness.PluginLoader.Config
         {
         }
 
-        public void Init(PluginList plugins)
+        public void Init(PluginList plugins, bool debugCompileAll)
         {
             list = plugins;
 
@@ -127,7 +127,7 @@ namespace avaness.PluginLoader.Config
                 string id = plugin.Id;
                 bool enabled = IsEnabled(id);
 
-                if (enabled)
+                if (enabled || (debugCompileAll && !plugin.IsLocal && plugin.IsCompiled))
                 {
                     sb.Append(id).Append(", ");
                     enabledPlugins[id] = plugin;

@@ -24,6 +24,7 @@ namespace avaness.PluginLoader.Data
     {
         public abstract string Source { get; }
         public abstract bool IsLocal { get; }
+        public abstract bool IsCompiled { get; }
 
         [XmlIgnore]
         public Version Version { get; protected set; }
@@ -76,6 +77,7 @@ namespace avaness.PluginLoader.Data
 
         [XmlIgnore]
         public bool Enabled => Main.Instance.Config.IsEnabled(Id);
+
 
         protected PluginData()
         {
@@ -172,6 +174,8 @@ namespace avaness.PluginLoader.Data
         public void Error(string msg = null)
         {
             Status = PluginStatus.Error;
+            if (Main.Instance.DebugCompileAll)
+                return;
             if (msg == null)
                 msg = $"The plugin '{this}' caused an error. It is recommended that you disable this plugin and restart. The game may be unstable beyond this point. See loader.log or the game log for details.";
             string file = MyLog.Default.GetFilePath();

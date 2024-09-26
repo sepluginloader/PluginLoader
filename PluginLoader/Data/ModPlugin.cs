@@ -14,6 +14,7 @@ namespace avaness.PluginLoader.Data
     {
         public override string Source => "Mod";
         public override bool IsLocal => false;
+        public override bool IsCompiled => false;
 
         [XmlIgnore]
         public ulong WorkshopId { get; private set; }

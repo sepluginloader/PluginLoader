@@ -6,6 +6,7 @@ namespace avaness.PluginLoader.Data
     {
         public override string Source => "Obsolete";
         public override bool IsLocal => false;
+        public override bool IsCompiled => false;
 
         public override Assembly GetAssembly()
         {

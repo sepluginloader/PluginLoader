@@ -22,6 +22,7 @@ namespace avaness.PluginLoader.Data
 
         public override string Source => "Development Folder";
         public override bool IsLocal => true;
+        public override bool IsCompiled => true;
         private string[] sourceDirectories;
         private GitHubPlugin github;
         private AssemblyResolver resolver;
