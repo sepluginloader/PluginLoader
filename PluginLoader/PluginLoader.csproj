@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>avaness.PluginLoader</RootNamespace>
     <AssemblyName>PluginLoader</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>latest</LangVersion>
@@ -141,6 +141,7 @@
     <Compile Include="Data\PluginStatus.cs" />
     <Compile Include="Data\ModPlugin.cs" />
     <Compile Include="GUI\AddPluginMenu.cs" />
+    <Compile Include="GUI\ConfigurePlugin.cs" />
     <Compile Include="GUI\GuiControls\ParentButton.cs" />
     <Compile Include="GUI\MainPluginMenu.cs" />
     <Compile Include="GUI\PluginDetailMenu.cs" />

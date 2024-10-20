@@ -38,6 +38,7 @@ namespace avaness.PluginLoader
         private bool init;
 
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
+        public List<PluginInstance> Plugins => plugins;
 
         public Main()
         {

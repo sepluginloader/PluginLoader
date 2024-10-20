@@ -21,6 +21,7 @@ namespace avaness.PluginLoader
         private IHandleInputPlugin inputPlugin;
 
         public string Id => data.Id;
+        public string FriendlyName => data.FriendlyName;
         public bool HasConfigDialog => openConfigDialog != null;
 
         private PluginInstance(PluginData data, Assembly mainAssembly, Type mainType)
