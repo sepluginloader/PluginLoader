@@ -46,8 +46,8 @@ public class ConfigurePlugin : PluginScreen
         table.ItemDoubleClicked += OnItemSelected;
         table.ItemSelected += OnItemSelected;
 
-        var horizontalBorder = 0.5f * (m_size.Value.X - area.Width);
-        SetTableHeight(table, area.Height - horizontalBorder);
+        SetTableHeight(table, area.Height - GuiSpacing);
+        
         AddTableRows();
         table.SortByColumn(0, MyGuiControlTable.SortStateEnum.Ascending);
         table.SelectedRowIndex = -1;
