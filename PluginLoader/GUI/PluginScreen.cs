@@ -45,6 +45,22 @@ namespace avaness.PluginLoader.GUI
             return new RectangleF(topPos, size);
         }
 
+        protected RectangleF GetAreaBelow(MyGuiControlBase top, float verticalSpacing = GuiSpacing, float horizontalSpacing = GuiSpacing)
+        {
+            Vector2 halfSize = m_size.Value / 2;
+
+            float topPosY = GetCoordTopLeftFromAligned(top).Y;
+            Vector2 topPos = new Vector2(horizontalSpacing - halfSize.X, topPosY + top.Size.Y + verticalSpacing);
+
+            Vector2 bottomPos = new Vector2(halfSize.X - horizontalSpacing, halfSize.Y);
+
+            Vector2 size = bottomPos - topPos;
+            size.X = Math.Abs(size.X);
+            size.Y = Math.Abs(size.Y);
+
+            return new RectangleF(topPos, size);
+        }
+
         protected MyLayoutTable GetLayoutTableBetween(MyGuiControlBase top, MyGuiControlBase bottom, float verticalSpacing = GuiSpacing, float horizontalSpacing = GuiSpacing)
         {
             RectangleF rect = GetAreaBetween(top, bottom, verticalSpacing, horizontalSpacing);
