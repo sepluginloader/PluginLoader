@@ -120,7 +120,7 @@ namespace avaness.PluginLoader.GUI
 
             if (!mods)
             {
-                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, toolTip: "Open plugin settings", onButtonClick: OnPluginSettingsClick)
+                MyGuiControlButton btnSettings = new MyGuiControlButton(size: btnAdd.Size, visualStyle: VRage.Game.MyGuiControlButtonStyleEnum.SquareSmall, toolTip: "Open plugin settings, in-game hotkey: Ctrl+Alt+/", onButtonClick: OnPluginSettingsClick)
                 {
                     UserData = list,
                     Enabled = false
