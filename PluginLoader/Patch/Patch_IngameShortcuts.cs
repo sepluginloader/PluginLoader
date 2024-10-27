@@ -47,8 +47,7 @@ namespace avaness.PluginLoader.Patch
 
         private static void ShowConfigurePlugin()
         {
-            var screen = new ConfigurePlugin();
-            MyGuiSandbox.AddScreen(screen);
+            MyGuiSandbox.AddScreen(new ConfigurePlugin());
         }
 
         public static void ShowLogMenu()

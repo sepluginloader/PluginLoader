@@ -27,10 +27,10 @@ public class ConfigurePlugin : PluginScreen
     {
         base.RecreateControls(constructor);
 
-        var caption = AddCaption("Configure a plugin", captionScale: 1);
+        MyGuiControlLabel caption = AddCaption("Configure a plugin", captionScale: 1);
         AddBarBelow(caption);
 
-        var area = GetAreaBelow(caption, GuiSpacing * 2);
+        RectangleF area = GetAreaBelow(caption, GuiSpacing * 2);
         table = new MyGuiControlTable()
         {
             Size = area.Size,
@@ -57,12 +57,10 @@ public class ConfigurePlugin : PluginScreen
 
     private void AddTableRows()
     {
-        foreach (var p in pluginInstances)
+        foreach (PluginInstance p in pluginInstances)
         {
             if (p.HasConfigDialog)
-            {
                 table.Add(CreateRow(p));
-            }
         }
     }
 
@@ -91,7 +89,7 @@ public class ConfigurePlugin : PluginScreen
 
     private void OnItemSelected(MyGuiControlTable arg1, MyGuiControlTable.EventArgs arg2)
     {
-        var selectedPluginInstance = table.SelectedRow?.GetCell(0).UserData as PluginInstance;
+        PluginInstance selectedPluginInstance = table.SelectedRow?.GetCell(0).UserData as PluginInstance;
         if (selectedPluginInstance == null)
             return;
 
