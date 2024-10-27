@@ -5,6 +5,7 @@ using Sandbox.Graphics.GUI;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using avaness.PluginLoader.GUI;
 using VRage;
 using VRage.Input;
 using VRage.Utils;
@@ -17,20 +18,37 @@ namespace avaness.PluginLoader.Patch
         public static bool Prefix()
         {
             IMyInput input = MyInput.Static;
-            if (MySession.Static != null && input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
+            if (MySession.Static == null || input == null)
+                return true;
+            
+            if (input.IsAnyAltKeyPressed() && input.IsAnyCtrlKeyPressed())
             {
                 if(input.IsNewKeyPressed(MyKeys.F5))
                 {
                     ShowRestartMenu();
                     return false;
                 }
-                else if(input.IsNewKeyPressed(MyKeys.L))
+
+                if(input.IsNewKeyPressed(MyKeys.L))
                 {
                     ShowLogMenu();
                     return false;
                 }
+                
+                if (input.IsNewKeyPressed(MyKeys.OemQuestion))
+                {
+                    ShowConfigurePlugin();
+                    return false;
+                }
             }
+
             return true;
+        }
+
+        private static void ShowConfigurePlugin()
+        {
+            var screen = new ConfigurePlugin();
+            MyGuiSandbox.AddScreen(screen);
         }
 
         public static void ShowLogMenu()

@@ -43,6 +43,7 @@ namespace avaness.PluginLoader
         private bool init;
         private readonly StringBuilder debugCompileResults = new StringBuilder();
         private readonly List<PluginInstance> plugins = new List<PluginInstance>();
+        public List<PluginInstance> Plugins => plugins;
 
         public Main()
         {
