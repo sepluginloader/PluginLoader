@@ -91,6 +91,7 @@ namespace avaness.PluginLoader.Compiler
         private static IEnumerable<Assembly> GetOtherReferences()
         {
             yield return typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly;
+            yield return typeof(System.Windows.Forms.DataVisualization.Charting.Chart).Assembly;
         }
 
         private static bool ContainsReference(AssemblyName name)
