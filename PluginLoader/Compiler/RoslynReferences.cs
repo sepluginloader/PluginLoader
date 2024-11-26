@@ -12,6 +12,7 @@ namespace avaness.PluginLoader.Compiler
     public static class RoslynReferences
     {
         private static Dictionary<string, MetadataReference> allReferences = new Dictionary<string, MetadataReference>();
+        private static Dictionary<string, MetadataReference> publicizedReferences = new Dictionary<string, MetadataReference>();
         private static readonly HashSet<string> referenceBlacklist = new HashSet<string>(new[] { "System.ValueTuple" });
 
         public static void GenerateAssemblyList()
@@ -113,6 +114,30 @@ namespace avaness.PluginLoader.Compiler
             }
         }
 
+        public static bool GetPublicizedReference(string id, out MetadataReference publicizedRef)
+        {
+            if (publicizedReferences.TryGetValue(id, out publicizedRef))
+            {
+                return true;
+            }
+
+            if (!allReferences.TryGetValue(id, out var targetRef))
+            {
+                return false;
+            }
+
+            if (targetRef is PortableExecutableReference portableRef
+                 && !string.IsNullOrEmpty(portableRef.FilePath))
+            {
+                publicizedRef = Publicizer.PublicizeReference(portableRef);
+                publicizedReferences.Add(id, publicizedRef);
+
+                return true;
+            }
+
+            return false;
+        }
+
         private static void AddAssemblyReference(Assembly a)
         {
             string name = a.GetName().Name;
@@ -120,9 +145,9 @@ namespace avaness.PluginLoader.Compiler
                 allReferences.Add(name, MetadataReference.CreateFromFile(a.Location));
         }
 
-        public static IEnumerable<MetadataReference> EnumerateAllReferences()
+        public static Dictionary<string, MetadataReference> GetAllReferences()
         {
-            return allReferences.Values;
+            return allReferences;
         }
 
         private static bool IsValidReference(Assembly a)
