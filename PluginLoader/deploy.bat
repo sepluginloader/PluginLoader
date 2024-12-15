@@ -18,7 +18,11 @@ goto waitfile
 
 Rem Copy the file to the target location
 :copyfile
-echo Copying file.
-for /R "%~dp1" %%F in (*.dll) DO copy /y "%%F" "%se_folder%\%%~nxF"
+echo Copying DLLs
+copy /y /b PluginLoader.dll "%se_folder%\"
+copy /y /b 0Harmony.dll.dll "%se_folder%\"
+copy /y /b Newtonsoft.Json.dll "%se_folder%\"
+copy /y /b NuGet.*.dll "%se_folder%\"
 
+echo DONE deploying
 :eof
