@@ -76,7 +76,8 @@ namespace avaness.PluginLoader.Compiler
                 return false;
             }
 
-            bool shouldPublicize = field.IsAssembly
+            bool shouldPublicize = field.IsPrivate
+                || field.IsAssembly
                 || field.IsFamily
                 || field.IsFamilyOrAssembly
                 || field.IsFamilyAndAssembly;
@@ -96,7 +97,8 @@ namespace avaness.PluginLoader.Compiler
                 return false;
             }
 
-            bool shouldPublicize = method.IsAssembly
+            bool shouldPublicize = method.IsPrivate
+                || method.IsAssembly
                 || method.IsFamily
                 || method.IsFamilyOrAssembly
                 || method.IsFamilyAndAssembly;
