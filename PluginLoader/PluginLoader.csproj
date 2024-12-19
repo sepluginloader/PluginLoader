@@ -127,6 +127,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\PublicizedAssemblies.cs" />
     <Compile Include="Compiler\Publicizer.cs" />
     <Compile Include="Compiler\RoslynReferences.cs" />
     <Compile Include="Config\GitHubPluginConfig.cs" />
