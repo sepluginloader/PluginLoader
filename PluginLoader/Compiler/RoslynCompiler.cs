@@ -40,6 +40,7 @@ namespace avaness.PluginLoader.Compiler
             
             var references = RoslynReferences.AllReferences
                 .Select(kv => publicizedAssemblies.PublicizeReferenceIfRequired(assemblyName, kv.Key, kv.Value))
+                .Concat(customReferences)
                 .ToHashSet();
 
             CSharpCompilation compilation = CSharpCompilation.Create(
