@@ -20,7 +20,7 @@ Rem Copy the file to the target location
 :copyfile
 echo Copying DLLs
 copy /y /b PluginLoader.dll "%se_folder%\"
-copy /y /b 0Harmony.dll.dll "%se_folder%\"
+copy /y /b 0Harmony.dll "%se_folder%\"
 copy /y /b Newtonsoft.Json.dll "%se_folder%\"
 copy /y /b NuGet.*.dll "%se_folder%\"
 
