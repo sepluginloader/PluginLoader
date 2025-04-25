@@ -112,7 +112,7 @@ namespace avaness.PluginLoader
                     if (data.IsLocal)
                         HasLocal = true;
                 }
-                else if(DebugCompileAll)
+                else if(DebugCompileAll && data.IsCompiled)
                 {
                     debugCompileResults.Append(data.FriendlyName ?? "(null)").Append(" - ").Append(data.Id ?? "(null)").Append(" by ").Append(data.Author ?? "(null)").AppendLine();
                 }
