@@ -1,5 +1,8 @@
 [![Discord](https://img.shields.io/discord/816445932693487678)](https://discord.gg/VJGjzdgnjf)
 
+> [!Warning]
+> **Plugin Loader has been shut down and will no longer receive any updates.**
+
 # PluginLoader
 A tool to load plugins for Space Engineers automatically.
 
